@@ -12,11 +12,11 @@ $dot = match($val) {
 };
 
 $colorClasses = match($val) {
-    'active'      => 'bg-green-50 text-green-700 ring-green-600/20',
-    'development' => 'bg-blue-50 text-blue-700 ring-blue-600/20',
-    'maintenance' => 'bg-yellow-50 text-yellow-700 ring-yellow-600/20',
-    'inactive'    => 'bg-red-50 text-red-600 ring-red-500/20',
-    default       => 'bg-gray-100 text-gray-600 ring-gray-500/20',
+    'active'      => 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 ring-green-600/20 dark:ring-green-500/30',
+    'development' => 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 ring-blue-600/20 dark:ring-blue-500/30',
+    'maintenance' => 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 ring-yellow-600/20 dark:ring-yellow-500/30',
+    'inactive'    => 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 ring-red-500/20 dark:ring-red-500/30',
+    default       => 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 ring-gray-500/20 dark:ring-gray-500/30',
 };
 
 $label = match($val) {

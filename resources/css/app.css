@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Dark mode transitions */
+*, *::before, *::after {
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
 /* Hide scrollbar for Chrome, Safari and Opera */
 .scrollbar-hide::-webkit-scrollbar {
     display: none;

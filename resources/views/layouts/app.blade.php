@@ -14,10 +14,20 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <!-- Dark mode initialization -->
+    <script>
+        if (localStorage.getItem('darkMode') === 'true' || 
+            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+
     @stack('styles')
 </head>
-<body class="font-sans antialiased bg-gray-50">
-    <div x-data="{ sidebarOpen: false }" class="min-h-screen flex">
+<body class="font-sans antialiased bg-gray-50 dark:bg-gray-900" 
+      x-data="{ sidebarOpen: false, darkMode: localStorage.getItem('darkMode') === 'true' || (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches) }" 
+      x-init="$watch('darkMode', val => { localStorage.setItem('darkMode', val); if(val) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }); if(darkMode) document.documentElement.classList.add('dark');">
+    <div class="min-h-screen flex">
         {{-- Sidebar --}}
         <x-sidebar />
 
@@ -28,7 +38,7 @@
 
             {{-- Flash Messages --}}
             @if(session('success'))
-                <div class="bg-green-50 border-l-4 border-green-500 p-3 sm:p-4 mx-4 sm:mx-6 mt-3 sm:mt-4 rounded">
+                <div class="bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 p-3 sm:p-4 mx-4 sm:mx-6 mt-3 sm:mt-4 rounded">
                     <div class="flex">
                         <div class="flex-shrink-0">
                             <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -36,14 +46,14 @@
                             </svg>
                         </div>
                         <div class="ml-3">
-                            <p class="text-sm text-green-700">{{ session('success') }}</p>
+                            <p class="text-sm text-green-700 dark:text-green-300">{{ session('success') }}</p>
                         </div>
                     </div>
                 </div>
             @endif
 
             @if(session('error'))
-                <div class="bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 mx-4 sm:mx-6 mt-3 sm:mt-4 rounded">
+                <div class="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-3 sm:p-4 mx-4 sm:mx-6 mt-3 sm:mt-4 rounded">
                     <div class="flex">
                         <div class="flex-shrink-0">
                             <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -51,14 +61,14 @@
                             </svg>
                         </div>
                         <div class="ml-3">
-                            <p class="text-sm text-red-700">{{ session('error') }}</p>
+                            <p class="text-sm text-red-700 dark:text-red-300">{{ session('error') }}</p>
                         </div>
                     </div>
                 </div>
             @endif
 
             @if($errors->any())
-                <div class="bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 mx-4 sm:mx-6 mt-3 sm:mt-4 rounded">
+                <div class="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-3 sm:p-4 mx-4 sm:mx-6 mt-3 sm:mt-4 rounded">
                     <div class="flex">
                         <div class="flex-shrink-0">
                             <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -66,7 +76,7 @@
                             </svg>
                         </div>
                         <div class="ml-3">
-                            <ul class="text-sm text-red-700 list-disc list-inside">
+                            <ul class="text-sm text-red-700 dark:text-red-300 list-disc list-inside">
                                 @foreach($errors->all() as $error)
                                     <li>{{ $error }}</li>
                                 @endforeach
@@ -86,7 +96,7 @@
         </div>
 
         {{-- Mobile sidebar backdrop --}}
-        <div x-show="sidebarOpen" @click="sidebarOpen = false" x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-600/75 z-20 lg:hidden min-h-[44px]"></div>
+        <div x-show="sidebarOpen" @click="sidebarOpen = false" x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-600/75 dark:bg-gray-900/75 z-20 lg:hidden min-h-[44px]"></div>
     </div>
 
     @stack('scripts')

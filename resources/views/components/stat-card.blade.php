@@ -13,7 +13,7 @@ $colorVariants = [
 $bgColor = $colorVariants[$color] ?? $colorVariants['blue'];
 @endphp
 
-<div {{ $attributes->merge(['class' => 'bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition-shadow duration-300']) }}>
+<div {{ $attributes->merge(['class' => 'bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md dark:hover:shadow-gray-700/50 transition-shadow duration-300']) }}>
     @if($href)
     <a href="{{ $href }}" class="block">
     @endif
@@ -26,18 +26,18 @@ $bgColor = $colorVariants[$color] ?? $colorVariants['blue'];
                 </div>
                 <div class="ml-5 w-0 flex-1">
                     <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                             {{ $title }}
                         </dt>
                         <dd>
-                            <div class="text-2xl font-bold text-gray-900">
+                            <div class="text-2xl font-bold text-gray-900 dark:text-white">
                                 {{ $value }}
                             </div>
                         </dd>
                     </dl>
                     @if($subtitle)
                     <div class="mt-1">
-                        <p class="text-xs text-gray-500">{{ $subtitle }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ $subtitle }}</p>
                     </div>
                     @endif
                 </div>

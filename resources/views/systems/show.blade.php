@@ -25,14 +25,14 @@
     <div class="relative rounded-2xl shadow-lg overflow-hidden">
         {{-- Background gradient --}}
         <div style="position: absolute; inset: 0; background: {{ $gradientColors }}; z-index: 0;"></div>
-        
+
         {{-- Decorative wave pattern --}}
         <div style="position: absolute; top: 0; left: 0; right: 0; height: 60%; opacity: 0.1; z-index: 1;">
             <svg class="w-full h-full" viewBox="0 0 1440 200" preserveAspectRatio="none">
                 <path d="M0,80 C240,120 480,40 720,80 C960,120 1200,40 1440,80 L1440,0 L0,0 Z" fill="rgba(255,255,255,0.3)"/>
             </svg>
         </div>
-        
+
         {{-- Content --}}
         <div style="position: relative; z-index: 10; padding: 1.5rem 2rem;" class="sm:px-8">
             <div class="flex flex-col lg:flex-row lg:items-center gap-6">
@@ -126,8 +126,8 @@
     </div>
 
     {{-- Tab Navigation --}}
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div class="border-b border-gray-200 overflow-x-auto">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+        <div class="border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
             <nav class="flex min-w-max px-4" aria-label="Tabs">
                 @php
                 $tabs = [
@@ -144,7 +144,7 @@
                 @foreach($tabs as $t)
                 <button @click="tab = '{{ $t['id'] }}'"
                         x-bind:style="tab === '{{ $t['id'] }}' ? 'border-bottom: 2px solid {{ $accentColor }}; color: {{ $accentColor }};' : 'border-bottom: 2px solid transparent; color: rgb(107 114 128);'"
-                        class="flex items-center gap-2 px-4 py-4 text-sm font-medium transition-colors whitespace-nowrap focus:outline-none cursor-pointer">
+                        class="flex items-center gap-2 px-4 py-4 text-sm font-medium transition-colors whitespace-nowrap focus:outline-none cursor-pointer dark:text-gray-400 dark:hover:text-gray-200">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $t['icon'] }}"/>
                     </svg>
