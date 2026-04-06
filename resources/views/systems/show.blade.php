@@ -2,87 +2,109 @@
 @section('title', $system->acronym ?? $system->name)
 
 @section('content')
-<div class="space-y-5" x-data="{ tab: '{{ session('tab', 'general') }}' }">
+<div class="space-y-6" x-data="{ tab: '{{ session('tab', 'general') }}' }">
 
     {{-- Hero Header --}}
     @php
     $sv = $system->status->value;
-    $heroBg = match($sv) {
-        'active'      => 'from-green-600 to-emerald-700',
-        'development' => 'from-blue-600 to-indigo-700',
-        'maintenance' => 'from-yellow-500 to-orange-600',
-        'inactive'    => 'from-gray-500 to-gray-700',
-        default       => 'from-gray-500 to-gray-700',
+    $gradientColors = match($sv) {
+        'active'      => 'linear-gradient(135deg, #16a34a 0%, #059669 100%)',
+        'development' => 'linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)',
+        'maintenance' => 'linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)',
+        'inactive'    => 'linear-gradient(135deg, #6b7280 0%, #374151 100%)',
+        default       => 'linear-gradient(135deg, #6b7280 0%, #374151 100%)',
+    };
+    $accentColor = match($sv) {
+        'active'      => '#16a34a',
+        'development' => '#2563eb',
+        'maintenance' => '#f59e0b',
+        'inactive'    => '#6b7280',
+        default       => '#6b7280',
     };
     @endphp
-    <div class="bg-gradient-to-r {{ $heroBg }} rounded-xl shadow-sm overflow-hidden">
-        <div class="px-6 py-5 flex flex-col sm:flex-row sm:items-center gap-4">
-            {{-- Avatar --}}
-            <div class="flex-shrink-0 w-16 h-16 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-bold text-xl tracking-wide shadow-inner">
-                {{ strtoupper(substr($system->acronym ?? $system->name, 0, 3)) }}
-            </div>
-
-            {{-- Info --}}
-            <div class="flex-1 min-w-0">
-                <div class="flex items-start gap-3 flex-wrap">
-                    <h1 class="text-xl font-bold text-white leading-tight">{{ $system->name }}</h1>
-                    <x-status-badge :status="$system->status"
-                        class="bg-white/20 !text-white !ring-white/30 flex-shrink-0 mt-0.5" />
+    <div class="relative rounded-2xl shadow-lg overflow-hidden">
+        {{-- Background gradient --}}
+        <div style="position: absolute; inset: 0; background: {{ $gradientColors }}; z-index: 0;"></div>
+        
+        {{-- Decorative wave pattern --}}
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 60%; opacity: 0.1; z-index: 1;">
+            <svg class="w-full h-full" viewBox="0 0 1440 200" preserveAspectRatio="none">
+                <path d="M0,80 C240,120 480,40 720,80 C960,120 1200,40 1440,80 L1440,0 L0,0 Z" fill="rgba(255,255,255,0.3)"/>
+            </svg>
+        </div>
+        
+        {{-- Content --}}
+        <div style="position: relative; z-index: 10; padding: 1.5rem 2rem;" class="sm:px-8">
+            <div class="flex flex-col lg:flex-row lg:items-center gap-6">
+                {{-- Avatar --}}
+                <div style="flex-shrink: 0; width: 4rem; height: 4rem; border-radius: 1rem; background: rgba(255,255,255,0.2); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    {{ strtoupper(substr($system->acronym ?? $system->name, 0, 3)) }}
                 </div>
-                <div class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-white/80">
-                    @if($system->area)
-                    <span class="flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                        {{ $system->area->name }}
-                    </span>
-                    @endif
-                    @if($system->responsible)
-                    <span class="flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                        {{ $system->responsible->name }}
-                    </span>
-                    @endif
-                    @if($system->infrastructure?->system_url)
-                    <a href="{{ $system->infrastructure->system_url }}" target="_blank"
-                       class="flex items-center gap-1 hover:text-white transition-colors">
-                        <svg class="w-3.5 h-3.5 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                        {{ $system->infrastructure->system_url }}
+
+                {{-- Info --}}
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-start gap-3 flex-wrap">
+                        <h1 class="text-2xl font-bold text-white leading-tight">{{ $system->name }}</h1>
+                        <span style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.75rem; font-size: 0.75rem; font-weight: 600; border-radius: 9999px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3);">
+                            <span style="width: 0.5rem; height: 0.5rem; border-radius: 50%; background: white; display: inline-block;"></span>
+                            {{ $system->status->label() }}
+                        </span>
+                    </div>
+                    <div class="mt-2 flex flex-wrap gap-x-5 gap-y-2 text-sm text-white/90">
+                        @if($system->area)
+                        <span class="flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-white/70 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                            {{ $system->area->name }}
+                        </span>
+                        @endif
+                        @if($system->responsible)
+                        <span class="flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-white/70 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            {{ $system->responsible->name }}
+                        </span>
+                        @endif
+                        @if($system->infrastructure?->system_url)
+                        <a href="{{ $system->infrastructure->system_url }}" target="_blank"
+                           class="flex items-center gap-1.5 hover:text-white transition-colors">
+                            <svg class="w-4 h-4 text-white/70 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                            <span class="truncate max-w-xs">{{ $system->infrastructure->system_url }}</span>
+                        </a>
+                        @endif
+                        @if($system->tech_stack)
+                        <span class="flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-white/70 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                            {{ $system->tech_stack }}
+                        </span>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- Acciones --}}
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    @can('systems.edit')
+                    <a href="{{ route('systems.edit', $system) }}"
+                       style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); color: white; font-size: 0.875rem; font-weight: 500; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.3); backdrop-filter: blur(4px); transition: all 0.2s;">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                        Editar
                     </a>
-                    @endif
-                    @if($system->tech_stack)
-                    <span class="flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                        {{ $system->tech_stack }}
-                    </span>
-                    @endif
+                    @endcan
+                    @can('systems.delete')
+                    <form action="{{ route('systems.destroy', $system) }}" method="POST" class="inline">
+                        @csrf @method('DELETE')
+                        <button type="button" x-data
+                                @click.prevent="if(confirm('¿Eliminar este sistema? Esta acción no se puede deshacer.')) $el.closest('form').submit()"
+                                style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); color: white; font-size: 0.875rem; font-weight: 500; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(4px); transition: all 0.2s;">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            Eliminar
+                        </button>
+                    </form>
+                    @endcan
                 </div>
-            </div>
-
-            {{-- Acciones --}}
-            <div class="flex items-center gap-2 flex-shrink-0">
-                @can('systems.edit')
-                <a href="{{ route('systems.edit', $system) }}"
-                   class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-medium rounded-lg transition-colors backdrop-blur-sm">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                    Editar
-                </a>
-                @endcan
-                @can('systems.delete')
-                <form action="{{ route('systems.destroy', $system) }}" method="POST" class="inline">
-                    @csrf @method('DELETE')
-                    <button type="button" x-data
-                            @click.prevent="if(confirm('¿Eliminar este sistema? Esta acción no se puede deshacer.')) $el.closest('form').submit()"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-red-500/60 text-white text-xs font-medium rounded-lg transition-colors">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                        Eliminar
-                    </button>
-                </form>
-                @endcan
             </div>
         </div>
 
         {{-- Quick stats --}}
-        <div class="grid grid-cols-4 border-t border-white/10">
+        <div style="position: relative; z-index: 10; display: grid; grid-template-columns: repeat(2, 1fr); border-top: 1px solid rgba(255,255,255,0.2);" class="sm:grid-cols-4">
             @php
             $quickStats = [
                 ['label' => 'Versiones',     'val' => $system->versions->count(),         'tab' => 'versions'],
@@ -93,9 +115,11 @@
             @endphp
             @foreach($quickStats as $qs)
             <button @click="tab = '{{ $qs['tab'] }}'"
-                    class="flex flex-col items-center py-3 hover:bg-white/10 transition-colors cursor-pointer">
-                <span class="text-xl font-bold text-white">{{ $qs['val'] }}</span>
-                <span class="text-xs text-white/70 mt-0.5">{{ $qs['label'] }}</span>
+                    style="display: flex; flex-direction: column; align-items: center; padding: 1rem; transition: background-color 0.2s; cursor: pointer; border: none; background: none;"
+                    onmouseover="this.style.backgroundColor='rgba(255,255,255,0.1)'"
+                    onmouseout="this.style.backgroundColor='transparent'">
+                <span style="font-size: 1.5rem; font-weight: 700; color: white;">{{ $qs['val'] }}</span>
+                <span style="font-size: 0.75rem; color: rgba(255,255,255,0.8); margin-top: 0.25rem;">{{ $qs['label'] }}</span>
             </button>
             @endforeach
         </div>
@@ -104,7 +128,7 @@
     {{-- Tab Navigation --}}
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div class="border-b border-gray-200 overflow-x-auto">
-            <nav class="flex min-w-max px-2" aria-label="Tabs">
+            <nav class="flex min-w-max px-4" aria-label="Tabs">
                 @php
                 $tabs = [
                     ['id' => 'general',         'label' => 'General',        'icon' => 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
@@ -119,8 +143,8 @@
                 @endphp
                 @foreach($tabs as $t)
                 <button @click="tab = '{{ $t['id'] }}'"
-                        :class="tab === '{{ $t['id'] }}' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                        class="flex items-center gap-1.5 px-4 py-3.5 text-xs font-medium border-b-2 transition-colors whitespace-nowrap focus:outline-none">
+                        x-bind:style="tab === '{{ $t['id'] }}' ? 'border-bottom: 2px solid {{ $accentColor }}; color: {{ $accentColor }};' : 'border-bottom: 2px solid transparent; color: rgb(107 114 128);'"
+                        class="flex items-center gap-2 px-4 py-4 text-sm font-medium transition-colors whitespace-nowrap focus:outline-none cursor-pointer">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $t['icon'] }}"/>
                     </svg>

@@ -70,28 +70,33 @@
                         @foreach($statuses as $s)
                         @php
                         $checked = old('status', 'active') === $s->value;
-                        $colors = match($s->value) {
-                            'active'      => ['ring-green-500',  'bg-green-50',  'text-green-700',  'border-green-500'],
-                            'development' => ['ring-blue-500',   'bg-blue-50',   'text-blue-700',   'border-blue-500'],
-                            'maintenance' => ['ring-yellow-500', 'bg-yellow-50', 'text-yellow-700', 'border-yellow-500'],
-                            'inactive'    => ['ring-red-500',    'bg-red-50',    'text-red-700',    'border-red-500'],
-                            default       => ['ring-gray-400',   'bg-gray-50',   'text-gray-600',   'border-gray-400'],
-                        };
+                        $colorMap = [
+                            'active'      => ['bg' => 'rgb(220, 252, 231)', 'border' => 'rgb(22, 163, 74)', 'text' => 'rgb(22, 101, 52)', 'dot' => 'rgb(22, 163, 74)'],
+                            'development' => ['bg' => 'rgb(219, 234, 254)', 'border' => 'rgb(37, 99, 235)', 'text' => 'rgb(30, 64, 175)', 'dot' => 'rgb(37, 99, 235)'],
+                            'maintenance' => ['bg' => 'rgb(254, 243, 199)', 'border' => 'rgb(245, 158, 11)', 'text' => 'rgb(146, 64, 14)', 'dot' => 'rgb(245, 158, 11)'],
+                            'inactive'    => ['bg' => 'rgb(254, 226, 226)', 'border' => 'rgb(220, 38, 38)', 'text' => 'rgb(153, 27, 27)', 'dot' => 'rgb(220, 38, 38)'],
+                        ];
+                        $colors = $colorMap[$s->value] ?? ['bg' => 'rgb(243, 244, 246)', 'border' => 'rgb(107, 114, 128)', 'text' => 'rgb(55, 65, 81)', 'dot' => 'rgb(107, 114, 128)'];
                         @endphp
                         <label class="relative cursor-pointer">
                             <input type="radio" name="status" value="{{ $s->value }}" {{ $checked ? 'checked' : '' }}
-                                   class="peer sr-only">
-                            <div class="flex items-center gap-2 px-3 py-2.5 rounded-lg border-2 border-gray-200 peer-checked:border-current peer-checked:{{ $colors[1] }} transition-all
-                                        {{ $checked ? $colors[1].' border-2 '.$colors[3] : '' }}">
-                                <span class="w-2 h-2 rounded-full flex-shrink-0
-                                             {{ match($s->value) {
-                                                 'active'      => 'bg-green-500',
-                                                 'development' => 'bg-blue-500',
-                                                 'maintenance' => 'bg-yellow-400',
-                                                 'inactive'    => 'bg-red-400',
-                                                 default       => 'bg-gray-400',
-                                             } }}"></span>
-                                <span class="text-xs font-medium text-gray-700">{{ $s->label() }}</span>
+                                   class="peer sr-only"
+                                   onchange="document.querySelectorAll('input[name=status]').forEach(r => {
+                                       const div = r.nextElementSibling;
+                                       div.style.backgroundColor = 'white';
+                                       div.style.borderColor = 'rgb(229, 231, 235)';
+                                       div.style.color = 'rgb(55, 65, 81)';
+                                   });
+                                   this.nextElementSibling.style.backgroundColor = '{{ $colors['bg'] }}';
+                                   this.nextElementSibling.style.borderColor = '{{ $colors['border'] }}';
+                                   this.nextElementSibling.style.color = '{{ $colors['text'] }}';">
+                            <div class="flex items-center gap-2 px-3 py-2.5 rounded-lg border-2 transition-all"
+                                 style="background: {{ $checked ? $colors['bg'] : 'white' }}; 
+                                        border-color: {{ $checked ? $colors['border'] : 'rgb(229, 231, 235)' }}; 
+                                        color: {{ $checked ? $colors['text'] : 'rgb(55, 65, 81)' }};">
+                                <span class="w-2 h-2 rounded-full flex-shrink-0"
+                                      style="background: {{ $colors['dot'] }};"></span>
+                                <span class="text-xs font-medium">{{ $s->label() }}</span>
                             </div>
                         </label>
                         @endforeach
