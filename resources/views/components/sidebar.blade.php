@@ -1,7 +1,9 @@
-@props(['sidebarOpen' => false])
+@props([])
 
-<aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" 
-       class="fixed inset-y-0 left-0 z-30 w-64 bg-gradient-to-b from-slate-800 to-slate-900 text-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0">
+<aside
+    :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+    class="fixed inset-y-0 left-0 z-30 w-64 bg-gradient-to-b from-slate-800 to-slate-900 text-white transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0"
+>
     {{-- Logo --}}
     <div class="flex items-center justify-center h-16 bg-slate-900 border-b border-slate-700">
         <div class="flex items-center space-x-2">

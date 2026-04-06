@@ -20,6 +20,8 @@
     },
     "dependencies": {
         "@qwen-code/sdk": "^0.1.6",
+        "datatables.net": "^2.3.7",
+        "datatables.net-dt": "^2.3.7",
         "qwen": "^0.0.0"
     }
 }

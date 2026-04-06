@@ -12,7 +12,7 @@ class PersonaController extends Controller
     {
         $personas = Persona::withCount('user')
             ->orderBy('apellido_paterno')
-            ->paginate(20);
+            ->get();
 
         return view('admin.personas.index', compact('personas'));
     }

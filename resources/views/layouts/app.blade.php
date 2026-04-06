@@ -19,7 +19,7 @@
 <body class="font-sans antialiased bg-gray-50">
     <div x-data="{ sidebarOpen: false }" class="min-h-screen flex">
         {{-- Sidebar --}}
-        <x-sidebar :sidebarOpen="false" />
+        <x-sidebar />
 
         {{-- Main Content --}}
         <div class="flex-1 flex flex-col min-h-screen">
@@ -28,7 +28,7 @@
 
             {{-- Flash Messages --}}
             @if(session('success'))
-                <div class="bg-green-50 border-l-4 border-green-500 p-4 mx-6 mt-4 rounded">
+                <div class="bg-green-50 border-l-4 border-green-500 p-3 sm:p-4 mx-4 sm:mx-6 mt-3 sm:mt-4 rounded">
                     <div class="flex">
                         <div class="flex-shrink-0">
                             <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -43,7 +43,7 @@
             @endif
 
             @if(session('error'))
-                <div class="bg-red-50 border-l-4 border-red-500 p-4 mx-6 mt-4 rounded">
+                <div class="bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 mx-4 sm:mx-6 mt-3 sm:mt-4 rounded">
                     <div class="flex">
                         <div class="flex-shrink-0">
                             <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -58,7 +58,7 @@
             @endif
 
             @if($errors->any())
-                <div class="bg-red-50 border-l-4 border-red-500 p-4 mx-6 mt-4 rounded">
+                <div class="bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 mx-4 sm:mx-6 mt-3 sm:mt-4 rounded">
                     <div class="flex">
                         <div class="flex-shrink-0">
                             <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -77,7 +77,7 @@
             @endif
 
             {{-- Page Content --}}
-            <main class="flex-1 p-6">
+            <main class="flex-1 p-4 sm:p-6">
                 @yield('content')
             </main>
 
@@ -86,7 +86,7 @@
         </div>
 
         {{-- Mobile sidebar backdrop --}}
-        <div x-show="sidebarOpen" @click="sidebarOpen = false" x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-600 bg-opacity-75 z-20 lg:hidden"></div>
+        <div x-show="sidebarOpen" @click="sidebarOpen = false" x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-600/75 z-20 lg:hidden min-h-[44px]"></div>
     </div>
 
     @stack('scripts')

@@ -1,0 +1,381 @@
+/* ═══════════════════════════════════════════════════════
+   DataTables 2.x — SGATI Custom Styling
+   Integración limpia con Tailwind CSS 3 + diseño moderno
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Base ── */
+div.dt-container {
+    font-family: inherit;
+    font-size: 0.875rem;
+    color: #374151;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Cadena de divs internos que DataTables genera — todos deben ser 100% */
+div.dt-container .dt-layout-table,
+div.dt-container .dt-layout-table .dt-layout-cell,
+div.dt-container .dt-layout-full {
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+div.dt-container .dt-scroll,
+div.dt-container .dt-scroll-body {
+    width: 100% !important;
+}
+
+/* ── Layout rows: puro CSS, sin necesidad de initComplete ── */
+div.dt-container .dt-layout-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 0.75rem !important;
+    margin: 0 !important;
+}
+
+div.dt-container .dt-layout-top {
+    padding: 0.875rem 1.25rem !important;
+    background: #f9fafb !important;
+    border-bottom: 1px solid #e5e7eb !important;
+}
+
+div.dt-container .dt-layout-bottom {
+    padding: 0.75rem 1.25rem !important;
+    background: #f9fafb !important;
+    border-top: 1px solid #e5e7eb !important;
+}
+
+div.dt-container .dt-layout-start,
+div.dt-container .dt-layout-end,
+div.dt-container .dt-layout-full {
+    display: flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    float: none !important;
+    width: auto !important;
+}
+
+/* ── Controls ── */
+div.dt-container .dt-length,
+div.dt-container .dt-search,
+div.dt-container .dt-info,
+div.dt-container .dt-paging {
+    display: inline-flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    float: none !important;
+}
+
+/* ── Labels ── */
+div.dt-container .dt-length label,
+div.dt-container .dt-search label {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    margin: 0 !important;
+    font-size: 0.8125rem !important;
+    font-weight: 500 !important;
+    color: #6b7280 !important;
+    white-space: nowrap !important;
+}
+
+/* ── Length select ── */
+div.dt-container .dt-length select {
+    display: inline-flex !important;
+    align-items: center !important;
+    width: auto !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+    border: 1px solid #e5e7eb !important;
+    background: #fff !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
+    padding: 0 32px 0 10px !important;
+    font-size: 0.8125rem !important;
+    font-weight: 500 !important;
+    color: #374151 !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    appearance: auto !important;
+    transition: border-color 0.15s, box-shadow 0.15s !important;
+    outline: none !important;
+}
+
+div.dt-container .dt-length select:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+}
+
+/* ── Search input con ícono SVG ── */
+div.dt-container .dt-search input {
+    display: block !important;
+    width: 220px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+    border: 1px solid #e5e7eb !important;
+    background-color: #fff !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: 10px center !important;
+    background-size: 15px 15px !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
+    padding: 0 12px 0 32px !important;
+    font-size: 0.8125rem !important;
+    color: #374151 !important;
+    transition: border-color 0.15s, box-shadow 0.15s !important;
+    outline: none !important;
+    margin: 0 !important;
+}
+
+div.dt-container .dt-search input::placeholder {
+    color: #9ca3af !important;
+}
+
+div.dt-container .dt-search input:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+}
+
+/* ── Info text ── */
+div.dt-container .dt-info {
+    font-size: 0.8rem !important;
+    color: #9ca3af !important;
+    font-weight: 400 !important;
+}
+
+/* ── Pagination ── */
+div.dt-container .dt-paging {
+    gap: 0 !important;
+}
+
+div.dt-container .dt-paging nav {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+div.dt-container .dt-paging .dt-paging-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    padding: 0 8px !important;
+    font-size: 0.8125rem !important;
+    font-weight: 500 !important;
+    border-radius: 7px !important;
+    border: 1px solid transparent !important;
+    color: #6b7280 !important;
+    background: transparent !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    text-decoration: none !important;
+    line-height: 1 !important;
+}
+
+div.dt-container .dt-paging .dt-paging-button:hover:not(.disabled) {
+    background: #fff !important;
+    border-color: #e5e7eb !important;
+    color: #2563eb !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
+}
+
+div.dt-container .dt-paging .dt-paging-button.current {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #fff !important;
+    font-weight: 600 !important;
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.35) !important;
+}
+
+div.dt-container .dt-paging .dt-paging-button.disabled {
+    opacity: 0.35 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+/* ── Tabla base ── */
+table.dataTable {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    border-spacing: 0 !important;
+}
+
+/* ── Cabeceras ── */
+table.dataTable thead th {
+    padding: 11px 16px !important;
+    text-align: left !important;
+    font-size: 0.7rem !important;
+    font-weight: 600 !important;
+    color: #9ca3af !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.06em !important;
+    background: #f9fafb !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    white-space: nowrap !important;
+    cursor: default !important;
+    user-select: none !important;
+}
+
+table.dataTable thead th.dt-orderable-asc,
+table.dataTable thead th.dt-orderable-desc {
+    cursor: pointer !important;
+}
+
+table.dataTable thead th.dt-orderable-asc:hover,
+table.dataTable thead th.dt-orderable-desc:hover {
+    color: #6b7280 !important;
+    background: #f3f4f6 !important;
+}
+
+table.dataTable thead th.dt-ordering-asc,
+table.dataTable thead th.dt-ordering-desc {
+    color: #374151 !important;
+    background: #f3f4f6 !important;
+}
+
+/* ── Íconos de ordenamiento personalizados ── */
+table.dataTable thead th span.dt-column-order {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    margin-left: 5px;
+    vertical-align: middle;
+    opacity: 0.3;
+    transition: opacity 0.15s;
+}
+
+/* Flechas via clip-path — modernas y limpias */
+table.dataTable thead th span.dt-column-order::before,
+table.dataTable thead th span.dt-column-order::after {
+    content: '' !important;
+    position: absolute !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-style: solid !important;
+}
+
+table.dataTable thead th span.dt-column-order::before {
+    top: 0 !important;
+    border-width: 0 4px 5px 4px !important;
+    border-color: transparent transparent #9ca3af transparent !important;
+}
+
+table.dataTable thead th span.dt-column-order::after {
+    bottom: 0 !important;
+    border-width: 5px 4px 0 4px !important;
+    border-color: #9ca3af transparent transparent transparent !important;
+}
+
+/* Columna activa — flecha destacada */
+table.dataTable thead th.dt-ordering-asc span.dt-column-order {
+    opacity: 1 !important;
+}
+table.dataTable thead th.dt-ordering-asc span.dt-column-order::before {
+    border-bottom-color: #2563eb !important;
+}
+table.dataTable thead th.dt-ordering-asc span.dt-column-order::after {
+    opacity: 0.2 !important;
+}
+
+table.dataTable thead th.dt-ordering-desc span.dt-column-order {
+    opacity: 1 !important;
+}
+table.dataTable thead th.dt-ordering-desc span.dt-column-order::after {
+    border-top-color: #2563eb !important;
+}
+table.dataTable thead th.dt-ordering-desc span.dt-column-order::before {
+    opacity: 0.2 !important;
+}
+
+/* Hover sobre columna orderable */
+table.dataTable thead th.dt-orderable-asc:hover span.dt-column-order,
+table.dataTable thead th.dt-orderable-desc:hover span.dt-column-order {
+    opacity: 0.6 !important;
+}
+
+/* ── Filas de datos ── */
+table.dataTable tbody td {
+    padding: 10px 16px !important;
+    font-size: 0.875rem !important;
+    color: #374151 !important;
+    background: #fff !important;
+    border-bottom: 1px solid #f3f4f6 !important;
+    vertical-align: middle !important;
+}
+
+table.dataTable tbody tr:last-child td {
+    border-bottom: none !important;
+}
+
+table.dataTable tbody tr:hover td {
+    background: #fafafa !important;
+}
+
+/* ── Empty state nativo de DT ── */
+table.dataTable tbody td.dataTables_empty {
+    text-align: center !important;
+    padding: 4rem 1rem !important;
+    color: #9ca3af !important;
+    font-size: 0.875rem !important;
+    background: #fff !important;
+    border-bottom: none !important;
+    font-style: normal !important;
+}
+
+/* ══════════════════════════════════════════
+   Responsive — Mobile
+   ══════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    div.dt-container .dt-layout-row {
+        gap: 0.5rem !important;
+    }
+
+    div.dt-container .dt-layout-top {
+        padding: 0.75rem 1rem !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    div.dt-container .dt-layout-bottom {
+        padding: 0.625rem 1rem !important;
+        flex-direction: column !important;
+        align-items: center !important;
+    }
+
+    div.dt-container .dt-layout-start,
+    div.dt-container .dt-layout-end {
+        justify-content: center !important;
+        width: 100% !important;
+    }
+
+    div.dt-container .dt-search input {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    div.dt-container .dt-paging nav {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    table.dataTable thead th {
+        padding: 8px 10px !important;
+        font-size: 0.65rem !important;
+    }
+
+    table.dataTable tbody td {
+        padding: 8px 10px !important;
+        font-size: 0.8125rem !important;
+    }
+}
