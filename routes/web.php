@@ -12,6 +12,7 @@ use App\Http\Controllers\SystemDocumentController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AreaController;
+use App\Http\Controllers\Admin\PersonaController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => redirect()->route('dashboard'));
@@ -71,6 +72,7 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Administración (solo admin) ───────────────────────────────────────
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::resource('personas', PersonaController::class);
         Route::resource('users', UserController::class);
         Route::resource('areas', AreaController::class);
     });
