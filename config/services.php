@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'dni_api' => [
+        'url' => env('DNI_API_URL', 'https://apidatos.unamad.edu.pe/api/consulta'),
+    ],
+
 ];

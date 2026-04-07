@@ -43,7 +43,8 @@ class LoginRequest extends FormRequest
         $this->ensureIsNotRateLimited();
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
+            $decaySeconds = (int) config('security.lockout_duration', 1) * 60;
+            RateLimiter::hit($this->throttleKey(), $decaySeconds);
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
@@ -60,7 +61,11 @@ class LoginRequest extends FormRequest
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        $maxAttempts    = (int) config('security.max_login_attempts', 5);
+        $lockoutMinutes = (int) config('security.lockout_duration', 1);
+        $decaySeconds   = $lockoutMinutes * 60;
+
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), $maxAttempts)) {
             return;
         }
 

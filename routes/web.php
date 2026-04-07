@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\PersonaController;
 use App\Http\Controllers\Admin\ServerController;
 use App\Http\Controllers\Admin\ServerContainerController;
 use App\Http\Controllers\Admin\DatabaseServerController;
+use App\Http\Controllers\Admin\SettingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => redirect()->route('dashboard'));
@@ -84,10 +85,17 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Administración (solo admin) ───────────────────────────────────────
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('personas/dni-lookup/{dni}', [PersonaController::class, 'dniLookup'])->name('personas.dni-lookup');
         Route::resource('personas', PersonaController::class);
         Route::resource('users', UserController::class);
         Route::resource('areas', AreaController::class);
         Route::resource('servers', ServerController::class);
+
+        // Configuración
+        Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
+        Route::post('settings/cache', [SettingController::class, 'clearCache'])->name('settings.cache');
+        Route::post('settings/mail', [SettingController::class, 'updateMail'])->name('settings.mail');
+        Route::post('settings/security', [SettingController::class, 'updateSecurity'])->name('settings.security');
 
         Route::prefix('servers/{server}')->name('servers.')->group(function () {
             Route::get('connect',                        [ServerController::class, 'connect'])->name('connect');

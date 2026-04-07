@@ -149,6 +149,7 @@
                 <span>Repositorios</span>
                 @if($active)<div class="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400"></div>@endif
             </a>
+
         </div>
         @endcan
     </nav>

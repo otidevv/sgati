@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Persona;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class PersonaController extends Controller
 {
@@ -63,6 +64,34 @@ class PersonaController extends Controller
 
         return redirect()->route('admin.personas.index')
             ->with('success', 'Persona actualizada correctamente.');
+    }
+
+    public function dniLookup(string $dni)
+    {
+        if (!preg_match('/^\d{8}$/', $dni)) {
+            return response()->json(['error' => 'DNI inválido.'], 422);
+        }
+
+        try {
+            $response = Http::timeout(8)
+                ->get(config('services.dni_api.url') . '/' . $dni);
+
+            if ($response->failed() || $response->json() === null) {
+                return response()->json(['error' => 'No se encontraron datos para este DNI.'], 404);
+            }
+
+            $data = $response->json();
+
+            return response()->json([
+                'nombres'          => ucwords(strtolower($data['NOMBRES'] ?? '')),
+                'apellido_paterno' => ucwords(strtolower($data['AP_PAT'] ?? '')),
+                'apellido_materno' => ucwords(strtolower($data['AP_MAT'] ?? '')),
+                'fecha_nacimiento' => $data['FECHA_NAC'] ?? null,
+                'sexo'             => match($data['SEXO'] ?? '') { '1' => 'M', '2' => 'F', default => '' },
+            ]);
+        } catch (\Throwable) {
+            return response()->json(['error' => 'No se pudo conectar con el servicio de consulta.'], 503);
+        }
     }
 
     public function destroy(Persona $persona)
