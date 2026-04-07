@@ -54,8 +54,15 @@
             @endcan
         </div>
         <div class="mt-2.5 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-            @if($db->server_host)
-            <div><span class="text-gray-400 dark:text-gray-500">Host</span><p class="font-mono text-gray-700 dark:text-gray-300 mt-0.5">{{ $db->server_host }}{{ $db->port ? ':' . $db->port : '' }}</p></div>
+            @if($db->databaseServer)
+            <div>
+                <span class="text-gray-400 dark:text-gray-500">Motor BD</span>
+                <p class="font-mono text-gray-700 dark:text-gray-300 mt-0.5">{{ $db->databaseServer->engine_label }}</p>
+            </div>
+            <div>
+                <span class="text-gray-400 dark:text-gray-500">Host</span>
+                <p class="font-mono text-gray-700 dark:text-gray-300 mt-0.5">{{ $db->databaseServer->connection_string }}</p>
+            </div>
             @endif
             @if($db->schema_name)
             <div><span class="text-gray-400 dark:text-gray-500">Schema</span><p class="font-mono text-gray-700 dark:text-gray-300 mt-0.5">{{ $db->schema_name }}</p></div>

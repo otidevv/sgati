@@ -29,23 +29,35 @@
                     <select id="engine" name="engine" required
                             class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                         <option value="">Seleccionar…</option>
-                        @foreach(['postgresql'=>'PostgreSQL','mysql'=>'MySQL','oracle'=>'Oracle','sqlserver'=>'SQL Server','sqlite'=>'SQLite','mongodb'=>'MongoDB','other'=>'Otro'] as $v => $l)
+                        @foreach(['postgresql'=>'PostgreSQL','mysql'=>'MySQL','mariadb'=>'MariaDB','oracle'=>'Oracle','sqlserver'=>'SQL Server','sqlite'=>'SQLite','mongodb'=>'MongoDB','other'=>'Otro'] as $v => $l)
                         <option value="{{ $v }}" {{ old('engine') === $v ? 'selected' : '' }}>{{ $l }}</option>
                         @endforeach
                     </select>
                     @error('engine')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
-                <div>
-                    <label for="server_host" class="block text-sm font-medium text-gray-700 mb-1">Host</label>
-                    <input type="text" id="server_host" name="server_host" value="{{ old('server_host') }}"
-                           class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
-                           placeholder="localhost / 192.168.1.10">
+                <div class="sm:col-span-2">
+                    <label for="database_server_id" class="block text-sm font-medium text-gray-700 mb-1">Motor de BD (servidor)</label>
+                    <select id="database_server_id" name="database_server_id"
+                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <option value="">— Sin motor asignado —</option>
+                        @foreach($databaseServers as $ds)
+                        <option value="{{ $ds->id }}" {{ old('database_server_id') == $ds->id ? 'selected' : '' }}>
+                            {{ $ds->name ?: strtoupper($ds->engine) }}{{ $ds->version ? ' ' . $ds->version : '' }}{{ $ds->host ? ' — ' . $ds->host : '' }}
+                        </option>
+                        @endforeach
+                    </select>
+                    @error('database_server_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label for="port" class="block text-sm font-medium text-gray-700 mb-1">Puerto</label>
-                    <input type="number" id="port" name="port" value="{{ old('port') }}"
-                           class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                           placeholder="5432">
+                    <label for="db_user" class="block text-sm font-medium text-gray-700 mb-1">Usuario BD</label>
+                    <input type="text" id="db_user" name="db_user" value="{{ old('db_user') }}"
+                           class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
+                           placeholder="usuario_bd">
+                </div>
+                <div>
+                    <label for="db_password" class="block text-sm font-medium text-gray-700 mb-1">Contraseña BD</label>
+                    <input type="password" id="db_password" name="db_password" autocomplete="new-password"
+                           class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                 </div>
                 <div>
                     <label for="schema_name" class="block text-sm font-medium text-gray-700 mb-1">Schema</label>

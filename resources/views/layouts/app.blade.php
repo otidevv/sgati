@@ -87,7 +87,7 @@
             @endif
 
             {{-- Page Content --}}
-            <main class="flex-1 p-4 sm:p-6">
+            <main class="flex-1 p-5 sm:p-8">
                 @yield('content')
             </main>
 

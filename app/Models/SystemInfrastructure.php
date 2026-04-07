@@ -10,9 +10,9 @@ class SystemInfrastructure extends Model
     protected $table = 'system_infrastructure';
 
     protected $fillable = [
-        'system_id', 'server_name', 'server_os', 'server_ip', 'public_ip',
-        'system_url', 'port', 'web_server', 'ssl_enabled', 'ssl_expiry',
-        'environment', 'notes',
+        'system_id', 'server_id',
+        'public_ip', 'system_url', 'port', 'web_server',
+        'ssl_enabled', 'ssl_expiry', 'environment', 'notes',
     ];
 
     protected function casts(): array
@@ -27,5 +27,10 @@ class SystemInfrastructure extends Model
     public function system()
     {
         return $this->belongsTo(System::class);
+    }
+
+    public function server()
+    {
+        return $this->belongsTo(Server::class);
     }
 }

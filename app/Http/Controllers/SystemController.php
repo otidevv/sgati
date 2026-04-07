@@ -62,8 +62,12 @@ class SystemController extends Controller
     public function show(System $system)
     {
         $system->load([
-            'area', 'responsible', 'infrastructure',
-            'versions', 'databases', 'services',
+            'area', 'responsible',
+            'infrastructure.server.ips',
+            'versions',
+            'databases.databaseServer',
+            'services',
+            'repositories',
             'integrationsFrom.targetSystem',
             'integrationsTo.sourceSystem',
             'documents.uploadedBy', 'statusLogs.changedBy',

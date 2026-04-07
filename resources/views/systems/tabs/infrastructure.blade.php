@@ -25,7 +25,7 @@
         @endcan
     </div>
 
-    @if(!$infra || (!$infra->server_name && !$infra->system_url && !$infra->server_ip))
+    @if(!$infra || (!$infra->server_id && !$infra->system_url))
     {{-- Empty State --}}
     <div class="text-center py-16 bg-gray-50 dark:bg-gray-800 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700">
         <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-full w-fit mx-auto mb-4">
@@ -59,50 +59,95 @@
                 </div>
             </div>
             <div class="p-5 space-y-4">
-                @foreach([
-                    ['Nombre del Servidor', $infra->server_name, 'server'],
-                    ['Sistema Operativo', $infra->server_os, 'desktop'],
-                    ['IP Interna', $infra->server_ip, 'ip'],
-                    ['IP Pública', $infra->public_ip, 'globe'],
-                    ['Puerto', $infra->port, 'port'],
-                    ['Web Server', $infra->web_server, 'cloud'],
-                ] as [$label, $value, $icon])
-                @if($value)
+                @if($infra->server)
+                @php $srv = $infra->server; @endphp
+                {{-- Server name --}}
                 <div class="flex items-start gap-3">
                     <div class="flex-shrink-0 mt-0.5">
-                        @if($icon === 'server')
-                            <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"/>
-                            </svg>
-                        @elseif($icon === 'desktop')
-                            <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                            </svg>
-                        @elseif($icon === 'ip')
-                            <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
-                            </svg>
-                        @elseif($icon === 'globe')
-                            <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
-                            </svg>
-                        @elseif($icon === 'port')
-                            <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-                            </svg>
-                        @elseif($icon === 'cloud')
-                            <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
-                            </svg>
-                        @endif
+                        <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"/>
+                        </svg>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">{{ $label }}</p>
-                        <p class="text-sm font-mono text-gray-900 dark:text-gray-200 mt-0.5 break-all">{{ $value }}</p>
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Servidor</p>
+                        <a href="{{ route('admin.servers.show', $srv) }}"
+                           class="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">{{ $srv->name }}</a>
+                        @if($srv->function)
+                        <span class="ml-2 inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-{{ $srv->function->color() }}-100 dark:bg-{{ $srv->function->color() }}-900/30 text-{{ $srv->function->color() }}-700 dark:text-{{ $srv->function->color() }}-300">
+                            {{ $srv->function->label() }}
+                        </span>
+                        @endif
+                    </div>
+                </div>
+                {{-- OS --}}
+                @if($srv->operating_system)
+                <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0 mt-0.5">
+                        <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Sistema Operativo</p>
+                        <p class="text-sm text-gray-900 dark:text-gray-200 mt-0.5">{{ $srv->operating_system }}</p>
                     </div>
                 </div>
                 @endif
-                @endforeach
+                {{-- IPs --}}
+                @if($srv->ips->count())
+                <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0 mt-0.5">
+                        <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Direcciones IP</p>
+                        <div class="mt-1 flex flex-wrap gap-1.5">
+                            @foreach($srv->ips as $ip)
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono
+                                {{ $ip->type === 'public' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300' }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $ip->type === 'public' ? 'bg-blue-500' : 'bg-slate-400' }}"></span>
+                                {{ $ip->ip_address }}
+                                @if($ip->is_primary)<span class="opacity-60">•</span>@endif
+                            </span>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                @endif
+                {{-- Web root --}}
+                @if($srv->web_root)
+                <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0 mt-0.5">
+                        <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Ruta Web</p>
+                        <p class="text-sm font-mono text-gray-900 dark:text-gray-200 mt-0.5 break-all">{{ $srv->web_root }}</p>
+                    </div>
+                </div>
+                @endif
+                @else
+                <p class="text-sm text-gray-400 dark:text-gray-500 italic">Sin servidor asignado.</p>
+                @endif
+
+                {{-- Web server software --}}
+                @if($infra->web_server)
+                <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0 mt-0.5">
+                        <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Web Server</p>
+                        <p class="text-sm text-gray-900 dark:text-gray-200 mt-0.5">{{ $infra->web_server }}</p>
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
 

@@ -24,39 +24,26 @@
         {{-- Servidor --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">
-                <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Datos del Servidor</h2>
+                <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Servidor</h2>
             </div>
-            <div class="p-6 space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label for="server_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre del Servidor</label>
-                        <input type="text" id="server_name" name="server_name" value="{{ old('server_name', $infra->server_name) }}"
-                               class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                               placeholder="srv-unamad-01">
-                        @error('server_name')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
-                    </div>
-                    <div>
-                        <label for="server_os" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sistema Operativo</label>
-                        <input type="text" id="server_os" name="server_os" value="{{ old('server_os', $infra->server_os) }}"
-                               class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                               placeholder="Ubuntu 22.04 LTS">
-                        @error('server_os')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
-                    </div>
-                    <div>
-                        <label for="server_ip" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">IP Interna</label>
-                        <input type="text" id="server_ip" name="server_ip" value="{{ old('server_ip', $infra->server_ip) }}"
-                               class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
-                               placeholder="192.168.1.100">
-                        @error('server_ip')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
-                    </div>
-                    <div>
-                        <label for="public_ip" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">IP Pública</label>
-                        <input type="text" id="public_ip" name="public_ip" value="{{ old('public_ip', $infra->public_ip) }}"
-                               class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
-                               placeholder="200.X.X.X">
-                        @error('public_ip')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
-                    </div>
-                </div>
+            <div class="p-6">
+                <label for="server_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Servidor asignado</label>
+                <select id="server_id" name="server_id"
+                        class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <option value="">— Sin servidor —</option>
+                    @foreach($servers as $srv)
+                    <option value="{{ $srv->id }}" {{ old('server_id', $infra->server_id) == $srv->id ? 'selected' : '' }}>
+                        {{ $srv->name }}{{ $srv->operating_system ? ' (' . $srv->operating_system . ')' : '' }}
+                    </option>
+                    @endforeach
+                </select>
+                @error('server_id')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
+                @if($servers->isEmpty())
+                <p class="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                    No hay servidores registrados.
+                    <a href="{{ route('admin.servers.create') }}" class="underline hover:no-underline">Registrar uno aquí</a>.
+                </p>
+                @endif
             </div>
         </div>
 
@@ -66,20 +53,13 @@
                 <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Web & SSL</h2>
             </div>
             <div class="p-6 space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="sm:col-span-2">
                         <label for="system_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL del Sistema</label>
                         <input type="url" id="system_url" name="system_url" value="{{ old('system_url', $infra->system_url) }}"
                                class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                placeholder="https://sistema.unamad.edu.pe">
                         @error('system_url')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
-                    </div>
-                    <div>
-                        <label for="port" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Puerto</label>
-                        <input type="number" id="port" name="port" value="{{ old('port', $infra->port) }}"
-                               class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                               placeholder="443" min="1" max="65535">
-                        @error('port')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label for="web_server" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Servidor Web</label>

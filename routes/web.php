@@ -9,10 +9,14 @@ use App\Http\Controllers\SystemDatabaseController;
 use App\Http\Controllers\SystemServiceController;
 use App\Http\Controllers\SystemIntegrationController;
 use App\Http\Controllers\SystemDocumentController;
+use App\Http\Controllers\SystemRepositoryController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AreaController;
 use App\Http\Controllers\Admin\PersonaController;
+use App\Http\Controllers\Admin\ServerController;
+use App\Http\Controllers\Admin\ServerContainerController;
+use App\Http\Controllers\Admin\DatabaseServerController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => redirect()->route('dashboard'));
@@ -59,11 +63,19 @@ Route::middleware(['auth'])->group(function () {
             ->except(['index', 'show', 'edit', 'update']);
         Route::get('documents/{document}/download', [SystemDocumentController::class, 'download'])
             ->name('documents.download');
+
+        // Repositorios
+        Route::resource('repositories', SystemRepositoryController::class)
+            ->except(['index', 'show']);
     });
 
     // ── Repositorio general de documentos ────────────────────────────────
     Route::get('/documents', [SystemDocumentController::class, 'repository'])
         ->name('documents.repository');
+
+    // ── Repositorios (vista global) ───────────────────────────────────────
+    Route::get('/repositories', [SystemRepositoryController::class, 'index'])
+        ->name('repositories.index');
 
     // ── Reportes ──────────────────────────────────────────────────────────
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
@@ -75,6 +87,17 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('personas', PersonaController::class);
         Route::resource('users', UserController::class);
         Route::resource('areas', AreaController::class);
+        Route::resource('servers', ServerController::class);
+
+        Route::prefix('servers/{server}')->name('servers.')->group(function () {
+            Route::post('containers',                    [ServerContainerController::class, 'store'])->name('containers.store');
+            Route::put('containers/{container}',         [ServerContainerController::class, 'update'])->name('containers.update');
+            Route::delete('containers/{container}',      [ServerContainerController::class, 'destroy'])->name('containers.destroy');
+
+            Route::post('database-servers',              [DatabaseServerController::class, 'store'])->name('database-servers.store');
+            Route::put('database-servers/{databaseServer}', [DatabaseServerController::class, 'update'])->name('database-servers.update');
+            Route::delete('database-servers/{databaseServer}', [DatabaseServerController::class, 'destroy'])->name('database-servers.destroy');
+        });
     });
 });
 

@@ -44,6 +44,22 @@ class System extends Model
         return $this->hasOne(SystemInfrastructure::class);
     }
 
+    /**
+     * Servidor donde está alojado este sistema.
+     * Atajo: $system->server en lugar de $system->infrastructure->server
+     */
+    public function server()
+    {
+        return $this->hasOneThrough(
+            Server::class,
+            SystemInfrastructure::class,
+            'system_id',  // FK en system_infrastructure → systems
+            'id',         // PK en servers
+            'id',         // PK en systems
+            'server_id',  // FK en system_infrastructure → servers
+        );
+    }
+
     public function versions()
     {
         return $this->hasMany(SystemVersion::class)->orderByDesc('release_date');
@@ -67,6 +83,16 @@ class System extends Model
     public function statusLogs()
     {
         return $this->hasMany(SystemStatusLog::class)->orderByDesc('created_at');
+    }
+
+    public function repositories()
+    {
+        return $this->hasMany(Repository::class);
+    }
+
+    public function containers()
+    {
+        return $this->hasMany(ServerContainer::class);
     }
 
     public function integrationsFrom()
