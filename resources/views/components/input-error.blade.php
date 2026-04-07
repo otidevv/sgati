@@ -1,7 +1,9 @@
-@props(['disabled' => false, 'message'])
+@props(['messages' => []])
 
-@if ($message)
-<p {{ $attributes->merge(['class' => 'text-sm text-red-600 dark:text-red-400']) }}>
-    {{ $message }}
-</p>
+@if ($messages)
+    @foreach ((array) $messages as $message)
+        <p {{ $attributes->merge(['class' => 'text-sm text-red-600 dark:text-red-400']) }}>
+            {{ $message }}
+        </p>
+    @endforeach
 @endif

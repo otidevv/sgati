@@ -28,12 +28,12 @@
     </div>
 
     <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        <div class="w-full">
-            <table id="users-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" style="width:100%">
-                <thead class="bg-gray-50 dark:bg-gray-700/50"><tr><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Usuario</th><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Rol</th><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Área</th><th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th><th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th></tr></thead>
-                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+        <div class="overflow-x-auto">
+            <table id="users-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700/50"><tr class="bg-gray-50 dark:bg-gray-700/50"><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Usuario</th><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Rol</th><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Área</th><th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th><th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th></tr></thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
                     @forelse($users as $user)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <tr class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                         <td><div class="flex items-center gap-3"><div class="flex-shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-xs">{{ strtoupper(substr($user->name, 0, 2)) }}</div><div class="min-w-0"><p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ $user->name }}</p>@if($user->persona)<p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ $user->persona->nombre_corto }}</p>@endif</div></div></td>
                         <td><span class="text-sm text-gray-700 dark:text-gray-300">{{ $user->email }}</span></td>
                         <td>@if($user->role)<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">{{ $user->role->label }}</span>@else<span class="text-gray-400 dark:text-gray-500 text-xs">—</span>@endif</td>
@@ -45,10 +45,10 @@
                     @endforelse
                 </tbody>
             </table>
-            @if($users->isEmpty())
-            <div class="text-center py-16"><div class="mx-auto w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"><svg class="w-8 h-8 text-gray-300 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg></div><h3 class="mt-4 text-sm font-semibold text-gray-900 dark:text-white">No hay usuarios registrados</h3><p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Primero registra personas, luego crea sus cuentas.</p><div class="mt-6"><a href="{{ route('admin.personas.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>Registrar Persona</a></div></div>
-            @endif
         </div>
+        @if($users->isEmpty())
+        <div class="text-center py-16 bg-white dark:bg-gray-800"><div class="mx-auto w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"><svg class="w-8 h-8 text-gray-300 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg></div><h3 class="mt-4 text-sm font-semibold text-gray-900 dark:text-white">No hay usuarios registrados</h3><p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Primero registra personas, luego crea sus cuentas.</p><div class="mt-6"><a href="{{ route('admin.personas.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>Registrar Persona</a></div></div>
+        @endif
     </div>
 </div>
 
@@ -78,5 +78,63 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+@endpush
+
+@push('styles')
+<style>
+/* DataTables Dark Mode Support */
+.dark .dataTables_wrapper .dataTables_length,
+.dark .dataTables_wrapper .dataTables_filter,
+.dark .dataTables_wrapper .dataTables_info,
+.dark .dataTables_wrapper .dataTables_processing,
+.dark .dataTables_wrapper .dataTables_paginate {
+    color: #9ca3af;
+}
+
+.dark .dataTables_wrapper .dataTables_paginate .paginate_button {
+    color: #9ca3af !important;
+}
+
+.dark .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dark .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+    background: #374151 !important;
+    color: #ffffff !important;
+    border-color: #4b5563 !important;
+}
+
+.dark .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: #4b5563 !important;
+    color: #ffffff !important;
+    border-color: #6b7280 !important;
+}
+
+.dark .dataTables_wrapper .dataTables_filter input {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #e5e7eb;
+}
+
+.dark .dataTables_wrapper .dataTables_filter input::placeholder {
+    color: #9ca3af;
+}
+
+.dark .dataTables_wrapper .dataTables_length select {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #e5e7eb;
+}
+
+.dark table.dataTable tbody tr {
+    background-color: #1f2937;
+}
+
+.dark table.dataTable tbody tr:hover {
+    background-color: #374151 !important;
+}
+
+.dark table.dataTable tbody td {
+    color: #e5e7eb;
+}
+</style>
 @endpush
 @endsection
