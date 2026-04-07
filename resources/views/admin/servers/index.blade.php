@@ -146,6 +146,32 @@
                 {{-- Acciones --}}
                 <td class="px-5 py-3.5 text-right">
                     <div class="inline-flex items-center gap-1">
+
+                        {{-- Conectar via Guacamole --}}
+                        @if($server->guacamole_connection_id)
+                        <button type="button" title="Escritorio remoto (RDP)"
+                                onclick="guacConnect(this, '{{ route('admin.servers.connect', $server) }}')"
+                                class="inline-flex items-center justify-center w-8 h-8 rounded-lg
+                                       text-gray-400 dark:text-gray-500
+                                       hover:text-green-600 dark:hover:text-green-400
+                                       hover:bg-green-50 dark:hover:bg-green-900/30 transition-all">
+                            {{-- monitor icon --}}
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        @else
+                        <span title="Sin conexión Guacamole"
+                              class="inline-flex items-center justify-center w-8 h-8 rounded-lg
+                                     text-gray-200 dark:text-gray-700 cursor-not-allowed">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                        </span>
+                        @endif
+
                         <a href="{{ route('admin.servers.show', $server) }}" title="Ver detalle"
                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg
                                   text-gray-400 dark:text-gray-500
@@ -216,3 +242,33 @@
 
 </div>
 @endsection
+
+@push('scripts')
+<script>
+async function guacConnect(btn, url) {
+    // Deshabilitar botón y mostrar spinner
+    btn.disabled = true;
+    const original = btn.innerHTML;
+    btn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+    </svg>`;
+
+    try {
+        const res  = await fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+        const data = await res.json();
+
+        if (data.url) {
+            window.open(data.url, '_blank', 'noopener,noreferrer');
+        } else {
+            alert('Error al conectar: ' + (data.error ?? 'Respuesta inesperada'));
+        }
+    } catch (e) {
+        alert('No se pudo contactar al servidor. Verifica la configuración de Guacamole.');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = original;
+    }
+}
+</script>
+@endpush

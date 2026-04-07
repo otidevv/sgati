@@ -16,10 +16,10 @@ class UserSeeder extends Seeder
         $admin = Role::where('name', 'admin')->first();
 
         User::firstOrCreate(
-            ['email' => 'admin@unamad.edu.pe'],
+            ['email' => 'dmamanic@unamad.edu.pe'],
             [
                 'name'      => 'Administrador OTI',
-                'password'  => Hash::make('CambiarPassword123!'),
+                'password'  => Hash::make('123'),
                 'role_id'   => $admin?->id,
                 'area_id'   => $oti?->id,
                 'is_active' => true,

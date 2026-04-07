@@ -90,6 +90,8 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('servers', ServerController::class);
 
         Route::prefix('servers/{server}')->name('servers.')->group(function () {
+            Route::get('connect',                        [ServerController::class, 'connect'])->name('connect');
+
             Route::post('containers',                    [ServerContainerController::class, 'store'])->name('containers.store');
             Route::put('containers/{container}',         [ServerContainerController::class, 'update'])->name('containers.update');
             Route::delete('containers/{container}',      [ServerContainerController::class, 'destroy'])->name('containers.destroy');

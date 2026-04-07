@@ -278,34 +278,54 @@
                 </div>
             </div>
 
-            {{-- ── Acceso SSH ── --}}
+            {{-- ── Acceso Remoto (RDP / SSH) ── --}}
+            @php
+                $osVal       = old('operating_system', $server->operating_system ?? '');
+                $isWindows   = str_contains(strtolower($osVal), 'windows');
+                $proto       = $isWindows ? 'rdp' : 'ssh';
+                $defaultPort = $isWindows ? 3389 : 22;
+            @endphp
             <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-2">
                     <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                     </svg>
-                    <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                        Acceso SSH
+                    <h2 id="access-section-title"
+                        class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                        Acceso Remoto
                     </h2>
+                    {{-- Badge de protocolo detectado --}}
+                    <span id="proto-badge"
+                          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold tracking-wide
+                                 {{ $proto === 'rdp'
+                                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+                                    : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' }}">
+                        {{ strtoupper($proto) }}
+                    </span>
                     <span class="text-xs text-gray-400 font-normal">(credenciales encriptadas)</span>
                 </div>
                 <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
+
+                    {{-- Usuario --}}
                     <div>
-                        <label for="ssh_user" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                            Usuario SSH
+                        <label for="ssh_user" id="label-user"
+                               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                            {{ $proto === 'rdp' ? 'Usuario Windows' : 'Usuario SSH' }}
                         </label>
                         <input type="text" id="ssh_user" name="ssh_user"
                                value="{{ old('ssh_user', $server->ssh_user ?? '') }}"
-                               placeholder="root"
+                               placeholder="{{ $proto === 'rdp' ? 'Administrator' : 'root' }}"
                                autocomplete="off"
                                class="w-full rounded-lg border-gray-300 dark:border-gray-600
                                       dark:bg-gray-700 dark:text-white font-mono
                                       focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                     </div>
+
+                    {{-- Contraseña --}}
                     <div>
                         <label for="ssh_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                            Contraseña SSH
+                            Contraseña
                             @if(isset($server->id))
                             <span class="font-normal text-gray-400 text-xs ml-1">(dejar vacío para no cambiar)</span>
                             @endif
@@ -317,6 +337,49 @@
                                       dark:bg-gray-700 dark:text-white
                                       focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                     </div>
+
+                    {{-- Puerto --}}
+                    <div>
+                        <label for="rdp_port" id="label-port"
+                               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                            Puerto {{ strtoupper($proto) }}
+                        </label>
+                        <div class="relative">
+                            <input type="number" id="rdp_port" name="rdp_port"
+                                   min="1" max="65535"
+                                   value="{{ old('rdp_port', $server->rdp_port ?? $defaultPort) }}"
+                                   placeholder="{{ $defaultPort }}"
+                                   class="w-full rounded-lg border-gray-300 dark:border-gray-600
+                                          dark:bg-gray-700 dark:text-white font-mono
+                                          focus:ring-blue-500 focus:border-blue-500 sm:text-sm pr-16">
+                            <span id="port-suffix"
+                                  class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono font-semibold
+                                         {{ $proto === 'rdp' ? 'text-blue-400' : 'text-emerald-400' }}">
+                                {{ strtoupper($proto) }}
+                            </span>
+                        </div>
+                        <p id="port-hint" class="mt-1 text-xs text-gray-400">
+                            {{ $proto === 'rdp' ? 'Puerto RDP por defecto: 3389' : 'Puerto SSH por defecto: 22' }}
+                        </p>
+                    </div>
+
+                    {{-- Indicador visual de qué se va a crear en Guacamole --}}
+                    <div class="flex items-end pb-1">
+                        <div id="guac-info"
+                             class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs
+                                    {{ $proto === 'rdp'
+                                       ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                                       : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' }}">
+                            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            <span id="guac-info-text">
+                                Se creará conexión <strong>{{ strtoupper($proto) }}</strong> en Guacamole automáticamente
+                            </span>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -467,6 +530,67 @@ function addIpRow() {
     div.querySelector('input[type=text]').focus();
     ipIndex++;
 }
+
+// ── Detección de protocolo según OS ─────────────────────────────────
+(function () {
+    const osInput    = document.getElementById('operating_system');
+    const badge      = document.getElementById('proto-badge');
+    const labelUser  = document.getElementById('label-user');
+    const userInput  = document.getElementById('ssh_user');
+    const labelPort  = document.getElementById('label-port');
+    const portInput  = document.getElementById('rdp_port');
+    const portSuffix = document.getElementById('port-suffix');
+    const portHint   = document.getElementById('port-hint');
+    const guacInfo   = document.getElementById('guac-info');
+    const guacText   = document.getElementById('guac-info-text');
+
+    function applyProtocol(os) {
+        const isWin = /windows/i.test(os);
+        const proto = isWin ? 'rdp' : 'ssh';
+        const port  = isWin ? 3389 : 22;
+
+        // Badge
+        badge.textContent = proto.toUpperCase();
+        badge.className = badge.className
+            .replace(/bg-\w+-100|text-\w+-700|dark:bg-\w+-900\/40|dark:text-\w+-300/g, '').trim();
+        if (isWin) {
+            badge.classList.add('bg-blue-100','text-blue-700','dark:bg-blue-900/40','dark:text-blue-300');
+        } else {
+            badge.classList.add('bg-emerald-100','text-emerald-700','dark:bg-emerald-900/40','dark:text-emerald-300');
+        }
+
+        // Labels y placeholders
+        labelUser.textContent = isWin ? 'Usuario Windows' : 'Usuario SSH';
+        userInput.placeholder = isWin ? 'Administrator' : 'root';
+        labelPort.textContent = `Puerto ${proto.toUpperCase()}`;
+        portSuffix.textContent = proto.toUpperCase();
+        portSuffix.className = portSuffix.className
+            .replace(/text-\w+-400/g, '').trim() + (isWin ? ' text-blue-400' : ' text-emerald-400');
+        portHint.textContent = isWin ? 'Puerto RDP por defecto: 3389' : 'Puerto SSH por defecto: 22';
+
+        // Solo cambiar el puerto si el usuario no lo ha tocado o está vacío
+        if (!portInput.dataset.touched) {
+            portInput.value       = port;
+            portInput.placeholder = port;
+        }
+
+        // Info Guacamole
+        guacText.innerHTML = `Se creará conexión <strong>${proto.toUpperCase()}</strong> en Guacamole automáticamente`;
+        guacInfo.className = guacInfo.className
+            .replace(/bg-\w+-50|dark:bg-\w+-900\/20|text-\w+-700|dark:text-\w+-300/g, '').trim();
+        if (isWin) {
+            guacInfo.classList.add('bg-blue-50','dark:bg-blue-900/20','text-blue-700','dark:text-blue-300');
+        } else {
+            guacInfo.classList.add('bg-emerald-50','dark:bg-emerald-900/20','text-emerald-700','dark:text-emerald-300');
+        }
+    }
+
+    // Marcar si el usuario toca el puerto manualmente
+    portInput.addEventListener('input', () => { portInput.dataset.touched = '1'; });
+
+    // Escuchar cambios en el campo OS
+    osInput.addEventListener('input', () => applyProtocol(osInput.value));
+})();
 
 function toggleActive() {
     const btn   = document.getElementById('toggle-active');

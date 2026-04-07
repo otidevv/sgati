@@ -15,6 +15,7 @@ class Server extends Model
         'cpu_cores', 'ram_gb', 'storage_gb',
         'cloud_provider', 'cloud_region', 'cloud_instance',
         'installed_services', 'web_root', 'is_active', 'notes',
+        'guacamole_connection_id', 'rdp_port',
     ];
 
     protected function casts(): array
@@ -108,5 +109,24 @@ class Server extends Model
     public function getInstalledServicesStringAttribute(): string
     {
         return implode(', ', $this->installed_services ?? []);
+    }
+
+    /**
+     * Detecta el protocolo Guacamole según el sistema operativo.
+     * Windows → rdp  |  cualquier otro → ssh
+     */
+    public function getGuacamoleProtocolAttribute(): string
+    {
+        return str_contains(strtolower($this->operating_system ?? ''), 'windows')
+            ? 'rdp'
+            : 'ssh';
+    }
+
+    /**
+     * Puerto por defecto según protocolo detectado.
+     */
+    public function getDefaultRemotePortAttribute(): int
+    {
+        return $this->guacamole_protocol === 'rdp' ? 3389 : 22;
     }
 }

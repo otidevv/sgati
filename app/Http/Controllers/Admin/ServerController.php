@@ -7,7 +7,9 @@ use App\Models\Server;
 use App\Models\ServerIp;
 use App\Models\ServerContainer;
 use App\Enums\ServerFunction;
+use App\Services\GuacamoleService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ServerController extends Controller
@@ -50,6 +52,7 @@ class ServerController extends Controller
             'installed_services' => 'nullable|string',
             'is_active'          => 'boolean',
             'notes'              => 'nullable|string',
+            'rdp_port'           => 'nullable|integer|min:1|max:65535',
             'ips'                => 'nullable|array',
             'ips.*.ip_address'   => 'required|string|max:45',
             'ips.*.type'         => 'required|in:private,public',
@@ -60,6 +63,7 @@ class ServerController extends Controller
         $data['slug']               = Str::slug($data['name']);
         $data['is_active']          = $request->boolean('is_active', true);
         $data['installed_services'] = $this->parseServices($request->input('installed_services'));
+        $data['rdp_port']           = $data['rdp_port'] ?? 3389;
 
         $ips = $data['ips'] ?? [];
         unset($data['ips']);
@@ -75,6 +79,9 @@ class ServerController extends Controller
                 'is_primary' => isset($ip['is_primary']) || $i === 0,
             ]);
         }
+
+        // ── Crear conexión en Guacamole ───────────────────────────────
+        $this->syncGuacamoleConnection($server, 'create');
 
         return redirect()->route('admin.servers.show', $server)
             ->with('success', 'Servidor registrado correctamente.');
@@ -119,6 +126,7 @@ class ServerController extends Controller
             'installed_services' => 'nullable|string',
             'is_active'          => 'boolean',
             'notes'              => 'nullable|string',
+            'rdp_port'           => 'nullable|integer|min:1|max:65535',
             'ips'                => 'nullable|array',
             'ips.*.ip_address'   => 'required|string|max:45',
             'ips.*.type'         => 'required|in:private,public',
@@ -151,21 +159,105 @@ class ServerController extends Controller
             ]);
         }
 
+        // ── Sincronizar conexión en Guacamole ─────────────────────────
+        $server->refresh()->load('ips', 'primaryIp');
+        $this->syncGuacamoleConnection($server, 'update');
+
         return redirect()->route('admin.servers.show', $server)
             ->with('success', 'Servidor actualizado correctamente.');
     }
 
     public function destroy(Server $server)
     {
+        // ── Eliminar conexión en Guacamole primero ────────────────────
+        if ($server->guacamole_connection_id) {
+            try {
+                $guac   = new GuacamoleService();
+                $auth   = $guac->authenticate();
+                $guac->deleteConnection(
+                    $server->guacamole_connection_id,
+                    $auth['authToken'],
+                    $auth['dataSource']
+                );
+            } catch (\Throwable $e) {
+                Log::warning("No se pudo eliminar la conexión Guacamole del servidor [{$server->name}]: {$e->getMessage()}");
+            }
+        }
+
         $server->delete();
 
         return redirect()->route('admin.servers.index')
             ->with('success', 'Servidor eliminado.');
     }
 
+    /**
+     * Genera un token de sesión fresco en Guacamole y redirige al cliente RDP.
+     * Se abre en una nueva pestaña desde el frontend.
+     */
+    public function connect(Server $server)
+    {
+        if (! $server->guacamole_connection_id) {
+            return back()->with('error', "El servidor [{$server->name}] no tiene conexión Guacamole configurada. Edítalo y guárdalo para generarla.");
+        }
+
+        try {
+            $guac  = new GuacamoleService();
+            $auth  = $guac->authenticate();
+            $url   = $guac->buildClientUrl(
+                $server->guacamole_connection_id,
+                $auth['authToken'],
+                $auth['dataSource']
+            );
+
+            // Devolvemos la URL como JSON para que el JS la abra en nueva pestaña
+            if (request()->expectsJson()) {
+                return response()->json(['url' => $url]);
+            }
+
+            return redirect($url);
+
+        } catch (\Throwable $e) {
+            Log::error("Error al conectar con Guacamole [{$server->name}]: {$e->getMessage()}");
+
+            if (request()->expectsJson()) {
+                return response()->json(['error' => $e->getMessage()], 502);
+            }
+
+            return back()->with('error', "No se pudo conectar: {$e->getMessage()}");
+        }
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────
+
     private function parseServices(?string $input): array
     {
         if (empty($input)) return [];
         return array_values(array_filter(array_map('trim', explode(',', $input))));
+    }
+
+    /**
+     * Crea o actualiza la conexión RDP del servidor en Guacamole.
+     * Los errores se loguean pero NO interrumpen el flujo principal.
+     */
+    private function syncGuacamoleConnection(Server $server, string $action): void
+    {
+        try {
+            $guac = new GuacamoleService();
+            $auth = $guac->authenticate();
+
+            if ($action === 'update' && $server->guacamole_connection_id) {
+                $guac->updateConnection(
+                    $server,
+                    $server->guacamole_connection_id,
+                    $auth['authToken'],
+                    $auth['dataSource']
+                );
+            } else {
+                $connectionId = $guac->createConnection($server, $auth['authToken'], $auth['dataSource']);
+                $server->update(['guacamole_connection_id' => $connectionId]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning("No se pudo sincronizar Guacamole para [{$server->name}]: {$e->getMessage()}");
+        }
     }
 }
