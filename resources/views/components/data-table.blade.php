@@ -73,68 +73,32 @@
     </div>
 </div>
 
-{{-- ══ Delete confirmation modal (one instance per page) ══ --}}
-@once
-<div id="dt-modal-delete"
-     class="hidden fixed inset-0 z-50 items-center justify-center p-4"
-     role="dialog" aria-modal="true">
-    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-         onclick="dtCloseModal()"></div>
-    <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-sm w-full p-6">
-        <div class="flex items-center gap-4 mb-5">
-            <div class="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30
-                        flex items-center justify-center">
-                <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none"
-                     viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94
-                             a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                </svg>
-            </div>
-            <div>
-                <h3 class="text-base font-semibold text-gray-900 dark:text-white">
-                    Confirmar eliminación
-                </h3>
-                <p id="dt-modal-msg"
-                   class="text-sm text-gray-500 dark:text-gray-400 mt-0.5"></p>
-            </div>
-        </div>
-        <div class="flex gap-3 justify-end">
-            <button onclick="dtCloseModal()"
-                    class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300
-                           bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200
-                           dark:hover:bg-gray-600 transition-colors">
-                Cancelar
-            </button>
-            <button id="dt-modal-confirm"
-                    class="px-4 py-2 text-sm font-medium text-white bg-red-600
-                           rounded-lg hover:bg-red-700 transition-colors shadow-sm">
-                Sí, eliminar
-            </button>
-        </div>
-    </div>
-</div>
-@endonce
-
 {{-- ══ DataTable JS ══ --}}
 @once
 @push('scripts')
 <script>
-// ── Delete modal helpers ──────────────────────────────────────────────
+// ── Confirmación de eliminación via SweetAlert2 ───────────────────────
 function dtConfirmDelete(formId, entityName) {
-    document.getElementById('dt-modal-msg').textContent =
-        '¿Estás seguro de eliminar "' + entityName + '"? Esta acción no se puede deshacer.';
-    document.getElementById('dt-modal-confirm').onclick = () => {
-        document.getElementById(formId).submit();
-    };
-    const modal = document.getElementById('dt-modal-delete');
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-}
-function dtCloseModal() {
-    const modal = document.getElementById('dt-modal-delete');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
+    const t = document.documentElement.classList.contains('dark')
+        ? { background: '#1e293b', color: '#f1f5f9' }
+        : { background: '#ffffff', color: '#111827' };
+
+    Swal.fire({
+        title: 'Confirmar eliminación',
+        text: '¿Eliminar "' + entityName + '"? Esta acción no se puede deshacer.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        focusCancel: true,
+        reverseButtons: true,
+        background: t.background,
+        color: t.color,
+    }).then(r => {
+        if (r.isConfirmed) document.getElementById(formId).submit();
+    });
 }
 
 // ── DataTable factory ─────────────────────────────────────────────────

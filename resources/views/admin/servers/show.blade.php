@@ -105,26 +105,6 @@
         </div>
     </div>
 
-    {{-- Flash --}}
-    @if(session('success'))
-    <div class="flex items-center gap-3 p-4 bg-emerald-50 dark:bg-emerald-900/20
-                border border-emerald-200 dark:border-emerald-800 rounded-lg">
-        <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-        </svg>
-        <p class="text-sm text-emerald-700 dark:text-emerald-300">{{ session('success') }}</p>
-    </div>
-    @endif
-    @if(session('error'))
-    <div class="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20
-                border border-red-200 dark:border-red-800 rounded-lg">
-        <svg class="w-5 h-5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <p class="text-sm text-red-700 dark:text-red-300">{{ session('error') }}</p>
-    </div>
-    @endif
-
     {{-- Tarjetas resumen --}}
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
         @foreach([
@@ -633,7 +613,7 @@
                                             {{ $doc->description ?: $doc->original_name }}
                                         </button>
                                         <form action="{{ route('admin.servers.responsibles.documents.destroy', [$server, $resp, $doc]) }}"
-                                              method="POST" class="inline" onsubmit="return confirm('¿Eliminar este documento?')">
+                                              method="POST" class="inline" onsubmit="sgDeleteForm(this,'¿Eliminar este documento?');return false">
                                             @csrf @method('DELETE')
                                             <button type="submit"
                                                     class="ml-0.5 w-4 h-4 flex items-center justify-center rounded-full
@@ -1139,10 +1119,10 @@ async function guacConnect(btn, url) {
         if (data.url) {
             window.open(data.url, '_blank', 'noopener,noreferrer');
         } else {
-            alert('Error al conectar: ' + (data.error ?? 'Respuesta inesperada'));
+            sgToast('error', 'Error al conectar: ' + (data.error ?? 'Respuesta inesperada'));
         }
     } catch (e) {
-        alert('No se pudo contactar con Guacamole. Verifica la configuración.');
+        sgToast('error', 'No se pudo contactar con Guacamole. Verifica la configuración.');
     } finally {
         btn.disabled = false;
         btn.innerHTML = original;
@@ -1150,10 +1130,18 @@ async function guacConnect(btn, url) {
 }
 
 async function guacReconnect(btn, url, isNew = false) {
-    const msg = isNew
-        ? '¿Registrar este servidor en Guacamole?\n\nSe creará la conexión de acceso remoto.'
-        : '¿Restablecer la conexión Guacamole?\n\nSe eliminará la conexión actual y se creará una nueva. Las sesiones activas se cerrarán.';
-    if (!confirm(msg)) return;
+    const confirmed = await sgConfirm(isNew ? {
+        title: '¿Habilitar acceso remoto?',
+        text: 'Se registrará este servidor en Guacamole y se creará la conexión.',
+        confirmButtonText: 'Sí, habilitar',
+        confirmButtonColor: '#16a34a',
+    } : {
+        title: '¿Restablecer conexión?',
+        text: 'Se eliminará la conexión actual y se creará una nueva. Las sesiones activas se cerrarán.',
+        confirmButtonText: 'Sí, restablecer',
+        confirmButtonColor: '#d97706',
+    });
+    if (!confirmed) return;
 
     btn.disabled = true;
     const original = btn.innerHTML;
@@ -1174,15 +1162,14 @@ async function guacReconnect(btn, url, isNew = false) {
         });
         const data = await res.json();
         if (data.success) {
-            // Mostrar botón "Conectar" si antes no existía (conexión recién creada)
             location.reload();
         } else {
-            alert('Error: ' + (data.error ?? 'No se pudo restablecer la conexión.'));
+            sgToast('error', data.error ?? 'No se pudo restablecer la conexión.');
             btn.disabled = false;
             btn.innerHTML = original;
         }
     } catch (e) {
-        alert('No se pudo contactar con Guacamole. Verifica la configuración.');
+        sgToast('error', 'No se pudo contactar con Guacamole. Verifica la configuración.');
         btn.disabled = false;
         btn.innerHTML = original;
     }

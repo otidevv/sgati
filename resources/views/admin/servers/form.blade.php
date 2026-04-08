@@ -361,7 +361,7 @@
                         </p>
                     </div>
 
-                    {{-- Indicador visual de qué se va a crear en Guacamole --}}
+                    {{-- Indicador de protocolo configurado --}}
                     <div class="flex items-end pb-1">
                         <div id="guac-info"
                              class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs
@@ -373,7 +373,7 @@
                                       d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                             </svg>
                             <span id="guac-info-text">
-                                Se creará conexión <strong>{{ strtoupper($proto) }}</strong> en Guacamole automáticamente
+                                Protocolo <strong>{{ strtoupper($proto) }}</strong> configurado
                             </span>
                         </div>
                     </div>
@@ -557,7 +557,7 @@ function addIpRow() {
         }
 
         // Info Guacamole
-        guacText.innerHTML = `Se creará conexión <strong>${proto.toUpperCase()}</strong> en Guacamole automáticamente`;
+        guacText.innerHTML = `Protocolo <strong>${proto.toUpperCase()}</strong> configurado`;
         guacInfo.className = guacInfo.className
             .replace(/bg-\w+-50|dark:bg-\w+-900\/20|text-\w+-700|dark:text-\w+-300/g, '').trim();
         if (isWin) {

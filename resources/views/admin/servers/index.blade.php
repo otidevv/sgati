@@ -261,10 +261,10 @@ async function guacConnect(btn, url) {
         if (data.url) {
             window.open(data.url, '_blank', 'noopener,noreferrer');
         } else {
-            alert('Error al conectar: ' + (data.error ?? 'Respuesta inesperada'));
+            sgToast('error', 'Error al conectar: ' + (data.error ?? 'Respuesta inesperada'));
         }
     } catch (e) {
-        alert('No se pudo contactar al servidor. Verifica la configuración de Guacamole.');
+        sgToast('error', 'No se pudo contactar con Guacamole. Verifica la configuración.');
     } finally {
         btn.disabled = false;
         btn.innerHTML = original;
