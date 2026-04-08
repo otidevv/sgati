@@ -85,6 +85,16 @@ class Server extends Model
         return $this->hasMany(SystemInfrastructure::class);
     }
 
+    public function responsibles()
+    {
+        return $this->hasMany(ServerResponsible::class)->with('persona')->orderBy('level');
+    }
+
+    public function activeResponsibles()
+    {
+        return $this->hasMany(ServerResponsible::class)->with('persona')->where('is_active', true)->orderBy('level');
+    }
+
     /**
      * Sistemas alojados en este servidor (a través de system_infrastructure).
      */

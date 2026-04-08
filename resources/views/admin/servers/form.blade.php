@@ -163,36 +163,80 @@
                 <div class="p-6 space-y-5">
 
                     {{-- Tipo de servidor --}}
-                    <div>
+                    <div x-data="{ hostType: '{{ old('host_type', $server->host_type ?? 'physical') }}' }">
+
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Tipo de Servidor <span class="text-red-500">*</span>
                         </label>
+
                         <div class="flex gap-3">
-                            @foreach(['physical' => ['label' => 'Físico', 'icon' => 'M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01'], 'virtual' => ['label' => 'Virtual (VM)', 'icon' => 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4'], 'cloud' => ['label' => 'Nube', 'icon' => 'M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z']] as $val => $opt)
-                            <label class="host-type-btn flex-1 flex flex-col items-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all
-                                          {{ old('host_type', $server->host_type ?? 'physical') === $val
-                                             ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                             : 'border-gray-200 dark:border-gray-600 hover:border-gray-300' }}">
+                            @foreach([
+                                'physical' => ['label' => 'Físico',       'icon' => 'M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01'],
+                                'virtual'  => ['label' => 'Virtual (VM)',  'icon' => 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4'],
+                                'cloud'    => ['label' => 'Nube',          'icon' => 'M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z'],
+                            ] as $val => $opt)
+                            <label @click="hostType = '{{ $val }}'"
+                                   :class="hostType === '{{ $val }}'
+                                       ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                       : 'border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-600'"
+                                   class="flex-1 flex flex-col items-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all">
                                 <input type="radio" name="host_type" value="{{ $val }}" class="sr-only"
-                                       {{ old('host_type', $server->host_type ?? 'physical') === $val ? 'checked' : '' }}>
-                                <svg class="w-6 h-6 {{ old('host_type', $server->host_type ?? 'physical') === $val ? 'text-blue-600' : 'text-gray-400' }}"
-                                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                       :checked="hostType === '{{ $val }}'">
+                                <svg :class="hostType === '{{ $val }}' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'"
+                                     class="w-6 h-6 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $opt['icon'] }}"/>
                                 </svg>
-                                <span class="text-xs font-medium {{ old('host_type', $server->host_type ?? 'physical') === $val ? 'text-blue-700 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400' }}">
+                                <span :class="hostType === '{{ $val }}' ? 'text-blue-700 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'"
+                                      class="text-xs font-medium transition-colors">
                                     {{ $opt['label'] }}
                                 </span>
                             </label>
                             @endforeach
                         </div>
-                    </div>
+
+                        {{-- Campos nube: solo visibles cuando hostType === 'cloud' --}}
+                        <div x-show="hostType === 'cloud'" x-cloak
+                             class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 mt-4 border-t border-gray-100 dark:border-gray-700">
+                            <div>
+                                <label for="cloud_provider" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Proveedor Cloud <span class="text-red-500">*</span>
+                                </label>
+                                <select id="cloud_provider" name="cloud_provider"
+                                        class="w-full rounded-lg border-gray-300 dark:border-gray-600
+                                               dark:bg-gray-700 dark:text-white
+                                               focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <option value="">Seleccionar...</option>
+                                    @foreach(['aws' => 'Amazon AWS', 'gcp' => 'Google Cloud', 'azure' => 'Microsoft Azure', 'digitalocean' => 'DigitalOcean', 'linode' => 'Linode / Akamai', 'other' => 'Otro'] as $v => $lbl)
+                                    <option value="{{ $v }}" {{ old('cloud_provider', $server->cloud_provider ?? '') === $v ? 'selected' : '' }}>{{ $lbl }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label for="cloud_region" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Región</label>
+                                <input type="text" id="cloud_region" name="cloud_region"
+                                       value="{{ old('cloud_region', $server->cloud_region ?? '') }}"
+                                       placeholder="us-east-1, sa-east-1..."
+                                       class="w-full rounded-lg border-gray-300 dark:border-gray-600
+                                              dark:bg-gray-700 dark:text-white font-mono
+                                              focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="cloud_instance" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tipo de Instancia</label>
+                                <input type="text" id="cloud_instance" name="cloud_instance"
+                                       value="{{ old('cloud_instance', $server->cloud_instance ?? '') }}"
+                                       placeholder="t3.medium, e2-standard-2..."
+                                       class="w-full rounded-lg border-gray-300 dark:border-gray-600
+                                              dark:bg-gray-700 dark:text-white font-mono
+                                              focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                        </div>
+
+                    </div>{{-- /x-data hostType --}}
 
                     {{-- Recursos de hardware --}}
                     <div class="grid grid-cols-3 gap-4">
                         <div>
-                            <label for="cpu_cores" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                Núcleos CPU
-                            </label>
+                            <label for="cpu_cores" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Núcleos CPU</label>
                             <div class="relative">
                                 <input type="number" id="cpu_cores" name="cpu_cores" min="1" max="512"
                                        value="{{ old('cpu_cores', $server->cpu_cores ?? '') }}"
@@ -204,9 +248,7 @@
                             </div>
                         </div>
                         <div>
-                            <label for="ram_gb" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                Memoria RAM
-                            </label>
+                            <label for="ram_gb" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Memoria RAM</label>
                             <div class="relative">
                                 <input type="number" id="ram_gb" name="ram_gb" min="1" max="65536"
                                        value="{{ old('ram_gb', $server->ram_gb ?? '') }}"
@@ -218,9 +260,7 @@
                             </div>
                         </div>
                         <div>
-                            <label for="storage_gb" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                Almacenamiento
-                            </label>
+                            <label for="storage_gb" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Almacenamiento</label>
                             <div class="relative">
                                 <input type="number" id="storage_gb" name="storage_gb" min="1"
                                        value="{{ old('storage_gb', $server->storage_gb ?? '') }}"
@@ -233,48 +273,6 @@
                         </div>
                     </div>
 
-                    {{-- Nube (se muestra solo si host_type = cloud) --}}
-                    <div id="cloud-fields" class="{{ old('host_type', $server->host_type ?? 'physical') === 'cloud' ? '' : 'hidden' }}
-                                                   grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-gray-100 dark:border-gray-700">
-                        <div>
-                            <label for="cloud_provider" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                Proveedor Cloud <span class="text-red-500">*</span>
-                            </label>
-                            <select id="cloud_provider" name="cloud_provider"
-                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600
-                                           dark:bg-gray-700 dark:text-white
-                                           focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                <option value="">Seleccionar...</option>
-                                @foreach(['aws' => 'Amazon AWS', 'gcp' => 'Google Cloud', 'azure' => 'Microsoft Azure', 'digitalocean' => 'DigitalOcean', 'linode' => 'Linode / Akamai', 'other' => 'Otro'] as $val => $label)
-                                <option value="{{ $val }}" {{ old('cloud_provider', $server->cloud_provider ?? '') === $val ? 'selected' : '' }}>
-                                    {{ $label }}
-                                </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label for="cloud_region" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                Región
-                            </label>
-                            <input type="text" id="cloud_region" name="cloud_region"
-                                   value="{{ old('cloud_region', $server->cloud_region ?? '') }}"
-                                   placeholder="us-east-1, sa-east-1..."
-                                   class="w-full rounded-lg border-gray-300 dark:border-gray-600
-                                          dark:bg-gray-700 dark:text-white font-mono
-                                          focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        </div>
-                        <div>
-                            <label for="cloud_instance" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                Tipo de Instancia
-                            </label>
-                            <input type="text" id="cloud_instance" name="cloud_instance"
-                                   value="{{ old('cloud_instance', $server->cloud_instance ?? '') }}"
-                                   placeholder="t3.medium, e2-standard-2..."
-                                   class="w-full rounded-lg border-gray-300 dark:border-gray-600
-                                          dark:bg-gray-700 dark:text-white font-mono
-                                          focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -472,23 +470,7 @@
 
 @push('scripts')
 <script>
-// ── Host type radio styling ───────────────────────────────────────────
-document.querySelectorAll('input[name="host_type"]').forEach(radio => {
-    radio.closest('label').addEventListener('click', () => {
-        document.querySelectorAll('.host-type-btn').forEach(btn => {
-            const isSelected = btn.querySelector('input').value === radio.value;
-            btn.classList.toggle('border-blue-500', isSelected);
-            btn.classList.toggle('bg-blue-50',      isSelected);
-            btn.classList.toggle('dark:bg-blue-900/20', isSelected);
-            btn.classList.toggle('border-gray-200', !isSelected);
-            btn.querySelector('svg').classList.toggle('text-blue-600',  isSelected);
-            btn.querySelector('svg').classList.toggle('text-gray-400',  !isSelected);
-            btn.querySelector('span').classList.toggle('text-blue-700 dark:text-blue-400', isSelected);
-            btn.querySelector('span').classList.toggle('text-gray-600 dark:text-gray-400', !isSelected);
-        });
-        document.getElementById('cloud-fields').classList.toggle('hidden', radio.value !== 'cloud');
-    });
-});
+// ── Host type: manejado por Alpine.js (x-data="{ hostType }") ──────────
 
 let ipIndex = {{ count(old('ips', $server->ips?->toArray() ?? [])) }};
 

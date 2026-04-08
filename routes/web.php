@@ -16,6 +16,8 @@ use App\Http\Controllers\Admin\AreaController;
 use App\Http\Controllers\Admin\PersonaController;
 use App\Http\Controllers\Admin\ServerController;
 use App\Http\Controllers\Admin\ServerContainerController;
+use App\Http\Controllers\Admin\ServerResponsibleController;
+use App\Http\Controllers\Admin\ServerResponsibleDocumentController;
 use App\Http\Controllers\Admin\DatabaseServerController;
 use App\Http\Controllers\Admin\SettingController;
 use Illuminate\Support\Facades\Route;
@@ -99,6 +101,14 @@ Route::middleware(['auth'])->group(function () {
 
         Route::prefix('servers/{server}')->name('servers.')->group(function () {
             Route::get('connect',                        [ServerController::class, 'connect'])->name('connect');
+
+            Route::post('responsibles',                                                          [ServerResponsibleController::class, 'store'])->name('responsibles.store');
+            Route::put('responsibles/{responsible}',                                             [ServerResponsibleController::class, 'update'])->name('responsibles.update');
+            Route::delete('responsibles/{responsible}',                                          [ServerResponsibleController::class, 'destroy'])->name('responsibles.destroy');
+
+            Route::post('responsibles/{responsible}/documents',                                  [ServerResponsibleDocumentController::class, 'store'])->name('responsibles.documents.store');
+            Route::get('responsibles/{responsible}/documents/{document}/download',               [ServerResponsibleDocumentController::class, 'download'])->name('responsibles.documents.download');
+            Route::delete('responsibles/{responsible}/documents/{document}',                     [ServerResponsibleDocumentController::class, 'destroy'])->name('responsibles.documents.destroy');
 
             Route::post('containers',                    [ServerContainerController::class, 'store'])->name('containers.store');
             Route::put('containers/{container}',         [ServerContainerController::class, 'update'])->name('containers.update');

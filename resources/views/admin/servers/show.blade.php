@@ -400,8 +400,377 @@
                 @endforeach
                 @endif
             </div>
+            {{-- ── Responsables ── --}}
+            @php
+                $levelColors = [
+                    'principal'   => 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+                    'soporte'     => 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
+                    'supervision' => 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300',
+                    'operador'    => 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
+                ];
+                $levelLabels = ['principal'=>'Principal','soporte'=>'Soporte','supervision'=>'Supervisión','operador'=>'Operador'];
+                $docLabels   = ['resolucion_directoral'=>'R.D.','resolucion_jefatural'=>'R.J.','memorando'=>'Memo.','oficio'=>'Oficio','contrato'=>'Contrato','acta'=>'Acta','otro'=>'Doc.'];
+            @endphp
+            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+                <div class="px-5 py-3.5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Responsables</h3>
+                        @if($server->responsibles->count())
+                            <span class="text-xs text-gray-400 dark:text-gray-500">({{ $server->responsibles->count() }})</span>
+                        @endif
+                    </div>
+                    <button onclick="openModal('modal-responsible')"
+                            class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium
+                                   text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30
+                                   rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors">
+                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Agregar
+                    </button>
+                </div>
 
+                @if($server->responsibles->isEmpty())
+                <p class="text-sm text-gray-400 dark:text-gray-500 text-center py-6">Sin responsables asignados</p>
+                @else
+                <div class="divide-y divide-gray-100 dark:divide-gray-700">
+                    @foreach($server->responsibles as $resp)
+                    <div class="px-5 py-3">
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
+                                        {{ $resp->persona->apellido_paterno }} {{ $resp->persona->apellido_materno }}
+                                    </span>
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide {{ $levelColors[$resp->level] ?? '' }}">
+                                        {{ $levelLabels[$resp->level] ?? $resp->level }}
+                                    </span>
+                                    @if(!$resp->is_active)
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+                                        Inactivo
+                                    </span>
+                                    @endif
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                    {{ $resp->persona->nombres }} · Desde {{ $resp->assigned_at->format('d/m/Y') }}
+                                </p>
+                                @if($resp->document_type)
+                                <p class="text-xs text-indigo-600 dark:text-indigo-400 mt-1 flex items-center gap-1">
+                                    <svg class="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    {{ $docLabels[$resp->document_type] ?? $resp->document_type }}
+                                    @if($resp->document_number) · {{ $resp->document_number }} @endif
+                                    @if($resp->document_date) · {{ $resp->document_date->format('d/m/Y') }} @endif
+                                </p>
+                                @endif
+                            </div>
+                            <div class="flex items-center gap-1 flex-shrink-0">
+                                {{-- Adjuntar documento --}}
+                                <button onclick="openDocUpload({{ $resp->id }})"
+                                        title="Adjuntar documento"
+                                        class="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 dark:text-gray-500
+                                               hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                                    </svg>
+                                </button>
+                                <button onclick="editResponsible({{ $resp->id }}, {{ $resp->toJson() }})"
+                                        class="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 dark:text-gray-500
+                                               hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                    </svg>
+                                </button>
+                                <form action="{{ route('admin.servers.responsibles.destroy', [$server, $resp]) }}"
+                                      method="POST" id="del-resp-{{ $resp->id }}" class="inline">
+                                    @csrf @method('DELETE')
+                                    <button type="button"
+                                            onclick="dtConfirmDelete('del-resp-{{ $resp->id }}', '{{ addslashes($resp->persona->apellido_paterno . ' ' . $resp->persona->nombres) }}')"
+                                            class="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 dark:text-gray-500
+                                                   hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        {{-- Documentos adjuntos --}}
+                        @if($resp->documents->count())
+                        <div class="mt-2 flex flex-wrap gap-1.5">
+                            @foreach($resp->documents as $doc)
+                            <div class="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-full
+                                        bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700
+                                        text-indigo-700 dark:text-indigo-300 text-[11px] font-medium max-w-xs">
+                                <svg class="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                </svg>
+                                <a href="{{ route('admin.servers.responsibles.documents.download', [$server, $resp, $doc]) }}"
+                                   title="{{ $doc->original_name }}"
+                                   class="truncate max-w-[160px] hover:underline">
+                                    {{ $doc->description ?: $doc->original_name }}
+                                </a>
+                                <form action="{{ route('admin.servers.responsibles.documents.destroy', [$server, $resp, $doc]) }}"
+                                      method="POST" class="inline" onsubmit="return confirm('¿Eliminar este documento?')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit"
+                                            class="ml-0.5 w-4 h-4 flex items-center justify-center rounded-full
+                                                   text-indigo-400 hover:text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors">
+                                        <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                            @endforeach
+                        </div>
+                        @endif
+
+                    </div>
+                    @endforeach
+                </div>
+                @endif
+            </div>
         </div>
+    </div>
+</div>
+
+{{-- ════════════════════════════════════════════════
+     MODAL: Responsable
+════════════════════════════════════════════════ --}}
+<div id="modal-responsible"
+     class="hidden fixed inset-0 z-50 items-center justify-center p-4"
+     role="dialog" aria-modal="true">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal('modal-responsible')"></div>
+    <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 id="resp-modal-title" class="text-base font-semibold text-gray-900 dark:text-white">
+                Asignar Responsable
+            </h3>
+            <button onclick="closeModal('modal-responsible')"
+                    class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400
+                           hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <form id="resp-form"
+              action="{{ route('admin.servers.responsibles.store', $server) }}"
+              method="POST">
+            @csrf
+            <span id="resp-method"></span>
+
+            <div class="p-6 space-y-4">
+
+                {{-- Persona --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Persona <span class="text-red-500">*</span>
+                    </label>
+                    <select name="persona_id" id="resp-persona_id" required
+                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
+                                   dark:text-white focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
+                        <option value="">— Seleccionar —</option>
+                        @foreach($personas as $persona)
+                        <option value="{{ $persona->id }}">
+                            {{ $persona->apellido_paterno }} {{ $persona->apellido_materno }}, {{ $persona->nombres }}
+                            ({{ $persona->dni }})
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    {{-- Nivel --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                            Nivel <span class="text-red-500">*</span>
+                        </label>
+                        <select name="level" id="resp-level" required
+                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
+                                       dark:text-white focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
+                            <option value="principal">Responsable Principal</option>
+                            <option value="soporte">Soporte Técnico</option>
+                            <option value="supervision">Supervisión</option>
+                            <option value="operador">Operador</option>
+                        </select>
+                    </div>
+
+                    {{-- Fecha asignación --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                            Fecha de asignación <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date" name="assigned_at" id="resp-assigned_at" required
+                               value="{{ now()->format('Y-m-d') }}"
+                               class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
+                                      dark:text-white focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
+                    </div>
+                </div>
+
+                {{-- Activo --}}
+                <div class="flex items-center gap-3">
+                    <input type="checkbox" name="is_active" id="resp-is_active" value="1"
+                           checked class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                    <label for="resp-is_active" class="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                        Asignación activa
+                    </label>
+                </div>
+
+                {{-- Separador documento --}}
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <p class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Documento de respaldo <span class="font-normal text-gray-400 normal-case">(opcional)</span>
+                    </p>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tipo</label>
+                            <select name="document_type" id="resp-document_type"
+                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
+                                           dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <option value="">Sin documento</option>
+                                <option value="resolucion_directoral">Resolución Directoral</option>
+                                <option value="resolucion_jefatural">Resolución Jefatural</option>
+                                <option value="memorando">Memorando</option>
+                                <option value="oficio">Oficio</option>
+                                <option value="contrato">Contrato</option>
+                                <option value="acta">Acta</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">N° de documento</label>
+                            <input type="text" name="document_number" id="resp-document_number"
+                                   placeholder="R.D. N°042-2024-OTI"
+                                   class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
+                                          dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Fecha del documento</label>
+                            <input type="date" name="document_date" id="resp-document_date"
+                                   class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
+                                          dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Observaciones</label>
+                            <input type="text" name="document_notes" id="resp-document_notes"
+                                   placeholder="Notas adicionales..."
+                                   class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
+                                          dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <button type="button" onclick="closeModal('modal-responsible')"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700
+                               border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white
+                               bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors shadow-sm">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span id="resp-submit-label">Asignar</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ════════════════════════════════════════════════
+     MODAL: Adjuntar Documento a Responsable
+════════════════════════════════════════════════ --}}
+<div id="modal-doc-upload"
+     class="hidden fixed inset-0 z-50 items-center justify-center p-4"
+     role="dialog" aria-modal="true">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal('modal-doc-upload')"></div>
+    <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                </svg>
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white">Adjuntar Documento</h3>
+            </div>
+            <button onclick="closeModal('modal-doc-upload')"
+                    class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400
+                           hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <form id="doc-upload-form" method="POST" enctype="multipart/form-data">
+            @csrf
+            <div class="p-6 space-y-4">
+
+                {{-- Drop zone --}}
+                <div x-data="{ dragging: false }"
+                     @dragover.prevent="dragging = true"
+                     @dragleave.prevent="dragging = false"
+                     @drop.prevent="dragging = false; $refs.fileInput.files = $event.dataTransfer.files; updateFileName($event.dataTransfer.files[0]?.name)"
+                     :class="dragging ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-gray-300 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-500'"
+                     class="border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer"
+                     onclick="document.getElementById('doc-file-input').click()">
+                    <svg class="w-10 h-10 mx-auto text-gray-300 dark:text-gray-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    <p id="doc-file-label" class="text-sm text-gray-500 dark:text-gray-400">
+                        Arrastra el archivo aquí o <span class="text-indigo-600 dark:text-indigo-400 font-medium">haz clic para seleccionar</span>
+                    </p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">PDF, Word, Excel, imagen · Máx. 10 MB</p>
+                    <input id="doc-file-input" x-ref="fileInput" type="file" name="file"
+                           accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                           class="hidden" required
+                           onchange="updateFileName(this.files[0]?.name)">
+                </div>
+
+                {{-- Descripción --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Descripción <span class="text-gray-400 font-normal">(opcional)</span>
+                    </label>
+                    <input type="text" name="description" id="doc-description"
+                           placeholder="Ej: Resolución de nombramiento 2024"
+                           class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
+                                  dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+
+            </div>
+
+            <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-b-2xl">
+                <button type="button" onclick="closeModal('modal-doc-upload')"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700
+                               border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white
+                               bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    Subir documento
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -644,6 +1013,61 @@ function closeModal(id) {
     const m = document.getElementById(id);
     m.classList.add('hidden');
     m.classList.remove('flex');
+}
+
+// ── Responsables ─────────────────────────────────────────────────────
+const respStoreUrl  = "{{ route('admin.servers.responsibles.store', $server) }}";
+const respUpdateBase = "{{ url('admin/servers/' . $server->id . '/responsibles') }}/";
+
+function editResponsible(id, data) {
+    document.getElementById('resp-modal-title').textContent  = 'Editar Responsable';
+    document.getElementById('resp-submit-label').textContent = 'Guardar';
+    document.getElementById('resp-form').action = respUpdateBase + id;
+    document.getElementById('resp-method').innerHTML = '<input type="hidden" name="_method" value="PUT">';
+
+    document.getElementById('resp-persona_id').value     = data.persona_id     ?? '';
+    document.getElementById('resp-level').value          = data.level          ?? 'soporte';
+    document.getElementById('resp-assigned_at').value    = data.assigned_at    ?? '';
+    document.getElementById('resp-is_active').checked    = data.is_active      == 1;
+    document.getElementById('resp-document_type').value  = data.document_type  ?? '';
+    document.getElementById('resp-document_number').value= data.document_number ?? '';
+    document.getElementById('resp-document_date').value  = data.document_date  ?? '';
+    document.getElementById('resp-document_notes').value = data.document_notes ?? '';
+
+    openModal('modal-responsible');
+}
+
+document.getElementById('modal-responsible').addEventListener('click', function(e) {
+    if (e.target === this) closeModal('modal-responsible');
+});
+
+// Reset modal al abrir para agregar
+document.querySelector('[onclick="openModal(\'modal-responsible\')"]')?.addEventListener('click', function() {
+    document.getElementById('resp-modal-title').textContent  = 'Asignar Responsable';
+    document.getElementById('resp-submit-label').textContent = 'Asignar';
+    document.getElementById('resp-form').action = respStoreUrl;
+    document.getElementById('resp-method').innerHTML = '';
+    document.getElementById('resp-form').reset();
+    document.getElementById('resp-assigned_at').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('resp-is_active').checked = true;
+});
+
+// ── Documentos de Responsables ───────────────────────────────────────
+const docUploadBase = "{{ url('admin/servers/' . $server->id . '/responsibles') }}/";
+
+function openDocUpload(responsibleId) {
+    document.getElementById('doc-upload-form').action = docUploadBase + responsibleId + '/documents';
+    document.getElementById('doc-file-input').value  = '';
+    document.getElementById('doc-description').value = '';
+    document.getElementById('doc-file-label').innerHTML =
+        'Arrastra el archivo aquí o <span class="text-indigo-600 dark:text-indigo-400 font-medium">haz clic para seleccionar</span>';
+    openModal('modal-doc-upload');
+}
+
+function updateFileName(name) {
+    if (!name) return;
+    document.getElementById('doc-file-label').innerHTML =
+        '<span class="font-medium text-gray-700 dark:text-gray-300">' + name + '</span>';
 }
 
 // ── Contenedores ─────────────────────────────────────────────────────

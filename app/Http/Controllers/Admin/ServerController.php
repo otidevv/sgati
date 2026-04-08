@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Persona;
 use App\Models\Server;
 use App\Models\ServerIp;
 use App\Models\ServerContainer;
@@ -26,39 +27,16 @@ class ServerController extends Controller
 
     public function create()
     {
-        $functions = ServerFunction::cases();
         return view('admin.servers.form', [
             'server'    => new Server,
-            'functions' => $functions,
+            'functions' => ServerFunction::cases(),
+            'personas'  => Persona::orderBy('apellido_paterno')->get(),
         ]);
     }
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'name'               => 'required|string|max:100|unique:servers,name',
-            'operating_system'   => 'nullable|string|max:150',
-            'function'           => 'required|in:' . implode(',', array_column(ServerFunction::cases(), 'value')),
-            'host_type'          => 'required|in:physical,virtual,cloud',
-            'cpu_cores'          => 'nullable|integer|min:1|max:512',
-            'ram_gb'             => 'nullable|integer|min:1|max:65536',
-            'storage_gb'         => 'nullable|integer|min:1',
-            'cloud_provider'     => 'nullable|required_if:host_type,cloud|in:aws,gcp,azure,digitalocean,linode,other',
-            'cloud_region'       => 'nullable|string|max:50',
-            'cloud_instance'     => 'nullable|string|max:100',
-            'ssh_user'           => 'nullable|string|max:100',
-            'ssh_password'       => 'nullable|string',
-            'web_root'           => 'nullable|string|max:255',
-            'installed_services' => 'nullable|string',
-            'is_active'          => 'boolean',
-            'notes'              => 'nullable|string',
-            'rdp_port'           => 'nullable|integer|min:1|max:65535',
-            'ips'                => 'nullable|array',
-            'ips.*.ip_address'   => 'required|string|max:45',
-            'ips.*.type'         => 'required|in:private,public',
-            'ips.*.interface'    => 'nullable|string|max:50',
-            'ips.*.is_primary'   => 'nullable|boolean',
-        ]);
+        $data = $request->validate($this->serverRules());
 
         $data['slug']               = Str::slug($data['name']);
         $data['is_active']          = $request->boolean('is_active', true);
@@ -94,45 +72,30 @@ class ServerController extends Controller
             'activeContainers.system',
             'databaseServers.databases.system',
             'deployments.system',
+            'responsibles.persona',
+            'responsibles.documents',
         ]);
 
-        return view('admin.servers.show', compact('server'));
+        $personas = Persona::orderBy('apellido_paterno')->get();
+
+        return view('admin.servers.show', compact('server', 'personas'));
     }
 
     public function edit(Server $server)
     {
-        $server->load('ips');
-        $functions = ServerFunction::cases();
+        $server->load(['ips', 'responsibles.persona']);
 
-        return view('admin.servers.form', compact('server', 'functions'));
+        return view('admin.servers.form', [
+            'server'    => $server,
+            'functions' => ServerFunction::cases(),
+            'personas'  => Persona::orderBy('apellido_paterno')->get(),
+        ]);
     }
 
     public function update(Request $request, Server $server)
     {
-        $data = $request->validate([
-            'name'               => 'required|string|max:100|unique:servers,name,' . $server->id,
-            'operating_system'   => 'nullable|string|max:150',
-            'function'           => 'required|in:' . implode(',', array_column(ServerFunction::cases(), 'value')),
-            'host_type'          => 'required|in:physical,virtual,cloud',
-            'cpu_cores'          => 'nullable|integer|min:1|max:512',
-            'ram_gb'             => 'nullable|integer|min:1|max:65536',
-            'storage_gb'         => 'nullable|integer|min:1',
-            'cloud_provider'     => 'nullable|required_if:host_type,cloud|in:aws,gcp,azure,digitalocean,linode,other',
-            'cloud_region'       => 'nullable|string|max:50',
-            'cloud_instance'     => 'nullable|string|max:100',
-            'ssh_user'           => 'nullable|string|max:100',
-            'ssh_password'       => 'nullable|string',
-            'web_root'           => 'nullable|string|max:255',
-            'installed_services' => 'nullable|string',
-            'is_active'          => 'boolean',
-            'notes'              => 'nullable|string',
-            'rdp_port'           => 'nullable|integer|min:1|max:65535',
-            'ips'                => 'nullable|array',
-            'ips.*.ip_address'   => 'required|string|max:45',
-            'ips.*.type'         => 'required|in:private,public',
-            'ips.*.interface'    => 'nullable|string|max:50',
-            'ips.*.is_primary'   => 'nullable|boolean',
-        ]);
+        $rules = $this->serverRules('update', $server->id);
+        $data  = $request->validate($rules);
 
         $data['is_active']          = $request->boolean('is_active', true);
         $data['installed_services'] = $this->parseServices($request->input('installed_services'));
@@ -140,14 +103,12 @@ class ServerController extends Controller
         $ips = $data['ips'] ?? [];
         unset($data['ips']);
 
-        // No sobrescribir password si viene vacío
         if (empty($data['ssh_password'])) {
             unset($data['ssh_password']);
         }
 
         $server->update($data);
 
-        // Reemplazar IPs
         $server->ips()->delete();
         foreach ($ips as $i => $ip) {
             if (empty($ip['ip_address'])) continue;
@@ -159,7 +120,6 @@ class ServerController extends Controller
             ]);
         }
 
-        // ── Sincronizar conexión en Guacamole ─────────────────────────
         $server->refresh()->load('ips', 'primaryIp');
         $this->syncGuacamoleConnection($server, 'update');
 
@@ -228,6 +188,36 @@ class ServerController extends Controller
     }
 
     // ── Helpers ──────────────────────────────────────────────────────
+
+    private function serverRules(string $mode = 'create', ?int $id = null): array
+    {
+        $uniqueName = $mode === 'update' ? "unique:servers,name,{$id}" : 'unique:servers,name';
+
+        return [
+            'name'               => "required|string|max:100|{$uniqueName}",
+            'operating_system'   => 'nullable|string|max:150',
+            'function'           => 'required|in:' . implode(',', array_column(ServerFunction::cases(), 'value')),
+            'host_type'          => 'required|in:physical,virtual,cloud',
+            'cpu_cores'          => 'nullable|integer|min:1|max:512',
+            'ram_gb'             => 'nullable|integer|min:1|max:65536',
+            'storage_gb'         => 'nullable|integer|min:1',
+            'cloud_provider'     => 'nullable|required_if:host_type,cloud|in:aws,gcp,azure,digitalocean,linode,other',
+            'cloud_region'       => 'nullable|string|max:50',
+            'cloud_instance'     => 'nullable|string|max:100',
+            'ssh_user'           => 'nullable|string|max:100',
+            'ssh_password'       => 'nullable|string',
+            'web_root'           => 'nullable|string|max:255',
+            'installed_services' => 'nullable|string',
+            'is_active'          => 'boolean',
+            'notes'              => 'nullable|string',
+            'rdp_port'           => 'nullable|integer|min:1|max:65535',
+            'ips'                => 'nullable|array',
+            'ips.*.ip_address'   => 'required|string|max:45',
+            'ips.*.type'         => 'required|in:private,public',
+            'ips.*.interface'    => 'nullable|string|max:50',
+            'ips.*.is_primary'   => 'nullable|boolean',
+        ];
+    }
 
     private function parseServices(?string $input): array
     {
