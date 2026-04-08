@@ -66,6 +66,8 @@ Route::middleware(['auth'])->group(function () {
             ->except(['index', 'show', 'edit', 'update']);
         Route::get('documents/{document}/download', [SystemDocumentController::class, 'download'])
             ->name('documents.download');
+        Route::get('documents/{document}/preview',  [SystemDocumentController::class, 'preview'])
+            ->name('documents.preview');
 
         // Repositorios
         Route::resource('repositories', SystemRepositoryController::class)
@@ -101,6 +103,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::prefix('servers/{server}')->name('servers.')->group(function () {
             Route::get('connect',                        [ServerController::class, 'connect'])->name('connect');
+            Route::post('reconnect',                     [ServerController::class, 'reconnect'])->name('reconnect');
 
             Route::post('responsibles',                                                          [ServerResponsibleController::class, 'store'])->name('responsibles.store');
             Route::put('responsibles/{responsible}',                                             [ServerResponsibleController::class, 'update'])->name('responsibles.update');
@@ -108,6 +111,7 @@ Route::middleware(['auth'])->group(function () {
 
             Route::post('responsibles/{responsible}/documents',                                  [ServerResponsibleDocumentController::class, 'store'])->name('responsibles.documents.store');
             Route::get('responsibles/{responsible}/documents/{document}/download',               [ServerResponsibleDocumentController::class, 'download'])->name('responsibles.documents.download');
+            Route::get('responsibles/{responsible}/documents/{document}/preview',               [ServerResponsibleDocumentController::class, 'preview'])->name('responsibles.documents.preview');
             Route::delete('responsibles/{responsible}/documents/{document}',                     [ServerResponsibleDocumentController::class, 'destroy'])->name('responsibles.documents.destroy');
 
             Route::post('containers',                    [ServerContainerController::class, 'store'])->name('containers.store');

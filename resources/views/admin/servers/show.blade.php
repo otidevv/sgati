@@ -41,15 +41,68 @@
                 </p>
             </div>
         </div>
-        <a href="{{ route('admin.servers.edit', $server) }}"
-           class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium
-                  text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-            </svg>
-            Editar Servidor
-        </a>
+        <div class="flex items-center gap-2 flex-wrap">
+
+            {{-- ── Guacamole ── --}}
+            @if($server->guacamole_connection_id)
+            {{-- Conectar --}}
+            <button type="button"
+                    id="btn-guac-connect"
+                    onclick="guacConnect(this, '{{ route('admin.servers.connect', $server) }}')"
+                    title="Abrir escritorio remoto en nueva pestaña"
+                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium
+                           text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-sm">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                Conectar
+            </button>
+            {{-- Restablecer --}}
+            <button type="button"
+                    id="btn-guac-reset"
+                    onclick="guacReconnect(this, '{{ route('admin.servers.reconnect', $server) }}')"
+                    title="Elimina la conexión actual en Guacamole y crea una nueva"
+                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium
+                           text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30
+                           border border-amber-200 dark:border-amber-700
+                           hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-lg transition-colors">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Restablecer
+            </button>
+            @else
+            {{-- Sin conexión: CTA para habilitar acceso remoto --}}
+            <button type="button"
+                    id="btn-guac-reset"
+                    onclick="guacReconnect(this, '{{ route('admin.servers.reconnect', $server) }}', true)"
+                    title="Registrar este servidor en Guacamole para habilitar el acceso remoto"
+                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium
+                           text-emerald-700 dark:text-emerald-400
+                           bg-emerald-50 dark:bg-emerald-900/20
+                           border border-emerald-200 dark:border-emerald-700/60
+                           hover:bg-emerald-100 dark:hover:bg-emerald-900/40 rounded-lg transition-colors">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                Habilitar acceso remoto
+            </button>
+            @endif
+
+            {{-- Editar --}}
+            <a href="{{ route('admin.servers.edit', $server) }}"
+               class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium
+                      text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                </svg>
+                Editar
+            </a>
+        </div>
     </div>
 
     {{-- Flash --}}
@@ -60,6 +113,15 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
         </svg>
         <p class="text-sm text-emerald-700 dark:text-emerald-300">{{ session('success') }}</p>
+    </div>
+    @endif
+    @if(session('error'))
+    <div class="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20
+                border border-red-200 dark:border-red-800 rounded-lg">
+        <svg class="w-5 h-5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <p class="text-sm text-red-700 dark:text-red-300">{{ session('error') }}</p>
     </div>
     @endif
 
@@ -433,104 +495,160 @@
                     </button>
                 </div>
 
+                @php
+                    $avatarColors = [
+                        'principal'   => 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300',
+                        'soporte'     => 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
+                        'supervision' => 'bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300',
+                        'operador'    => 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300',
+                    ];
+                    $leftBorder = [
+                        'principal'   => 'border-blue-400 dark:border-blue-500',
+                        'soporte'     => 'border-slate-300 dark:border-slate-500',
+                        'supervision' => 'border-violet-400 dark:border-violet-500',
+                        'operador'    => 'border-amber-400 dark:border-amber-500',
+                    ];
+                @endphp
                 @if($server->responsibles->isEmpty())
-                <p class="text-sm text-gray-400 dark:text-gray-500 text-center py-6">Sin responsables asignados</p>
+                <div class="flex flex-col items-center justify-center py-10 text-center">
+                    <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Sin responsables asignados</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Usa el botón "Agregar" para asignar uno</p>
+                </div>
                 @else
-                <div class="divide-y divide-gray-100 dark:divide-gray-700">
+                <div class="divide-y divide-gray-100 dark:divide-gray-700/60">
                     @foreach($server->responsibles as $resp)
-                    <div class="px-5 py-3">
-                        <div class="flex items-start justify-between gap-2">
+                    @php
+                        $initials = strtoupper(substr($resp->persona->apellido_paterno, 0, 1) . substr($resp->persona->apellido_materno ?? '', 0, 1));
+                        $borderClass = $leftBorder[$resp->level] ?? 'border-gray-300';
+                        $avatarClass = $avatarColors[$resp->level] ?? 'bg-gray-100 text-gray-600';
+                    @endphp
+                    <div class="px-4 py-3 border-l-[3px] {{ $borderClass }} {{ !$resp->is_active ? 'opacity-60' : '' }} hover:bg-gray-50/60 dark:hover:bg-gray-700/30 transition-colors group/row">
+                        <div class="flex items-start gap-3">
+                            {{-- Avatar iniciales --}}
+                            <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5 {{ $avatarClass }}">
+                                {{ $initials }}
+                            </div>
+                            {{-- Datos --}}
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
-                                        {{ $resp->persona->apellido_paterno }} {{ $resp->persona->apellido_materno }}
+                                {{-- Fila 1: nombre + acciones al hover --}}
+                                <div class="flex items-center gap-1.5 min-w-0">
+                                    <span class="text-sm font-semibold text-gray-800 dark:text-gray-100 leading-snug truncate flex-1 min-w-0">
+                                        {{ $resp->persona->apellido_paterno }} {{ $resp->persona->apellido_materno }},
+                                        <span class="font-normal text-gray-600 dark:text-gray-300">{{ $resp->persona->nombres }}</span>
                                     </span>
-                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide {{ $levelColors[$resp->level] ?? '' }}">
+                                    {{-- Acciones inline --}}
+                                    <div class="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                                        <button onclick="openDocUpload({{ $resp->id }})"
+                                                title="Adjuntar documento"
+                                                class="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 dark:text-gray-500
+                                                       hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                                            </svg>
+                                        </button>
+                                        <button onclick="editResponsible({{ $resp->id }}, {{ $resp->toJson() }})"
+                                                title="Editar"
+                                                class="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 dark:text-gray-500
+                                                       hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                            </svg>
+                                        </button>
+                                        <form action="{{ route('admin.servers.responsibles.destroy', [$server, $resp]) }}"
+                                              method="POST" id="del-resp-{{ $resp->id }}" class="inline">
+                                            @csrf @method('DELETE')
+                                            <button type="button"
+                                                    title="Eliminar"
+                                                    onclick="dtConfirmDelete('del-resp-{{ $resp->id }}', '{{ addslashes($resp->persona->apellido_paterno . ' ' . $resp->persona->nombres) }}')"
+                                                    class="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 dark:text-gray-500
+                                                           hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                {{-- Fila 2: badges --}}
+                                <div class="flex items-center gap-2 mt-1 flex-wrap">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide {{ $levelColors[$resp->level] ?? '' }}">
                                         {{ $levelLabels[$resp->level] ?? $resp->level }}
                                     </span>
                                     @if(!$resp->is_active)
-                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-gray-500"></span>
                                         Inactivo
                                     </span>
+                                    @else
+                                    <span class="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
+                                        Activo
+                                    </span>
+                                    @endif
+                                    <span class="text-[11px] text-gray-400 dark:text-gray-500 flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                        Desde {{ $resp->assigned_at->format('d/m/Y') }}
+                                    </span>
+                                    @if($resp->document_type)
+                                    <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md
+                                                bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700/50
+                                                text-[11px] text-indigo-600 dark:text-indigo-400">
+                                        <svg class="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                        <span class="font-medium">{{ $docLabels[$resp->document_type] ?? $resp->document_type }}</span>
+                                        @if($resp->document_number)<span class="text-indigo-300 dark:text-indigo-600">·</span> {{ $resp->document_number }}@endif
+                                        @if($resp->document_date)<span class="text-indigo-300 dark:text-indigo-600">·</span> {{ $resp->document_date->format('d/m/Y') }}@endif
+                                    </div>
                                     @endif
                                 </div>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                    {{ $resp->persona->nombres }} · Desde {{ $resp->assigned_at->format('d/m/Y') }}
-                                </p>
-                                @if($resp->document_type)
-                                <p class="text-xs text-indigo-600 dark:text-indigo-400 mt-1 flex items-center gap-1">
-                                    <svg class="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                    </svg>
-                                    {{ $docLabels[$resp->document_type] ?? $resp->document_type }}
-                                    @if($resp->document_number) · {{ $resp->document_number }} @endif
-                                    @if($resp->document_date) · {{ $resp->document_date->format('d/m/Y') }} @endif
-                                </p>
+                                {{-- Documentos adjuntos --}}
+                                @if($resp->documents->count())
+                                <div class="mt-2 flex flex-wrap gap-1.5">
+                                    @foreach($resp->documents as $doc)
+                                    @php $docExt = strtolower(pathinfo($doc->original_name, PATHINFO_EXTENSION)); @endphp
+                                    <div class="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-full
+                                                bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700
+                                                text-indigo-700 dark:text-indigo-300 text-[11px] font-medium max-w-xs">
+                                        <svg class="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                        </svg>
+                                        <button type="button"
+                                                onclick='openDocPreview({
+                                                    name:        {{ json_encode($doc->description ?: $doc->original_name) }},
+                                                    description: {{ json_encode($doc->description ? $doc->original_name : null) }},
+                                                    previewUrl:  "{{ route('admin.servers.responsibles.documents.preview', [$server, $resp, $doc]) }}",
+                                                    downloadUrl: "{{ route('admin.servers.responsibles.documents.download', [$server, $resp, $doc]) }}",
+                                                    ext:         {{ json_encode($docExt) }}
+                                                })'
+                                                title="Previsualizar {{ $doc->original_name }}"
+                                                class="truncate max-w-[160px] hover:underline cursor-pointer">
+                                            {{ $doc->description ?: $doc->original_name }}
+                                        </button>
+                                        <form action="{{ route('admin.servers.responsibles.documents.destroy', [$server, $resp, $doc]) }}"
+                                              method="POST" class="inline" onsubmit="return confirm('¿Eliminar este documento?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit"
+                                                    class="ml-0.5 w-4 h-4 flex items-center justify-center rounded-full
+                                                           text-indigo-400 hover:text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors">
+                                                <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    @endforeach
+                                </div>
                                 @endif
-                            </div>
-                            <div class="flex items-center gap-1 flex-shrink-0">
-                                {{-- Adjuntar documento --}}
-                                <button onclick="openDocUpload({{ $resp->id }})"
-                                        title="Adjuntar documento"
-                                        class="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 dark:text-gray-500
-                                               hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
-                                    </svg>
-                                </button>
-                                <button onclick="editResponsible({{ $resp->id }}, {{ $resp->toJson() }})"
-                                        class="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 dark:text-gray-500
-                                               hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                                    </svg>
-                                </button>
-                                <form action="{{ route('admin.servers.responsibles.destroy', [$server, $resp]) }}"
-                                      method="POST" id="del-resp-{{ $resp->id }}" class="inline">
-                                    @csrf @method('DELETE')
-                                    <button type="button"
-                                            onclick="dtConfirmDelete('del-resp-{{ $resp->id }}', '{{ addslashes($resp->persona->apellido_paterno . ' ' . $resp->persona->nombres) }}')"
-                                            class="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 dark:text-gray-500
-                                                   hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                        </svg>
-                                    </button>
-                                </form>
-                            </div>
+                            </div>{{-- /datos --}}
                         </div>
-
-                        {{-- Documentos adjuntos --}}
-                        @if($resp->documents->count())
-                        <div class="mt-2 flex flex-wrap gap-1.5">
-                            @foreach($resp->documents as $doc)
-                            <div class="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-full
-                                        bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700
-                                        text-indigo-700 dark:text-indigo-300 text-[11px] font-medium max-w-xs">
-                                <svg class="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                                </svg>
-                                <a href="{{ route('admin.servers.responsibles.documents.download', [$server, $resp, $doc]) }}"
-                                   title="{{ $doc->original_name }}"
-                                   class="truncate max-w-[160px] hover:underline">
-                                    {{ $doc->description ?: $doc->original_name }}
-                                </a>
-                                <form action="{{ route('admin.servers.responsibles.documents.destroy', [$server, $resp, $doc]) }}"
-                                      method="POST" class="inline" onsubmit="return confirm('¿Eliminar este documento?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit"
-                                            class="ml-0.5 w-4 h-4 flex items-center justify-center rounded-full
-                                                   text-indigo-400 hover:text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors">
-                                        <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/>
-                                        </svg>
-                                    </button>
-                                </form>
-                            </div>
-                            @endforeach
-                        </div>
-                        @endif
-
                     </div>
                     @endforeach
                 </div>
@@ -999,10 +1117,77 @@
         </form>
     </div>
 </div>
+{{-- Modal previsualización de documentos (reutilizable) --}}
+<x-doc-preview-modal />
+
 @endsection
 
 @push('scripts')
 <script>
+// ── Guacamole ─────────────────────────────────────────────────────────
+async function guacConnect(btn, url) {
+    btn.disabled = true;
+    const original = btn.innerHTML;
+    btn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+    </svg><span>Conectando…</span>`;
+
+    try {
+        const res  = await fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+        const data = await res.json();
+        if (data.url) {
+            window.open(data.url, '_blank', 'noopener,noreferrer');
+        } else {
+            alert('Error al conectar: ' + (data.error ?? 'Respuesta inesperada'));
+        }
+    } catch (e) {
+        alert('No se pudo contactar con Guacamole. Verifica la configuración.');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = original;
+    }
+}
+
+async function guacReconnect(btn, url, isNew = false) {
+    const msg = isNew
+        ? '¿Registrar este servidor en Guacamole?\n\nSe creará la conexión de acceso remoto.'
+        : '¿Restablecer la conexión Guacamole?\n\nSe eliminará la conexión actual y se creará una nueva. Las sesiones activas se cerrarán.';
+    if (!confirm(msg)) return;
+
+    btn.disabled = true;
+    const original = btn.innerHTML;
+    const loadingLabel = isNew ? 'Creando conexión…' : 'Restableciendo…';
+    btn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+    </svg><span>${loadingLabel}</span>`;
+
+    try {
+        const res  = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Accept':           'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN':     document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            },
+        });
+        const data = await res.json();
+        if (data.success) {
+            // Mostrar botón "Conectar" si antes no existía (conexión recién creada)
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error ?? 'No se pudo restablecer la conexión.'));
+            btn.disabled = false;
+            btn.innerHTML = original;
+        }
+    } catch (e) {
+        alert('No se pudo contactar con Guacamole. Verifica la configuración.');
+        btn.disabled = false;
+        btn.innerHTML = original;
+    }
+}
+
 // ── Helpers de modal ─────────────────────────────────────────────────
 function openModal(id) {
     const m = document.getElementById(id);

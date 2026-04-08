@@ -39,6 +39,31 @@ class ServerResponsibleDocumentController extends Controller
         return Storage::disk('local')->download($document->file_path, $document->original_name);
     }
 
+    public function preview(Server $server, ServerResponsible $responsible, ServerResponsibleDocument $document)
+    {
+        if (! Storage::disk('local')->exists($document->file_path)) {
+            abort(404, 'El archivo no existe en el servidor.');
+        }
+
+        $ext = strtolower(pathinfo($document->original_name, PATHINFO_EXTENSION));
+        $mimeMap = [
+            'pdf'  => 'application/pdf',
+            'png'  => 'image/png',
+            'jpg'  => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'gif'  => 'image/gif',
+            'webp' => 'image/webp',
+            'svg'  => 'image/svg+xml',
+        ];
+
+        $mime = $mimeMap[$ext] ?? Storage::disk('local')->mimeType($document->file_path);
+
+        return response()->file(
+            Storage::disk('local')->path($document->file_path),
+            ['Content-Type' => $mime, 'Content-Disposition' => 'inline; filename="' . rawurlencode($document->original_name) . '"']
+        );
+    }
+
     public function destroy(Server $server, ServerResponsible $responsible, ServerResponsibleDocument $document)
     {
         Storage::disk('local')->delete($document->file_path);

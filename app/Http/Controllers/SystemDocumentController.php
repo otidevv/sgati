@@ -60,6 +60,22 @@ class SystemDocumentController extends Controller
         return Storage::disk('local')->download($document->file_path, $document->file_name);
     }
 
+    public function preview(System $system, SystemDocument $document)
+    {
+        abort_if($document->system_id !== $system->id, 404);
+
+        if (! Storage::disk('local')->exists($document->file_path)) {
+            abort(404, 'El archivo no existe en el servidor.');
+        }
+
+        $mime = $document->mime_type ?: Storage::disk('local')->mimeType($document->file_path);
+
+        return response()->file(
+            Storage::disk('local')->path($document->file_path),
+            ['Content-Type' => $mime, 'Content-Disposition' => 'inline; filename="' . rawurlencode($document->file_name) . '"']
+        );
+    }
+
     public function repository(Request $request)
     {
         $documents = SystemDocument::with('system')
