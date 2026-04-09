@@ -8,6 +8,8 @@ use App\Http\Controllers\SystemInfrastructureController;
 use App\Http\Controllers\SystemDatabaseController;
 use App\Http\Controllers\SystemDatabaseResponsibleController;
 use App\Http\Controllers\SystemDatabaseResponsibleDocumentController;
+use App\Http\Controllers\SystemServiceDocumentController;
+use App\Http\Controllers\SystemServiceFieldController;
 use App\Http\Controllers\SystemServiceController;
 use App\Http\Controllers\SystemIntegrationController;
 use App\Http\Controllers\SystemDocumentController;
@@ -72,7 +74,18 @@ Route::middleware(['auth'])->group(function () {
 
         // Servicios / APIs
         Route::resource('services', SystemServiceController::class)
-            ->except(['index', 'show']);
+            ->except(['index']);
+
+        Route::prefix('services/{service}')->name('services.')->group(function () {
+            Route::post('documents',                              [SystemServiceDocumentController::class, 'store'])->name('documents.store');
+            Route::get('documents/{document}/download',          [SystemServiceDocumentController::class, 'download'])->name('documents.download');
+            Route::get('documents/{document}/preview',           [SystemServiceDocumentController::class, 'preview'])->name('documents.preview');
+            Route::delete('documents/{document}',                [SystemServiceDocumentController::class, 'destroy'])->name('documents.destroy');
+
+            Route::post('fields',                                [SystemServiceFieldController::class, 'store'])->name('fields.store');
+            Route::put('fields/{field}',                         [SystemServiceFieldController::class, 'update'])->name('fields.update');
+            Route::delete('fields/{field}',                      [SystemServiceFieldController::class, 'destroy'])->name('fields.destroy');
+        });
 
         // Integraciones
         Route::resource('integrations', SystemIntegrationController::class)
