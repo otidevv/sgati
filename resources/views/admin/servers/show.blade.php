@@ -789,17 +789,41 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                         Persona <span class="text-red-500">*</span>
                     </label>
-                    <select name="persona_id" id="resp-persona_id" required
-                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
-                                   dark:text-white focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
-                        <option value="">— Seleccionar —</option>
-                        @foreach($personas as $persona)
-                        <option value="{{ $persona->id }}">
-                            {{ $persona->apellido_paterno }} {{ $persona->apellido_materno }}, {{ $persona->nombres }}
-                            ({{ $persona->dni }})
-                        </option>
-                        @endforeach
-                    </select>
+                    <div class="relative" id="resp-search-wrap">
+                        <div class="relative">
+                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            <input type="text" id="resp-search-input" autocomplete="off"
+                                   placeholder="Buscar por DNI o apellido/nombre..."
+                                   class="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600
+                                          dark:bg-gray-700 dark:text-white text-sm
+                                          focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <input type="hidden" name="persona_id" id="resp-persona_id" required>
+                        {{-- Dropdown resultados --}}
+                        <div id="resp-dropdown"
+                             class="hidden absolute z-50 w-full mt-1 bg-white dark:bg-gray-800
+                                    border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl
+                                    max-h-48 overflow-y-auto text-sm">
+                        </div>
+                        {{-- Persona seleccionada --}}
+                        <div id="resp-selected"
+                             class="hidden mt-2 items-center gap-2 px-3 py-2 rounded-lg
+                                    bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700/40">
+                            <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            <span id="resp-selected-name" class="flex-1 text-sm font-medium text-emerald-700 dark:text-emerald-300 truncate"></span>
+                            <button type="button" onclick="clearPersonaSearch('resp')"
+                                    class="text-emerald-400 hover:text-red-500 transition-colors flex-shrink-0">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Escribe al menos 4 caracteres para buscar</p>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -1445,6 +1469,89 @@ function closeModal(id) {
     m.classList.remove('flex');
 }
 
+// ── Persona autocomplete ──────────────────────────────────────────────
+const personaSearchUrl = "{{ route('admin.personas.search') }}";
+let searchTimers = {};
+
+function initPersonaSearch(prefix) {
+    const searchInput = document.getElementById(prefix + '-search-input');
+    const hiddenInput = document.getElementById(prefix + '-persona_id');
+    const dropdown    = document.getElementById(prefix + '-dropdown');
+    const selected    = document.getElementById(prefix + '-selected');
+    const selName     = document.getElementById(prefix + '-selected-name');
+
+    searchInput.addEventListener('input', function () {
+        const q = this.value.trim();
+        clearTimeout(searchTimers[prefix]);
+        dropdown.classList.add('hidden');
+        dropdown.innerHTML = '';
+
+        if (q.length < 4) return;
+
+        dropdown.innerHTML = '<p class="px-4 py-3 text-xs text-gray-400 dark:text-gray-500">Buscando...</p>';
+        dropdown.classList.remove('hidden');
+
+        searchTimers[prefix] = setTimeout(async () => {
+            try {
+                const res  = await fetch(personaSearchUrl + '?q=' + encodeURIComponent(q));
+                const data = await res.json();
+                dropdown.innerHTML = '';
+
+                if (!data.length) {
+                    dropdown.innerHTML = '<p class="px-4 py-3 text-xs text-gray-400 dark:text-gray-500">Sin resultados</p>';
+                    return;
+                }
+
+                data.forEach(p => {
+                    const label = `${p.apellido_paterno} ${p.apellido_materno ?? ''}, ${p.nombres} &mdash; <span class="font-mono">${p.dni}</span>`;
+                    const btn   = document.createElement('button');
+                    btn.type    = 'button';
+                    btn.className = 'w-full text-left px-4 py-2.5 text-sm text-gray-800 dark:text-gray-200 ' +
+                                    'hover:bg-emerald-50 dark:hover:bg-emerald-900/20 ' +
+                                    'hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors';
+                    btn.innerHTML = label;
+                    btn.addEventListener('click', () => {
+                        hiddenInput.value   = p.id;
+                        selName.textContent = `${p.apellido_paterno} ${p.apellido_materno ?? ''}, ${p.nombres} (${p.dni})`;
+                        searchInput.value   = '';
+                        dropdown.classList.add('hidden');
+                        dropdown.innerHTML  = '';
+                        selected.classList.remove('hidden');
+                        selected.classList.add('flex');
+                    });
+                    dropdown.appendChild(btn);
+                });
+            } catch {
+                dropdown.innerHTML = '<p class="px-4 py-3 text-xs text-red-400">Error al buscar</p>';
+            }
+        }, 300);
+    });
+
+    document.addEventListener('click', e => {
+        if (!document.getElementById(prefix + '-search-wrap').contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+}
+
+function clearPersonaSearch(prefix) {
+    document.getElementById(prefix + '-persona_id').value = '';
+    document.getElementById(prefix + '-selected-name').textContent = '';
+    const sel = document.getElementById(prefix + '-selected');
+    sel.classList.add('hidden');
+    sel.classList.remove('flex');
+    document.getElementById(prefix + '-search-input').value = '';
+}
+
+function resetPersonaSearch(prefix) {
+    clearPersonaSearch(prefix);
+    document.getElementById(prefix + '-dropdown').classList.add('hidden');
+    document.getElementById(prefix + '-dropdown').innerHTML = '';
+}
+
+// Inicializar autocompletado del modal de responsables
+initPersonaSearch('resp');
+
 // ── Responsables ─────────────────────────────────────────────────────
 const respStoreUrl  = "{{ route('admin.servers.responsibles.store', $server) }}";
 const respUpdateBase = "{{ url('admin/servers/' . $server->id . '/responsibles') }}/";
@@ -1455,7 +1562,16 @@ function editResponsible(id, data) {
     document.getElementById('resp-form').action = respUpdateBase + id;
     document.getElementById('resp-method').innerHTML = '<input type="hidden" name="_method" value="PUT">';
 
-    document.getElementById('resp-persona_id').value     = data.persona_id     ?? '';
+    // Mostrar persona ya seleccionada
+    document.getElementById('resp-persona_id').value = data.persona_id ?? '';
+    if (data.persona_id && data.persona) {
+        const selName = document.getElementById('resp-selected-name');
+        const sel     = document.getElementById('resp-selected');
+        selName.textContent = `${data.persona.apellido_paterno} ${data.persona.apellido_materno ?? ''}, ${data.persona.nombres}`;
+        sel.classList.remove('hidden');
+        sel.classList.add('flex');
+    }
+
     document.getElementById('resp-level').value          = data.level          ?? 'soporte';
     document.getElementById('resp-assigned_at').value    = data.assigned_at    ?? '';
     document.getElementById('resp-is_active').checked    = data.is_active      == 1;
@@ -1478,6 +1594,7 @@ document.querySelector('[onclick="openModal(\'modal-responsible\')"]')?.addEvent
     document.getElementById('resp-form').action = respStoreUrl;
     document.getElementById('resp-method').innerHTML = '';
     document.getElementById('resp-form').reset();
+    resetPersonaSearch('resp');
     document.getElementById('resp-assigned_at').value = new Date().toISOString().slice(0, 10);
     document.getElementById('resp-is_active').checked = true;
 });

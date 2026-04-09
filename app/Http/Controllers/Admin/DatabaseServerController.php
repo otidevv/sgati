@@ -15,6 +15,7 @@ class DatabaseServerController extends Controller
     {
         $databaseServer->load([
             'databases.system',
+            'responsibles.persona',
             'server',
         ]);
 

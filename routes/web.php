@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\ServerContainerController;
 use App\Http\Controllers\Admin\ServerResponsibleController;
 use App\Http\Controllers\Admin\ServerResponsibleDocumentController;
 use App\Http\Controllers\Admin\DatabaseServerController;
+use App\Http\Controllers\Admin\DatabaseServerResponsibleController;
 use App\Http\Controllers\Admin\SettingController;
 use Illuminate\Support\Facades\Route;
 
@@ -89,6 +90,7 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Administración (solo admin) ───────────────────────────────────────
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('personas/search',            [PersonaController::class, 'search'])->name('personas.search');
         Route::get('personas/dni-lookup/{dni}', [PersonaController::class, 'dniLookup'])->name('personas.dni-lookup');
         Route::resource('personas', PersonaController::class);
         Route::resource('users', UserController::class);
@@ -124,6 +126,14 @@ Route::middleware(['auth'])->group(function () {
             Route::get('database-servers/{databaseServer}',   [DatabaseServerController::class, 'show'])->name('database-servers.show');
             Route::put('database-servers/{databaseServer}',   [DatabaseServerController::class, 'update'])->name('database-servers.update');
             Route::delete('database-servers/{databaseServer}',[DatabaseServerController::class, 'destroy'])->name('database-servers.destroy');
+
+            Route::prefix('database-servers/{databaseServer}')->name('database-servers.')->group(function () {
+                Route::post('responsibles',                                     [DatabaseServerResponsibleController::class, 'store'])->name('responsibles.store');
+                Route::put('responsibles/{responsible}',                        [DatabaseServerResponsibleController::class, 'update'])->name('responsibles.update');
+                Route::patch('responsibles/{responsible}/deactivate',           [DatabaseServerResponsibleController::class, 'deactivate'])->name('responsibles.deactivate');
+                Route::patch('responsibles/{responsible}/reactivate',           [DatabaseServerResponsibleController::class, 'reactivate'])->name('responsibles.reactivate');
+                Route::delete('responsibles/{responsible}',                     [DatabaseServerResponsibleController::class, 'destroy'])->name('responsibles.destroy');
+            });
         });
     });
 });

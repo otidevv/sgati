@@ -31,6 +31,16 @@ class DatabaseServer extends Model
         return $this->belongsTo(Server::class);
     }
 
+    public function responsibles()
+    {
+        return $this->hasMany(DatabaseServerResponsible::class)->with('persona')->orderBy('level');
+    }
+
+    public function activeResponsibles()
+    {
+        return $this->hasMany(DatabaseServerResponsible::class)->with('persona')->where('is_active', true)->orderBy('level');
+    }
+
     /**
      * Bases de datos alojadas en este motor.
      */

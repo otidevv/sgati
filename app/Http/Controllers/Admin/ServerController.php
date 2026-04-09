@@ -73,9 +73,7 @@ class ServerController extends Controller
             'responsibles.documents',
         ]);
 
-        $personas = Persona::orderBy('apellido_paterno')->get();
-
-        return view('admin.servers.show', compact('server', 'personas'));
+        return view('admin.servers.show', compact('server'));
     }
 
     public function edit(Server $server)

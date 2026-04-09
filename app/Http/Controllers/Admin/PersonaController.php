@@ -66,6 +66,26 @@ class PersonaController extends Controller
             ->with('success', 'Persona actualizada correctamente.');
     }
 
+    public function search(Request $request)
+    {
+        $q = trim($request->get('q', ''));
+
+        if (mb_strlen($q) < 4) {
+            return response()->json([]);
+        }
+
+        $personas = Persona::where('dni', 'like', $q . '%')
+            ->orWhere('apellido_paterno', 'like', '%' . $q . '%')
+            ->orWhere('apellido_materno', 'like', '%' . $q . '%')
+            ->orWhere('nombres', 'like', '%' . $q . '%')
+            ->orderBy('apellido_paterno')
+            ->orderBy('apellido_materno')
+            ->limit(10)
+            ->get(['id', 'dni', 'nombres', 'apellido_paterno', 'apellido_materno']);
+
+        return response()->json($personas);
+    }
+
     public function dniLookup(string $dni)
     {
         if (!preg_match('/^\d{8}$/', $dni)) {
