@@ -9,6 +9,12 @@ use Illuminate\Http\Request;
 
 class SystemDatabaseController extends Controller
 {
+    public function show(System $system, SystemDatabase $database)
+    {
+        $database->load(['responsibles.persona', 'responsibles.documents', 'databaseServer']);
+        return view('systems.databases.show', compact('system', 'database'));
+    }
+
     public function create(System $system)
     {
         $databaseServers = DatabaseServer::orderBy('name')->orderBy('engine')->get(['id', 'name', 'engine', 'version', 'host']);
@@ -24,7 +30,6 @@ class SystemDatabaseController extends Controller
             'db_user'           => 'nullable|string|max:100',
             'db_password'       => 'nullable|string',
             'schema_name'       => 'nullable|string|max:100',
-            'responsible'       => 'nullable|string|max:100',
             'environment'       => 'required|in:production,staging,development',
             'notes'             => 'nullable|string',
         ]);
@@ -50,7 +55,6 @@ class SystemDatabaseController extends Controller
             'db_user'           => 'nullable|string|max:100',
             'db_password'       => 'nullable|string',
             'schema_name'       => 'nullable|string|max:100',
-            'responsible'       => 'nullable|string|max:100',
             'environment'       => 'required|in:production,staging,development',
             'notes'             => 'nullable|string',
         ]);

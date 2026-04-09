@@ -65,7 +65,7 @@ class SystemController extends Controller
             'area', 'responsible',
             'infrastructure.server.ips',
             'versions',
-            'databases.databaseServer',
+            'databases.databaseServer', 'databases.responsibles',
             'services',
             'repositories',
             'integrationsFrom.targetSystem',

@@ -6,6 +6,8 @@ use App\Http\Controllers\SystemController;
 use App\Http\Controllers\SystemVersionController;
 use App\Http\Controllers\SystemInfrastructureController;
 use App\Http\Controllers\SystemDatabaseController;
+use App\Http\Controllers\SystemDatabaseResponsibleController;
+use App\Http\Controllers\SystemDatabaseResponsibleDocumentController;
 use App\Http\Controllers\SystemServiceController;
 use App\Http\Controllers\SystemIntegrationController;
 use App\Http\Controllers\SystemDocumentController;
@@ -53,7 +55,20 @@ Route::middleware(['auth'])->group(function () {
 
         // Bases de datos
         Route::resource('databases', SystemDatabaseController::class)
-            ->except(['index', 'show']);
+            ->except(['index']);
+
+        Route::prefix('databases/{database}')->name('databases.')->group(function () {
+            Route::post('responsibles',                                                                  [SystemDatabaseResponsibleController::class, 'store'])->name('responsibles.store');
+            Route::put('responsibles/{responsible}',                                                     [SystemDatabaseResponsibleController::class, 'update'])->name('responsibles.update');
+            Route::patch('responsibles/{responsible}/deactivate',                                        [SystemDatabaseResponsibleController::class, 'deactivate'])->name('responsibles.deactivate');
+            Route::patch('responsibles/{responsible}/reactivate',                                        [SystemDatabaseResponsibleController::class, 'reactivate'])->name('responsibles.reactivate');
+            Route::delete('responsibles/{responsible}',                                                  [SystemDatabaseResponsibleController::class, 'destroy'])->name('responsibles.destroy');
+
+            Route::post('responsibles/{responsible}/documents',                                          [SystemDatabaseResponsibleDocumentController::class, 'store'])->name('responsibles.documents.store');
+            Route::get('responsibles/{responsible}/documents/{document}/download',                       [SystemDatabaseResponsibleDocumentController::class, 'download'])->name('responsibles.documents.download');
+            Route::get('responsibles/{responsible}/documents/{document}/preview',                        [SystemDatabaseResponsibleDocumentController::class, 'preview'])->name('responsibles.documents.preview');
+            Route::delete('responsibles/{responsible}/documents/{document}',                             [SystemDatabaseResponsibleDocumentController::class, 'destroy'])->name('responsibles.documents.destroy');
+        });
 
         // Servicios / APIs
         Route::resource('services', SystemServiceController::class)

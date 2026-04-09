@@ -87,15 +87,6 @@
                                   focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                 </div>
 
-                {{-- Responsable --}}
-                <div>
-                    <label for="responsible" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Responsable (DBA)</label>
-                    <input type="text" id="responsible" name="responsible"
-                           value="{{ old('responsible', $database->responsible) }}"
-                           placeholder="Nombre del DBA"
-                           class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
-                                  dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                </div>
             </div>
 
             {{-- Sección: Motor / Servidor --}}

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\Environment;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SystemDatabase extends Model
 {
@@ -11,7 +12,7 @@ class SystemDatabase extends Model
         'system_id', 'database_server_id',
         'db_name', 'engine', 'schema_name',
         'db_user', 'db_password',
-        'responsible', 'environment', 'notes',
+        'environment', 'notes',
     ];
 
     protected function casts(): array
@@ -30,5 +31,10 @@ class SystemDatabase extends Model
     public function databaseServer()
     {
         return $this->belongsTo(DatabaseServer::class);
+    }
+
+    public function responsibles(): HasMany
+    {
+        return $this->hasMany(SystemDatabaseResponsible::class)->orderBy('assigned_at');
     }
 }
