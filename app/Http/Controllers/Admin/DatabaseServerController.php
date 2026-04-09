@@ -11,6 +11,16 @@ class DatabaseServerController extends Controller
 {
     private const ENGINES = ['postgresql','mysql','mariadb','oracle','sqlserver','sqlite','mongodb','other'];
 
+    public function show(Server $server, DatabaseServer $databaseServer)
+    {
+        $databaseServer->load([
+            'databases.system',
+            'server',
+        ]);
+
+        return view('admin.database-servers.show', compact('server', 'databaseServer'));
+    }
+
     public function store(Request $request, Server $server)
     {
         $data = $request->validate([

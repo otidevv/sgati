@@ -107,6 +107,8 @@ Route::middleware(['auth'])->group(function () {
 
             Route::post('responsibles',                                                          [ServerResponsibleController::class, 'store'])->name('responsibles.store');
             Route::put('responsibles/{responsible}',                                             [ServerResponsibleController::class, 'update'])->name('responsibles.update');
+            Route::patch('responsibles/{responsible}/deactivate',                                [ServerResponsibleController::class, 'deactivate'])->name('responsibles.deactivate');
+            Route::patch('responsibles/{responsible}/reactivate',                                [ServerResponsibleController::class, 'reactivate'])->name('responsibles.reactivate');
             Route::delete('responsibles/{responsible}',                                          [ServerResponsibleController::class, 'destroy'])->name('responsibles.destroy');
 
             Route::post('responsibles/{responsible}/documents',                                  [ServerResponsibleDocumentController::class, 'store'])->name('responsibles.documents.store');
@@ -118,9 +120,10 @@ Route::middleware(['auth'])->group(function () {
             Route::put('containers/{container}',         [ServerContainerController::class, 'update'])->name('containers.update');
             Route::delete('containers/{container}',      [ServerContainerController::class, 'destroy'])->name('containers.destroy');
 
-            Route::post('database-servers',              [DatabaseServerController::class, 'store'])->name('database-servers.store');
-            Route::put('database-servers/{databaseServer}', [DatabaseServerController::class, 'update'])->name('database-servers.update');
-            Route::delete('database-servers/{databaseServer}', [DatabaseServerController::class, 'destroy'])->name('database-servers.destroy');
+            Route::post('database-servers',                    [DatabaseServerController::class, 'store'])->name('database-servers.store');
+            Route::get('database-servers/{databaseServer}',   [DatabaseServerController::class, 'show'])->name('database-servers.show');
+            Route::put('database-servers/{databaseServer}',   [DatabaseServerController::class, 'update'])->name('database-servers.update');
+            Route::delete('database-servers/{databaseServer}',[DatabaseServerController::class, 'destroy'])->name('database-servers.destroy');
         });
     });
 });

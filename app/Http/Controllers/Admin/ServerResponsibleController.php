@@ -58,10 +58,41 @@ class ServerResponsibleController extends Controller
         return back()->with('success', 'Responsable actualizado correctamente.');
     }
 
+    public function reactivate(Request $request, Server $server, ServerResponsible $responsible)
+    {
+        $data = $request->validate([
+            'assigned_at' => 'required|date',
+        ]);
+
+        $responsible->update([
+            'is_active'     => true,
+            'assigned_at'   => $data['assigned_at'],
+            'unassigned_at' => null,
+        ]);
+
+        return back()->with('success', 'Responsable reactivado correctamente.');
+    }
+
+    public function deactivate(Request $request, Server $server, ServerResponsible $responsible)
+    {
+        $data = $request->validate([
+            'unassigned_at' => 'required|date|after_or_equal:' . $responsible->assigned_at->format('Y-m-d'),
+            'deactivate_notes' => 'nullable|string|max:500',
+        ]);
+
+        $responsible->update([
+            'is_active'        => false,
+            'unassigned_at'    => $data['unassigned_at'],
+            'document_notes'   => $data['deactivate_notes'] ?: $responsible->document_notes,
+        ]);
+
+        return back()->with('success', 'Responsable dado de baja correctamente.');
+    }
+
     public function destroy(Server $server, ServerResponsible $responsible)
     {
         $responsible->delete();
 
-        return back()->with('success', 'Responsable eliminado.');
+        return back()->with('success', 'Responsable eliminado del historial.');
     }
 }

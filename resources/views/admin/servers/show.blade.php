@@ -403,6 +403,15 @@
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="text-xs text-gray-400">{{ $dbServer->databases->count() }} BD(s)</span>
+                            <a href="{{ route('admin.servers.database-servers.show', [$server, $dbServer]) }}"
+                               title="Ver detalle"
+                               class="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400
+                                      hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-all">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </a>
                             <button onclick="editDbServer({{ $dbServer->id }}, {{ $dbServer->toJson() }})"
                                     class="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400
                                            hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
@@ -489,7 +498,13 @@
                         'operador'    => 'border-amber-400 dark:border-amber-500',
                     ];
                 @endphp
-                @if($server->responsibles->isEmpty())
+                @php
+                    $activeResponsibles   = $server->responsibles->where('is_active', true);
+                    $historicalResponsibles = $server->responsibles->where('is_active', false)->sortByDesc('unassigned_at');
+                @endphp
+
+                {{-- ── Sin ningún responsable ── --}}
+                @if($activeResponsibles->isEmpty() && $historicalResponsibles->isEmpty())
                 <div class="flex flex-col items-center justify-center py-10 text-center">
                     <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-3">
                         <svg class="w-6 h-6 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -500,28 +515,35 @@
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Usa el botón "Agregar" para asignar uno</p>
                 </div>
                 @else
+
+                {{-- ══ RESPONSABLES ACTIVOS ══ --}}
+                @if($activeResponsibles->isEmpty())
+                <div class="px-5 py-4 flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    </svg>
+                    Sin responsables activos actualmente
+                </div>
+                @else
                 <div class="divide-y divide-gray-100 dark:divide-gray-700/60">
-                    @foreach($server->responsibles as $resp)
+                    @foreach($activeResponsibles as $resp)
                     @php
-                        $initials = strtoupper(substr($resp->persona->apellido_paterno, 0, 1) . substr($resp->persona->apellido_materno ?? '', 0, 1));
+                        $initials    = strtoupper(substr($resp->persona->apellido_paterno, 0, 1) . substr($resp->persona->apellido_materno ?? '', 0, 1));
                         $borderClass = $leftBorder[$resp->level] ?? 'border-gray-300';
                         $avatarClass = $avatarColors[$resp->level] ?? 'bg-gray-100 text-gray-600';
                     @endphp
-                    <div class="px-4 py-3 border-l-[3px] {{ $borderClass }} {{ !$resp->is_active ? 'opacity-60' : '' }} hover:bg-gray-50/60 dark:hover:bg-gray-700/30 transition-colors group/row">
+                    <div class="px-4 py-3 border-l-[3px] {{ $borderClass }} hover:bg-gray-50/60 dark:hover:bg-gray-700/30 transition-colors group/row">
                         <div class="flex items-start gap-3">
-                            {{-- Avatar iniciales --}}
                             <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5 {{ $avatarClass }}">
                                 {{ $initials }}
                             </div>
-                            {{-- Datos --}}
                             <div class="flex-1 min-w-0">
-                                {{-- Fila 1: nombre + acciones al hover --}}
+                                {{-- Nombre + acciones --}}
                                 <div class="flex items-center gap-1.5 min-w-0">
                                     <span class="text-sm font-semibold text-gray-800 dark:text-gray-100 leading-snug truncate flex-1 min-w-0">
                                         {{ $resp->persona->apellido_paterno }} {{ $resp->persona->apellido_materno }},
                                         <span class="font-normal text-gray-600 dark:text-gray-300">{{ $resp->persona->nombres }}</span>
                                     </span>
-                                    {{-- Acciones inline --}}
                                     <div class="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover/row:opacity-100 transition-opacity">
                                         <button onclick="openDocUpload({{ $resp->id }})"
                                                 title="Adjuntar documento"
@@ -539,37 +561,26 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                                             </svg>
                                         </button>
-                                        <form action="{{ route('admin.servers.responsibles.destroy', [$server, $resp]) }}"
-                                              method="POST" id="del-resp-{{ $resp->id }}" class="inline">
-                                            @csrf @method('DELETE')
-                                            <button type="button"
-                                                    title="Eliminar"
-                                                    onclick="dtConfirmDelete('del-resp-{{ $resp->id }}', '{{ addslashes($resp->persona->apellido_paterno . ' ' . $resp->persona->nombres) }}')"
-                                                    class="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 dark:text-gray-500
-                                                           hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                                </svg>
-                                            </button>
-                                        </form>
+                                        {{-- DAR DE BAJA (reemplaza eliminar) --}}
+                                        <button onclick="openDeactivate({{ $resp->id }}, '{{ addslashes($resp->persona->apellido_paterno . ' ' . $resp->persona->nombres) }}')"
+                                                title="Dar de baja"
+                                                class="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 dark:text-gray-500
+                                                       hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                                            </svg>
+                                        </button>
                                     </div>
                                 </div>
-                                {{-- Fila 2: badges --}}
+                                {{-- Badges --}}
                                 <div class="flex items-center gap-2 mt-1 flex-wrap">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide {{ $levelColors[$resp->level] ?? '' }}">
                                         {{ $levelLabels[$resp->level] ?? $resp->level }}
                                     </span>
-                                    @if(!$resp->is_active)
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-gray-500"></span>
-                                        Inactivo
-                                    </span>
-                                    @else
                                     <span class="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
                                         Activo
                                     </span>
-                                    @endif
                                     <span class="text-[11px] text-gray-400 dark:text-gray-500 flex items-center gap-1">
                                         <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -627,11 +638,117 @@
                                     @endforeach
                                 </div>
                                 @endif
-                            </div>{{-- /datos --}}
+                            </div>
                         </div>
                     </div>
                     @endforeach
                 </div>
+                @endif
+
+                {{-- ══ HISTORIAL DE RESPONSABLES ══ --}}
+                @if($historicalResponsibles->isNotEmpty())
+                <div class="border-t border-gray-100 dark:border-gray-700/60">
+                    <button type="button" onclick="toggleHistory()"
+                            class="w-full flex items-center justify-between px-5 py-2.5 text-xs font-semibold
+                                   text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/30
+                                   uppercase tracking-wider transition-colors">
+                        <span class="flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Historial de responsables
+                            <span class="px-1.5 py-0.5 rounded-full bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 normal-case tracking-normal font-semibold">
+                                {{ $historicalResponsibles->count() }}
+                            </span>
+                        </span>
+                        <svg id="history-chevron" class="w-3.5 h-3.5 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+
+                    <div id="resp-history" class="hidden divide-y divide-gray-100 dark:divide-gray-700/60 bg-gray-50/50 dark:bg-gray-800/30">
+                        @foreach($historicalResponsibles as $resp)
+                        @php
+                            $initials    = strtoupper(substr($resp->persona->apellido_paterno, 0, 1) . substr($resp->persona->apellido_materno ?? '', 0, 1));
+                            $borderClass = $leftBorder[$resp->level] ?? 'border-gray-300';
+                            $avatarClass = 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400';
+                        @endphp
+                        <div class="px-4 py-3 border-l-[3px] border-gray-300 dark:border-gray-600 opacity-75 hover:opacity-100 hover:bg-gray-100/60 dark:hover:bg-gray-700/30 transition-all group/hist">
+                            <div class="flex items-start gap-3">
+                                <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5 {{ $avatarClass }}">
+                                    {{ $initials }}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    {{-- Nombre + acción eliminar --}}
+                                    <div class="flex items-center gap-1.5 min-w-0">
+                                        <span class="text-sm font-semibold text-gray-600 dark:text-gray-400 leading-snug truncate flex-1 min-w-0">
+                                            {{ $resp->persona->apellido_paterno }} {{ $resp->persona->apellido_materno }},
+                                            <span class="font-normal">{{ $resp->persona->nombres }}</span>
+                                        </span>
+                                        <div class="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover/hist:opacity-100 transition-opacity">
+                                            <button onclick="openReactivate({{ $resp->id }}, '{{ addslashes($resp->persona->apellido_paterno . ' ' . $resp->persona->nombres) }}')"
+                                                    title="Reactivar"
+                                                    class="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 dark:text-gray-500
+                                                           hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors">
+                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                                </svg>
+                                            </button>
+                                            <form action="{{ route('admin.servers.responsibles.destroy', [$server, $resp]) }}"
+                                                  method="POST" id="del-hist-{{ $resp->id }}" class="inline">
+                                                @csrf @method('DELETE')
+                                                <button type="button"
+                                                        title="Eliminar del historial"
+                                                        onclick="dtConfirmDelete('del-hist-{{ $resp->id }}', '{{ addslashes($resp->persona->apellido_paterno . ' ' . $resp->persona->nombres) }}')"
+                                                        class="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 dark:text-gray-500
+                                                               hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    {{-- Badges histórico --}}
+                                    <div class="flex items-center gap-2 mt-1 flex-wrap">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide {{ $levelColors[$resp->level] ?? '' }} opacity-60">
+                                            {{ $levelLabels[$resp->level] ?? $resp->level }}
+                                        </span>
+                                        {{-- Período --}}
+                                        <span class="inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500 font-medium">
+                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                            </svg>
+                                            {{ $resp->assigned_at->format('d/m/Y') }}
+                                            <svg class="w-3 h-3 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                                            </svg>
+                                            {{ $resp->unassigned_at?->format('d/m/Y') ?? 'N/A' }}
+                                            @php
+                                                $dias = $resp->assigned_at->diffInDays($resp->unassigned_at ?? now());
+                                            @endphp
+                                            <span class="text-gray-300 dark:text-gray-600">({{ $dias }} {{ $dias === 1 ? 'día' : 'días' }})</span>
+                                        </span>
+                                        @if($resp->document_type)
+                                        <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md
+                                                    bg-gray-100 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600
+                                                    text-[11px] text-gray-500 dark:text-gray-400">
+                                            <span class="font-medium">{{ $docLabels[$resp->document_type] ?? $resp->document_type }}</span>
+                                            @if($resp->document_number)<span class="text-gray-300 dark:text-gray-600">·</span> {{ $resp->document_number }}@endif
+                                        </div>
+                                        @endif
+                                        @if($resp->document_notes)
+                                        <span class="text-[11px] text-gray-400 dark:text-gray-500 italic">{{ $resp->document_notes }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
                 @endif
             </div>
         </div>
@@ -785,6 +902,147 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
                     <span id="resp-submit-label">Asignar</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ════════════════════════════════════════════════
+     MODAL: Dar de Baja a Responsable
+════════════════════════════════════════════════ --}}
+<div id="modal-deactivate"
+     class="hidden fixed inset-0 z-50 items-center justify-center p-4"
+     role="dialog" aria-modal="true">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal('modal-deactivate')"></div>
+    <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                </svg>
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white">Dar de Baja Responsable</h3>
+            </div>
+            <button onclick="closeModal('modal-deactivate')"
+                    class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400
+                           hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <form id="deactivate-form" method="POST">
+            @csrf
+            <input type="hidden" name="_method" value="PATCH">
+
+            <div class="p-6 space-y-4">
+                <div class="flex items-start gap-3 p-3 rounded-lg bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700/40">
+                    <svg class="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <p class="text-sm text-orange-700 dark:text-orange-300">
+                        El responsable <strong id="deactivate-name" class="font-semibold"></strong> pasará al historial conservando su período de gestión.
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Fecha de baja <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" name="unassigned_at" id="deactivate-date" required
+                           class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
+                                  dark:text-white focus:ring-orange-500 focus:border-orange-500 sm:text-sm">
+                    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Debe ser igual o posterior a la fecha de asignación.</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Motivo / Observaciones <span class="text-gray-400 font-normal">(opcional)</span>
+                    </label>
+                    <textarea name="deactivate_notes" id="deactivate-notes" rows="2"
+                              placeholder="Ej: Renuncia voluntaria, Fin de contrato, Reasignación..."
+                              class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
+                                     dark:text-white focus:ring-orange-500 focus:border-orange-500 sm:text-sm resize-none"></textarea>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <button type="button" onclick="closeModal('modal-deactivate')"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700
+                               border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white
+                               bg-orange-600 rounded-lg hover:bg-orange-700 transition-colors shadow-sm">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                    </svg>
+                    Dar de Baja
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ════════════════════════════════════════════════
+     MODAL: Reactivar Responsable
+════════════════════════════════════════════════ --}}
+<div id="modal-reactivate"
+     class="hidden fixed inset-0 z-50 items-center justify-center p-4"
+     role="dialog" aria-modal="true">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal('modal-reactivate')"></div>
+    <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white">Reactivar Responsable</h3>
+            </div>
+            <button onclick="closeModal('modal-reactivate')"
+                    class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400
+                           hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <form id="reactivate-form" method="POST">
+            @csrf
+            <input type="hidden" name="_method" value="PATCH">
+
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                    <strong id="reactivate-name" class="text-gray-800 dark:text-gray-200 font-semibold"></strong>
+                    volverá a figurar como responsable activo con el nuevo período de asignación.
+                </p>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Fecha de reactivación <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" name="assigned_at" id="reactivate-date" required
+                           class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
+                                  dark:text-white focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <button type="button" onclick="closeModal('modal-reactivate')"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700
+                               border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white
+                               bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors shadow-sm">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Reactivar
                 </button>
             </div>
         </form>
@@ -1223,6 +1481,32 @@ document.querySelector('[onclick="openModal(\'modal-responsible\')"]')?.addEvent
     document.getElementById('resp-assigned_at').value = new Date().toISOString().slice(0, 10);
     document.getElementById('resp-is_active').checked = true;
 });
+
+// ── Dar de Baja / Reactivar ───────────────────────────────────────────
+const deactivateBase = "{{ url('admin/servers/' . $server->id . '/responsibles') }}/";
+
+function openDeactivate(id, nombre) {
+    document.getElementById('deactivate-name').textContent = nombre;
+    document.getElementById('deactivate-form').action = deactivateBase + id + '/deactivate';
+    document.getElementById('deactivate-date').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('deactivate-notes').value = '';
+    openModal('modal-deactivate');
+}
+
+function openReactivate(id, nombre) {
+    document.getElementById('reactivate-name').textContent = nombre;
+    document.getElementById('reactivate-form').action = deactivateBase + id + '/reactivate';
+    document.getElementById('reactivate-date').value = new Date().toISOString().slice(0, 10);
+    openModal('modal-reactivate');
+}
+
+// ── Historial toggle ──────────────────────────────────────────────────
+function toggleHistory() {
+    const panel   = document.getElementById('resp-history');
+    const chevron = document.getElementById('history-chevron');
+    const hidden  = panel.classList.toggle('hidden');
+    chevron.style.transform = hidden ? '' : 'rotate(180deg)';
+}
 
 // ── Documentos de Responsables ───────────────────────────────────────
 const docUploadBase = "{{ url('admin/servers/' . $server->id . '/responsibles') }}/";
