@@ -575,64 +575,93 @@
                                                     </span>
                                                     <div
                                                         class="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover/row:opacity-100 transition-opacity">
-                                                        <button
-                                                            onclick="editDbResponsible({{ $resp->id }}, {{ $resp->toJson() }})"
-                                                            title="Editar"
+                                                        <button onclick="openDbDocUpload({{ $resp->id }})"
+                                                            title="Adjuntar documento"
                                                             class="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 dark:text-gray-500
-                                               hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
-                                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
-                                                                stroke="currentColor">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    stroke-width="2"
-                                                                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                                   hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
+                                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
                                                             </svg>
                                                         </button>
-                                                        <button
-                                                            onclick="openDbDeactivate({{ $resp->id }}, '{{ addslashes($resp->persona->apellido_paterno . ' ' . $resp->persona->nombres) }}')"
+                                                        <button onclick="editDbResponsible({{ $resp->id }}, {{ $resp->toJson() }})"
+                                                            title="Editar"
+                                                            class="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 dark:text-gray-500
+                                                                   hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                                            </svg>
+                                                        </button>
+                                                        <button onclick="openDbDeactivate({{ $resp->id }}, '{{ addslashes($resp->persona->apellido_paterno . ' ' . $resp->persona->nombres) }}')"
                                                             title="Dar de baja"
                                                             class="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 dark:text-gray-500
-                                               hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors">
-                                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
-                                                                stroke="currentColor">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    stroke-width="2"
-                                                                    d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                                                   hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors">
+                                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
                                                             </svg>
                                                         </button>
                                                     </div>
                                                 </div>
                                                 <div class="flex items-center gap-2 mt-1 flex-wrap">
-                                                    <span
-                                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide {{ $levelColors[$resp->level] ?? '' }}">
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide {{ $levelColors[$resp->level] ?? '' }}">
                                                         {{ $levelLabels[$resp->level] ?? $resp->level }}
                                                     </span>
-                                                    <span
-                                                        class="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400">
+                                                    <span class="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400">
                                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Activo
                                                     </span>
-                                                    <span
-                                                        class="text-[11px] text-gray-400 dark:text-gray-500 flex items-center gap-1">
-                                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24"
-                                                            stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2"
-                                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    <span class="text-[11px] text-gray-400 dark:text-gray-500 flex items-center gap-1">
+                                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                                         </svg>
                                                         Desde {{ $resp->assigned_at->format('d/m/Y') }}
                                                     </span>
-                                                    @if ($resp->document_type)
-                                                        <span
-                                                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md
-                                         bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700/50
-                                         text-[11px] text-indigo-600 dark:text-indigo-400">
-                                                            <span
-                                                                class="font-medium">{{ $docLabels[$resp->document_type] ?? $resp->document_type }}</span>
-                                                            @if ($resp->document_number)
-                                                                · {{ $resp->document_number }}
-                                                            @endif
-                                                        </span>
+                                                    @if($resp->document_type)
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md
+                                                                 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700/50
+                                                                 text-[11px] text-indigo-600 dark:text-indigo-400">
+                                                        <span class="font-medium">{{ $docLabels[$resp->document_type] ?? $resp->document_type }}</span>
+                                                        @if($resp->document_number) · {{ $resp->document_number }}@endif
+                                                    </span>
                                                     @endif
                                                 </div>
+                                                {{-- Documentos adjuntos --}}
+                                                @if($resp->documents->count())
+                                                <div class="mt-2 flex flex-wrap gap-1.5">
+                                                    @foreach($resp->documents as $doc)
+                                                    @php $docExt = strtolower(pathinfo($doc->original_name, PATHINFO_EXTENSION)); @endphp
+                                                    <div class="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-full
+                                                                bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700
+                                                                text-indigo-700 dark:text-indigo-300 text-[11px] font-medium max-w-xs">
+                                                        <svg class="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                                        </svg>
+                                                        <button type="button"
+                                                                onclick='openDocPreview({
+                                                                    name:        {{ json_encode($doc->description ?: $doc->original_name) }},
+                                                                    description: {{ json_encode($doc->description ? $doc->original_name : null) }},
+                                                                    previewUrl:  "{{ route('admin.servers.database-servers.responsibles.documents.preview', [$server, $databaseServer, $resp, $doc]) }}",
+                                                                    downloadUrl: "{{ route('admin.servers.database-servers.responsibles.documents.download', [$server, $databaseServer, $resp, $doc]) }}",
+                                                                    ext:         {{ json_encode($docExt) }}
+                                                                })'
+                                                                title="Previsualizar {{ $doc->original_name }}"
+                                                                class="truncate max-w-[160px] hover:underline cursor-pointer">
+                                                            {{ $doc->description ?: $doc->original_name }}
+                                                        </button>
+                                                        <form action="{{ route('admin.servers.database-servers.responsibles.documents.destroy', [$server, $databaseServer, $resp, $doc]) }}"
+                                                              method="POST" class="inline"
+                                                              onsubmit="sgDeleteForm(this,'¿Eliminar este documento?');return false">
+                                                            @csrf @method('DELETE')
+                                                            <button type="submit"
+                                                                    class="ml-0.5 w-4 h-4 flex items-center justify-center rounded-full
+                                                                           text-indigo-400 hover:text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors">
+                                                                <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/>
+                                                                </svg>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                    @endforeach
+                                                </div>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -1175,6 +1204,83 @@
         </div>
     </div>
 
+{{-- ════════════════════════════════════════════════
+     MODAL: Adjuntar Documento a Responsable (BD)
+════════════════════════════════════════════════ --}}
+<div id="modal-db-doc-upload"
+     class="hidden fixed inset-0 z-50 items-center justify-center p-4"
+     role="dialog" aria-modal="true">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal('modal-db-doc-upload')"></div>
+    <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                </svg>
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white">Adjuntar Documento</h3>
+            </div>
+            <button onclick="closeModal('modal-db-doc-upload')"
+                    class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400
+                           hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <form id="db-doc-upload-form" method="POST" enctype="multipart/form-data">
+            @csrf
+            <div class="p-6 space-y-4">
+                <div x-data="{ dragging: false }"
+                     @dragover.prevent="dragging = true"
+                     @dragleave.prevent="dragging = false"
+                     @drop.prevent="dragging = false; $refs.dbFileInput.files = $event.dataTransfer.files; updateDbFileName($event.dataTransfer.files[0]?.name)"
+                     :class="dragging ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-gray-300 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-500'"
+                     class="border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer"
+                     onclick="document.getElementById('db-doc-file-input').click()">
+                    <svg class="w-10 h-10 mx-auto text-gray-300 dark:text-gray-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    <p id="db-doc-file-label" class="text-sm text-gray-500 dark:text-gray-400">
+                        Arrastra el archivo aquí o <span class="text-indigo-600 dark:text-indigo-400 font-medium">haz clic para seleccionar</span>
+                    </p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">PDF, Word, Excel, imagen · Máx. 10 MB</p>
+                    <input id="db-doc-file-input" x-ref="dbFileInput" type="file" name="file"
+                           accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                           class="hidden" required
+                           onchange="updateDbFileName(this.files[0]?.name)">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Descripción <span class="text-gray-400 font-normal">(opcional)</span>
+                    </label>
+                    <input type="text" name="description" id="db-doc-description"
+                           placeholder="Ej: Resolución de nombramiento 2024"
+                           class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
+                                  dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-b-2xl">
+                <button type="button" onclick="closeModal('modal-db-doc-upload')"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700
+                               border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white
+                               bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    Subir documento
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Componente de previsualización (reutilizable) --}}
+<x-doc-preview-modal />
+
 @endsection
 
 @push('scripts')
@@ -1339,6 +1445,24 @@
             const chevron = document.getElementById('db-history-chevron');
             const hidden = panel.classList.toggle('hidden');
             chevron.style.transform = hidden ? '' : 'rotate(180deg)';
+        }
+
+        // ── Documentos de Responsables BD ────────────────────────────────────
+        const dbDocUploadBase = "{{ url('admin/servers/' . $server->id . '/database-servers/' . $databaseServer->id . '/responsibles') }}/";
+
+        function openDbDocUpload(responsibleId) {
+            document.getElementById('db-doc-upload-form').action = dbDocUploadBase + responsibleId + '/documents';
+            document.getElementById('db-doc-file-input').value   = '';
+            document.getElementById('db-doc-description').value  = '';
+            document.getElementById('db-doc-file-label').innerHTML =
+                'Arrastra el archivo aquí o <span class="text-indigo-600 dark:text-indigo-400 font-medium">haz clic para seleccionar</span>';
+            openModal('modal-db-doc-upload');
+        }
+
+        function updateDbFileName(name) {
+            if (!name) return;
+            document.getElementById('db-doc-file-label').innerHTML =
+                '<span class="font-medium text-gray-700 dark:text-gray-300">' + name + '</span>';
         }
 
         // ── Contraseña ────────────────────────────────────────────────────────

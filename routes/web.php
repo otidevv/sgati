@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\ServerResponsibleController;
 use App\Http\Controllers\Admin\ServerResponsibleDocumentController;
 use App\Http\Controllers\Admin\DatabaseServerController;
 use App\Http\Controllers\Admin\DatabaseServerResponsibleController;
+use App\Http\Controllers\Admin\DatabaseServerResponsibleDocumentController;
 use App\Http\Controllers\Admin\SettingController;
 use Illuminate\Support\Facades\Route;
 
@@ -133,6 +134,11 @@ Route::middleware(['auth'])->group(function () {
                 Route::patch('responsibles/{responsible}/deactivate',           [DatabaseServerResponsibleController::class, 'deactivate'])->name('responsibles.deactivate');
                 Route::patch('responsibles/{responsible}/reactivate',           [DatabaseServerResponsibleController::class, 'reactivate'])->name('responsibles.reactivate');
                 Route::delete('responsibles/{responsible}',                     [DatabaseServerResponsibleController::class, 'destroy'])->name('responsibles.destroy');
+
+                Route::post('responsibles/{responsible}/documents',                                          [DatabaseServerResponsibleDocumentController::class, 'store'])->name('responsibles.documents.store');
+                Route::get('responsibles/{responsible}/documents/{document}/download',                       [DatabaseServerResponsibleDocumentController::class, 'download'])->name('responsibles.documents.download');
+                Route::get('responsibles/{responsible}/documents/{document}/preview',                        [DatabaseServerResponsibleDocumentController::class, 'preview'])->name('responsibles.documents.preview');
+                Route::delete('responsibles/{responsible}/documents/{document}',                             [DatabaseServerResponsibleDocumentController::class, 'destroy'])->name('responsibles.documents.destroy');
             });
         });
     });
