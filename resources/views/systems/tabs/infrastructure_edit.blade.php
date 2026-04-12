@@ -48,7 +48,16 @@
         </div>
 
         {{-- Web & SSL --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden" x-data="{ ssl: {{ old('ssl_enabled', $infra->ssl_enabled) ? 'true' : 'false' }} }">
+        @php
+            $currentSslType = old('ssl_type',
+                $infra->ssl_certificate_id ? 'institutional' : 'custom'
+            );
+        @endphp
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
+             x-data="{
+                ssl: {{ old('ssl_enabled', $infra->ssl_enabled) ? 'true' : 'false' }},
+                sslType: '{{ $currentSslType }}'
+             }">
             <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">
                 <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Web & SSL</h2>
             </div>
@@ -98,13 +107,79 @@
                     </label>
                 </div>
 
-                {{-- SSL expiry --}}
-                <div x-show="ssl" x-transition>
-                    <label for="ssl_expiry" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha de Vencimiento del Certificado</label>
-                    <input type="date" id="ssl_expiry" name="ssl_expiry"
-                           value="{{ old('ssl_expiry', $infra->ssl_expiry?->format('Y-m-d')) }}"
-                           class="block w-full sm:w-48 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    @error('ssl_expiry')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
+                {{-- SSL detalles (solo si habilitado) --}}
+                <div x-show="ssl" x-transition class="space-y-4">
+
+                    {{-- Tipo de certificado --}}
+                    <div>
+                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo de certificado</p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="relative flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors"
+                                   :class="sslType === 'institutional'
+                                       ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700'
+                                       : 'bg-white dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'">
+                                <input type="radio" name="ssl_type" value="institutional"
+                                       x-model="sslType"
+                                       class="mt-0.5 text-blue-600 border-gray-300 dark:border-gray-600 focus:ring-blue-500">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">Certificado institucional</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Certificado registrado en el repositorio de la OTI</p>
+                                </div>
+                            </label>
+                            <label class="relative flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors"
+                                   :class="sslType === 'custom'
+                                       ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700'
+                                       : 'bg-white dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'">
+                                <input type="radio" name="ssl_type" value="custom"
+                                       x-model="sslType"
+                                       class="mt-0.5 text-amber-600 border-gray-300 dark:border-gray-600 focus:ring-amber-500">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">Certificado propio</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Cert externo o específico — solo registra la fecha de vencimiento</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    {{-- Selector de certificado institucional --}}
+                    <div x-show="sslType === 'institutional'" x-transition>
+                        <label for="ssl_certificate_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Certificado SSL
+                        </label>
+                        <select id="ssl_certificate_id" name="ssl_certificate_id"
+                                class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
+                                       dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="">— Seleccionar certificado —</option>
+                            @foreach($sslCerts as $c)
+                            <option value="{{ $c->id }}"
+                                    {{ old('ssl_certificate_id', $infra->ssl_certificate_id) == $c->id ? 'selected' : '' }}>
+                                {{ $c->name }}
+                                @if($c->common_name) ({{ $c->common_name }}) @endif
+                                @if($c->valid_until) — vence {{ $c->valid_until->format('d/m/Y') }} @endif
+                            </option>
+                            @endforeach
+                        </select>
+                        @if($sslCerts->isEmpty())
+                        <p class="mt-1.5 text-xs text-amber-600 dark:text-amber-400">
+                            No hay certificados registrados.
+                            <a href="{{ route('admin.ssl-certificates.create') }}" target="_blank" class="underline hover:no-underline">Registrar uno aquí</a>.
+                        </p>
+                        @endif
+                        @error('ssl_certificate_id')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
+                    </div>
+
+                    {{-- Fecha de vencimiento para certificado propio --}}
+                    <div x-show="sslType === 'custom'" x-transition>
+                        <label for="ssl_custom_expiry" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Fecha de vencimiento del certificado
+                        </label>
+                        <input type="date" id="ssl_custom_expiry" name="ssl_custom_expiry"
+                               value="{{ old('ssl_custom_expiry', $infra->ssl_custom_expiry?->format('Y-m-d') ?? $infra->ssl_expiry?->format('Y-m-d')) }}"
+                               class="block w-full sm:w-48 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
+                                      dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        @error('ssl_custom_expiry')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
+                    </div>
+
                 </div>
             </div>
         </div>

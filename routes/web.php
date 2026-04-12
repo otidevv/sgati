@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\DatabaseServerController;
 use App\Http\Controllers\Admin\DatabaseServerResponsibleController;
 use App\Http\Controllers\Admin\DatabaseServerResponsibleDocumentController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\SslCertificateController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => redirect()->route('dashboard'));
@@ -125,6 +126,15 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('users', UserController::class);
         Route::resource('areas', AreaController::class);
         Route::resource('servers', ServerController::class);
+
+        // Certificados SSL
+        Route::post('ssl-certificates/parse-cert', [SslCertificateController::class, 'parseCert'])->name('ssl-certificates.parse-cert');
+        Route::resource('ssl-certificates', SslCertificateController::class)
+              ->parameters(['ssl-certificates' => 'sslCertificate']);
+        Route::get('ssl-certificates/{sslCertificate}/download/cert',  [SslCertificateController::class, 'downloadCert'])->name('ssl-certificates.download.cert');
+        Route::get('ssl-certificates/{sslCertificate}/download/key',   [SslCertificateController::class, 'downloadKey'])->name('ssl-certificates.download.key');
+        Route::get('ssl-certificates/{sslCertificate}/download/chain', [SslCertificateController::class, 'downloadChain'])->name('ssl-certificates.download.chain');
+        Route::get('ssl-certificates/{sslCertificate}/download/pfx',   [SslCertificateController::class, 'downloadPfx'])->name('ssl-certificates.download.pfx');
 
         // Configuración
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');

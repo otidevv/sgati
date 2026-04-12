@@ -177,7 +177,17 @@
             @endif
 
             {{-- SSL Configuration --}}
-            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+            @php
+                $sslExpiry     = $infra->effectiveSslExpiry();
+                $sslCert       = $infra->sslCertificate;
+                $daysLeft      = $sslExpiry ? now()->diffInDays($sslExpiry, false) : null;
+                $isExpired     = $daysLeft !== null && $daysLeft < 0;
+                $isExpiringSoon= $daysLeft !== null && $daysLeft >= 0 && $daysLeft < 30;
+                $expiryColor   = $isExpired ? 'red' : ($isExpiringSoon ? 'yellow' : 'green');
+            @endphp
+            <div class="bg-white dark:bg-gray-800 rounded-xl border
+                        {{ $infra->ssl_enabled && $isExpired ? 'border-red-200 dark:border-red-800' : ($infra->ssl_enabled && $isExpiringSoon ? 'border-yellow-200 dark:border-yellow-800' : 'border-gray-200 dark:border-gray-700') }}
+                        shadow-sm overflow-hidden">
                 <div class="px-5 py-4 bg-gradient-to-r from-gray-50 to-white dark:from-gray-700/50 dark:to-gray-800 border-b border-gray-200 dark:border-gray-700">
                     <div class="flex items-center gap-2">
                         <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -187,6 +197,7 @@
                     </div>
                 </div>
                 <div class="p-5 space-y-4">
+                    {{-- Estado --}}
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Estado</span>
                         @if($infra->ssl_enabled)
@@ -205,25 +216,48 @@
                             </span>
                         @endif
                     </div>
-                    @if($infra->ssl_enabled && $infra->ssl_expiry)
-                    @php
-                        $daysLeft = now()->diffInDays($infra->ssl_expiry, false);
-                        $isExpired = $daysLeft < 0;
-                        $isExpiringSoon = $daysLeft >= 0 && $daysLeft < 30;
-                    @endphp
+
+                    @if($infra->ssl_enabled)
+                    {{-- Certificado vinculado (institucional) --}}
+                    @if($sslCert)
+                    <div class="flex items-start justify-between gap-2">
+                        <span class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mt-0.5">Certificado</span>
+                        <div class="text-right">
+                            @can('infrastructure.edit')
+                            <a href="{{ route('admin.ssl-certificates.show', $sslCert) }}"
+                               class="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+                                {{ $sslCert->name }}
+                            </a>
+                            @else
+                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ $sslCert->name }}</p>
+                            @endcan
+                            @if($sslCert->common_name)
+                            <p class="text-xs font-mono text-gray-400 dark:text-gray-500 mt-0.5">{{ $sslCert->common_name }}</p>
+                            @endif
+                        </div>
+                    </div>
+                    @else
+                    {{-- Certificado propio (solo fecha) --}}
+                    <div class="flex items-center gap-1.5">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+                                     bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
+                            Certificado propio
+                        </span>
+                    </div>
+                    @endif
+
+                    {{-- Vencimiento --}}
+                    @if($sslExpiry)
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Vencimiento</span>
                         <div class="text-right">
-                            <p class="text-sm font-semibold {{ $isExpired ? 'text-red-600 dark:text-red-400' : ($isExpiringSoon ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400') }}">
-                                {{ $infra->ssl_expiry->format('d/m/Y') }}
+                            <p class="text-sm font-semibold text-{{ $expiryColor }}-600 dark:text-{{ $expiryColor }}-400">
+                                {{ $sslExpiry->format('d/m/Y') }}
                             </p>
                             <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                @if($isExpired)
-                                    Vencido hace {{ abs($daysLeft) }} días
-                                @elseif($isExpiringSoon)
-                                    Vence en {{ $daysLeft }} días
-                                @else
-                                    {{ $infra->ssl_expiry->diffForHumans() }}
+                                @if($isExpired) Vencido hace {{ abs($daysLeft) }} días
+                                @elseif($isExpiringSoon) Vence en {{ $daysLeft }} días
+                                @else {{ $sslExpiry->diffForHumans() }}
                                 @endif
                             </p>
                         </div>
@@ -234,13 +268,12 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                         </svg>
                         <p class="text-xs {{ $isExpired ? 'text-red-700 dark:text-red-300' : 'text-yellow-700 dark:text-yellow-300' }}">
-                            @if($isExpired)
-                                El certificado SSL ha vencido. Se requiere renovación inmediata.
-                            @else
-                                El certificado SSL vencerá pronto. Planifique su renovación.
+                            @if($isExpired) El certificado SSL ha vencido. Se requiere renovación inmediata.
+                            @else El certificado SSL vencerá pronto. Planifique su renovación.
                             @endif
                         </p>
                     </div>
+                    @endif
                     @endif
                     @endif
                 </div>
