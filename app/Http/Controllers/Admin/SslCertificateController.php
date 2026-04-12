@@ -190,6 +190,93 @@ class SslCertificateController extends Controller
             ->with('success', 'Certificado SSL eliminado.');
     }
 
+    public function extractFromPfx(Request $request, SslCertificate $sslCertificate)
+    {
+        if (!$sslCertificate->pfx_file_path) {
+            return back()->with('error', 'No hay archivo PFX disponible para extraer.');
+        }
+
+        $pfxContent = $this->disk()->get($sslCertificate->pfx_file_path);
+        $password   = $request->input('pfx_password', '');
+        $certs      = [];
+
+        if (!openssl_pkcs12_read($pfxContent, $certs, $password)) {
+            if (!openssl_pkcs12_read($pfxContent, $certs, '')) {
+                return back()->with('error', 'No se pudo leer el PFX. Verifica que la contraseña sea correcta.');
+            }
+        }
+
+        $saved = [];
+
+        if (!$sslCertificate->cert_file_path && !empty($certs['cert'])) {
+            $certPem = '';
+            openssl_x509_export($certs['cert'], $certPem);
+            $certPath = "ssl-certs/{$sslCertificate->id}/cert/certificate.crt";
+            $this->disk()->put($certPath, $certPem);
+            $sslCertificate->cert_file_path = $certPath;
+            $saved[] = 'certificado (.crt)';
+        }
+
+        if (!$sslCertificate->key_file_path && !empty($certs['pkey'])) {
+            $keyPem = '';
+            openssl_pkey_export($certs['pkey'], $keyPem);
+            $keyPath = "ssl-certs/{$sslCertificate->id}/key/private.key";
+            $this->disk()->put($keyPath, $keyPem);
+            $sslCertificate->key_file_path = $keyPath;
+            $saved[] = 'llave privada (.key)';
+        }
+
+        if (empty($saved)) {
+            return back()->with('error', 'El PFX no contenía datos que falten en el registro actual.');
+        }
+
+        $sslCertificate->save();
+
+        return back()->with('success', 'Extraído correctamente del PFX: ' . implode(' y ', $saved) . '.');
+    }
+
+    public function convertToPfx(Request $request, SslCertificate $sslCertificate)
+    {
+        $request->validate(['pfx_password' => 'nullable|string|max:255']);
+
+        if (!$sslCertificate->cert_file_path || !$sslCertificate->key_file_path) {
+            return back()->with('error', 'Se necesitan el certificado (.crt) y la llave privada (.key) para generar el PFX.');
+        }
+
+        $certContent = $this->disk()->get($sslCertificate->cert_file_path);
+        $keyContent  = $this->disk()->get($sslCertificate->key_file_path);
+        $password    = $request->input('pfx_password', '');
+
+        $pfxData = '';
+        $options = [];
+
+        if ($sslCertificate->chain_file_path) {
+            $chainContent = $this->disk()->get($sslCertificate->chain_file_path);
+            $options['extracerts'] = [$chainContent];
+        }
+
+        if (!openssl_pkcs12_export($certContent, $pfxData, $keyContent, $password, $options)) {
+            return back()->with('error', 'No se pudo generar el PFX. Verifica que el certificado y la llave privada correspondan.');
+        }
+
+        if ($sslCertificate->pfx_file_path) {
+            $this->deleteFile($sslCertificate->pfx_file_path);
+        }
+
+        $pfxPath = "ssl-certs/{$sslCertificate->id}/pfx/certificate.pfx";
+        $this->disk()->put($pfxPath, $pfxData);
+        $sslCertificate->pfx_file_path = $pfxPath;
+        $sslCertificate->save();
+
+        $msg = 'Archivo PFX generado correctamente';
+        $msg .= $password ? ' (con contraseña).' : ' (sin contraseña).';
+        if (!empty($options['extracerts'])) {
+            $msg = 'Archivo PFX generado con cadena intermedia incluida' . ($password ? ' y contraseña.' : '.');
+        }
+
+        return back()->with('success', $msg);
+    }
+
     public function downloadCert(SslCertificate $sslCertificate)
     {
         return $this->downloadFile($sslCertificate->cert_file_path, 'certificado');

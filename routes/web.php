@@ -135,6 +135,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('ssl-certificates/{sslCertificate}/download/key',   [SslCertificateController::class, 'downloadKey'])->name('ssl-certificates.download.key');
         Route::get('ssl-certificates/{sslCertificate}/download/chain', [SslCertificateController::class, 'downloadChain'])->name('ssl-certificates.download.chain');
         Route::get('ssl-certificates/{sslCertificate}/download/pfx',   [SslCertificateController::class, 'downloadPfx'])->name('ssl-certificates.download.pfx');
+        Route::post('ssl-certificates/{sslCertificate}/extract-from-pfx', [SslCertificateController::class, 'extractFromPfx'])->name('ssl-certificates.extract-from-pfx');
+        Route::post('ssl-certificates/{sslCertificate}/convert-to-pfx',   [SslCertificateController::class, 'convertToPfx'])->name('ssl-certificates.convert-to-pfx');
 
         // Configuración
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');

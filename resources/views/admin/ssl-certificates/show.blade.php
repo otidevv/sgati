@@ -65,6 +65,15 @@
     </div>
     @endif
 
+    @if(session('error'))
+    <div class="flex items-center gap-3 px-4 py-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg text-sm text-red-700 dark:text-red-300">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        {{ session('error') }}
+    </div>
+    @endif
+
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {{-- Detalles --}}
@@ -165,6 +174,115 @@
             </div>
         </div>
     </div>
+
+    {{-- Herramientas de Conversión --}}
+    @php
+        $hasPfx      = (bool) $sslCertificate->pfx_file_path;
+        $hasCert     = (bool) $sslCertificate->cert_file_path;
+        $hasKey      = (bool) $sslCertificate->key_file_path;
+        $canExtract  = $hasPfx  && (!$hasCert || !$hasKey);
+        $canGenPfx   = $hasCert && $hasKey && !$hasPfx;
+    @endphp
+
+    @if($canExtract || $canGenPfx)
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+        <div class="px-5 py-4 bg-gradient-to-r from-indigo-50 to-white dark:from-indigo-900/20 dark:to-gray-800
+                    border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+            <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+            </svg>
+            <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Conversión de Formato</h4>
+        </div>
+        <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+            @if($canExtract)
+            {{-- PFX → cert + key --}}
+            <div class="border border-indigo-200 dark:border-indigo-700/50 rounded-lg p-4 bg-indigo-50/50 dark:bg-indigo-900/10">
+                <div class="flex items-start gap-3 mb-3">
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-800/50 flex-shrink-0">
+                        <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                    </span>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900 dark:text-white">Extraer del PFX</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            Obtiene
+                            @if(!$hasCert && !$hasKey) el certificado <span class="font-mono">.crt</span> y la llave <span class="font-mono">.key</span>
+                            @elseif(!$hasCert) el certificado <span class="font-mono">.crt</span>
+                            @else la llave privada <span class="font-mono">.key</span>
+                            @endif
+                            a partir del archivo PFX.
+                        </p>
+                    </div>
+                </div>
+                <form method="POST" action="{{ route('admin.ssl-certificates.extract-from-pfx', $sslCertificate) }}">
+                    @csrf
+                    <div class="mb-3">
+                        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                            Contraseña del PFX <span class="font-normal text-gray-400">(dejar vacío si no tiene)</span>
+                        </label>
+                        <input type="password" name="pfx_password"
+                               class="w-full text-sm px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600
+                                      bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+                                      focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                               placeholder="contraseña...">
+                    </div>
+                    <button type="submit"
+                            class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium
+                                   text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Extraer archivos del PFX
+                    </button>
+                </form>
+            </div>
+            @endif
+
+            @if($canGenPfx)
+            {{-- cert + key → PFX --}}
+            <div class="border border-violet-200 dark:border-violet-700/50 rounded-lg p-4 bg-violet-50/50 dark:bg-violet-900/10">
+                <div class="flex items-start gap-3 mb-3">
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-800/50 flex-shrink-0">
+                        <svg class="w-4 h-4 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
+                        </svg>
+                    </span>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900 dark:text-white">Generar PFX</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            Crea un archivo <span class="font-mono">.pfx</span> combinando el certificado y la llave privada{{ $sslCertificate->chain_file_path ? ', incluyendo la cadena intermedia disponible' : '' }}.
+                        </p>
+                    </div>
+                </div>
+                <form method="POST" action="{{ route('admin.ssl-certificates.convert-to-pfx', $sslCertificate) }}">
+                    @csrf
+                    <div class="mb-3">
+                        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                            Contraseña para el PFX <span class="font-normal text-gray-400">(opcional)</span>
+                        </label>
+                        <input type="password" name="pfx_password"
+                               class="w-full text-sm px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600
+                                      bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+                                      focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none"
+                               placeholder="contraseña para el nuevo PFX...">
+                    </div>
+                    <button type="submit"
+                            class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium
+                                   text-white bg-violet-600 hover:bg-violet-700 rounded-md transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                        </svg>
+                        Generar archivo PFX
+                    </button>
+                </form>
+            </div>
+            @endif
+
+        </div>
+    </div>
+    @endif
 
     {{-- Sistemas que usan este certificado --}}
     @if($sslCertificate->infrastructures->isNotEmpty())
