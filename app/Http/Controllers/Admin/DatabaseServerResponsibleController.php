@@ -10,26 +10,18 @@ use Illuminate\Http\Request;
 
 class DatabaseServerResponsibleController extends Controller
 {
-    private const LEVELS    = 'principal,soporte,supervision,operador';
-    private const DOC_TYPES = 'resolucion_directoral,resolucion_jefatural,memorando,oficio,contrato,acta,otro';
+    private const LEVELS = 'principal,soporte,supervision,operador';
 
     public function store(Request $request, Server $server, DatabaseServer $databaseServer)
     {
         $data = $request->validate([
-            'persona_id'      => 'required|exists:personas,id',
-            'level'           => 'required|in:' . self::LEVELS,
-            'assigned_at'     => 'required|date',
-            'is_active'       => 'boolean',
-            'document_type'   => 'nullable|in:' . self::DOC_TYPES,
-            'document_number' => 'nullable|string|max:100',
-            'document_date'   => 'nullable|date',
-            'document_notes'  => 'nullable|string|max:500',
+            'persona_id'  => 'required|exists:personas,id',
+            'level'       => 'required|in:' . self::LEVELS,
+            'assigned_at' => 'required|date',
+            'is_active'   => 'boolean',
         ]);
 
-        $data['is_active']       = $request->boolean('is_active', true);
-        $data['document_type']   = $data['document_type']   ?: null;
-        $data['document_number'] = $data['document_number'] ?: null;
-        $data['document_date']   = $data['document_date']   ?: null;
+        $data['is_active'] = $request->boolean('is_active', true);
 
         $databaseServer->responsibles()->create($data);
 
@@ -39,20 +31,13 @@ class DatabaseServerResponsibleController extends Controller
     public function update(Request $request, Server $server, DatabaseServer $databaseServer, DatabaseServerResponsible $responsible)
     {
         $data = $request->validate([
-            'persona_id'      => 'required|exists:personas,id',
-            'level'           => 'required|in:' . self::LEVELS,
-            'assigned_at'     => 'required|date',
-            'is_active'       => 'boolean',
-            'document_type'   => 'nullable|in:' . self::DOC_TYPES,
-            'document_number' => 'nullable|string|max:100',
-            'document_date'   => 'nullable|date',
-            'document_notes'  => 'nullable|string|max:500',
+            'persona_id'  => 'required|exists:personas,id',
+            'level'       => 'required|in:' . self::LEVELS,
+            'assigned_at' => 'required|date',
+            'is_active'   => 'boolean',
         ]);
 
-        $data['is_active']       = $request->boolean('is_active', true);
-        $data['document_type']   = $data['document_type']   ?: null;
-        $data['document_number'] = $data['document_number'] ?: null;
-        $data['document_date']   = $data['document_date']   ?: null;
+        $data['is_active'] = $request->boolean('is_active', true);
 
         $responsible->update($data);
 

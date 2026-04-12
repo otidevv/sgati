@@ -12,6 +12,14 @@ class SystemDatabaseResponsibleDocument extends Model
         'original_name',
         'file_path',
         'description',
+        'document_type',
+        'document_number',
+        'document_date',
+        'document_notes',
+    ];
+
+    protected $casts = [
+        'document_date' => 'date',
     ];
 
     public function responsible(): BelongsTo

@@ -9,25 +9,17 @@ use Illuminate\Http\Request;
 
 class SystemDatabaseResponsibleController extends Controller
 {
-    private const LEVELS    = 'principal,soporte,supervision,operador';
-    private const DOC_TYPES = 'resolucion_directoral,resolucion_jefatural,memorando,oficio,contrato,acta,otro';
+    private const LEVELS = 'principal,soporte,supervision,operador';
 
     public function store(Request $request, System $system, SystemDatabase $database)
     {
         $data = $request->validate([
-            'persona_id'      => 'required|exists:personas,id',
-            'level'           => 'required|in:' . self::LEVELS,
-            'assigned_at'     => 'required|date',
-            'document_type'   => 'nullable|in:' . self::DOC_TYPES,
-            'document_number' => 'nullable|string|max:100',
-            'document_date'   => 'nullable|date',
-            'document_notes'  => 'nullable|string|max:500',
+            'persona_id'  => 'required|exists:personas,id',
+            'level'       => 'required|in:' . self::LEVELS,
+            'assigned_at' => 'required|date',
         ]);
 
-        $data['is_active']       = true;
-        $data['document_type']   = $data['document_type']   ?: null;
-        $data['document_number'] = $data['document_number'] ?: null;
-        $data['document_date']   = $data['document_date']   ?: null;
+        $data['is_active'] = true;
 
         $database->responsibles()->create($data);
 
@@ -37,18 +29,10 @@ class SystemDatabaseResponsibleController extends Controller
     public function update(Request $request, System $system, SystemDatabase $database, SystemDatabaseResponsible $responsible)
     {
         $data = $request->validate([
-            'persona_id'      => 'required|exists:personas,id',
-            'level'           => 'required|in:' . self::LEVELS,
-            'assigned_at'     => 'required|date',
-            'document_type'   => 'nullable|in:' . self::DOC_TYPES,
-            'document_number' => 'nullable|string|max:100',
-            'document_date'   => 'nullable|date',
-            'document_notes'  => 'nullable|string|max:500',
+            'persona_id'  => 'required|exists:personas,id',
+            'level'       => 'required|in:' . self::LEVELS,
+            'assigned_at' => 'required|date',
         ]);
-
-        $data['document_type']   = $data['document_type']   ?: null;
-        $data['document_number'] = $data['document_number'] ?: null;
-        $data['document_date']   = $data['document_date']   ?: null;
 
         $responsible->update($data);
 

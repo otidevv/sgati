@@ -17,7 +17,19 @@ return new class extends Migration
 
             $table->string('original_name');        // Nombre original del archivo
             $table->string('file_path');            // Ruta en disco (local privado)
-            $table->string('description', 255)->nullable(); // Descripción opcional
+            $table->string('description', 255)->nullable();
+            $table->enum('document_type', [
+                'resolucion_directoral',
+                'resolucion_jefatural',
+                'memorando',
+                'oficio',
+                'contrato',
+                'acta',
+                'otro',
+            ])->nullable();
+            $table->string('document_number', 100)->nullable();
+            $table->date('document_date')->nullable();
+            $table->string('document_notes', 500)->nullable();
 
             $table->timestamps();
         });

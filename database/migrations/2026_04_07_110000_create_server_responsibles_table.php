@@ -27,19 +27,7 @@ return new class extends Migration
                 'operador',    // Operador con acceso limitado
             ])->default('soporte');
 
-            // Documento de respaldo (opcional)
-            $table->enum('document_type', [
-                'resolucion_directoral',
-                'resolucion_jefatural',
-                'memorando',
-                'oficio',
-                'contrato',
-                'acta',
-                'otro',
-            ])->nullable();
-
-            $table->string('document_number', 100)->nullable();  // Ej: "R.D. N°042-2024-OTI"
-            $table->date('document_date')->nullable();
+            // Motivo de baja (se rellena al dar de baja)
             $table->text('document_notes')->nullable();
 
             // Control

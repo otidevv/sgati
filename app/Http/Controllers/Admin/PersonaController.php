@@ -68,16 +68,16 @@ class PersonaController extends Controller
 
     public function search(Request $request)
     {
-        $q = trim($request->get('q', ''));
+        $q = mb_strtolower(trim($request->get('q', '')));
 
         if (mb_strlen($q) < 4) {
             return response()->json([]);
         }
 
-        $personas = Persona::where('dni', 'like', $q . '%')
-            ->orWhere('apellido_paterno', 'like', '%' . $q . '%')
-            ->orWhere('apellido_materno', 'like', '%' . $q . '%')
-            ->orWhere('nombres', 'like', '%' . $q . '%')
+        $personas = Persona::whereRaw('LOWER(dni) LIKE ?', [$q . '%'])
+            ->orWhereRaw('LOWER(apellido_paterno) LIKE ?', ['%' . $q . '%'])
+            ->orWhereRaw('LOWER(apellido_materno) LIKE ?', ['%' . $q . '%'])
+            ->orWhereRaw('LOWER(nombres) LIKE ?', ['%' . $q . '%'])
             ->orderBy('apellido_paterno')
             ->orderBy('apellido_materno')
             ->limit(10)

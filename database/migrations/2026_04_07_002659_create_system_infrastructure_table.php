@@ -14,9 +14,7 @@ return new class extends Migration
         Schema::create('system_infrastructure', function (Blueprint $table) {
             $table->id();
             $table->foreignId('system_id')->unique()->constrained('systems')->cascadeOnDelete();
-            $table->string('server_name', 100)->nullable();
-            $table->string('server_os', 100)->nullable();
-            $table->string('server_ip', 45)->nullable();
+            $table->foreignId('server_id')->nullable()->constrained('servers')->nullOnDelete();
             $table->string('public_ip', 45)->nullable();
             $table->string('system_url', 255)->nullable();
             $table->integer('port')->nullable();

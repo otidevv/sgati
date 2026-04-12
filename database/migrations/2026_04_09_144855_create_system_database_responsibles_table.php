@@ -14,10 +14,7 @@ return new class extends Migration
             $table->foreignId('persona_id')->constrained('personas')->restrictOnDelete();
             $table->enum('level', ['principal', 'soporte', 'supervision', 'operador'])->default('principal');
 
-            // Documento de respaldo
-            $table->string('document_type', 50)->nullable();
-            $table->string('document_number', 100)->nullable();
-            $table->date('document_date')->nullable();
+            // Motivo de baja (se rellena al dar de baja)
             $table->string('document_notes', 500)->nullable();
 
             // Vigencia

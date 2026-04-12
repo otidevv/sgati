@@ -139,8 +139,7 @@
                     </label>
                     <select id="engine" name="engine" required
                             class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
-                                   dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
-                                   disabled:opacity-60 disabled:cursor-not-allowed">
+                                   dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                         <option value="">Seleccionar…</option>
                         @foreach($engines as $v => $l)
                         <option value="{{ $v }}" {{ old('engine') === $v ? 'selected' : '' }}>{{ $l }}</option>
@@ -220,9 +219,9 @@
         const host   = opt?.dataset?.host   ?? '';
 
         if (engine) {
-            // Bloquear engine y sincronizar
-            engineSelect.value    = engine;
-            engineSelect.disabled = true;
+            // Sincronizar valor y bloquear visualmente (sin usar disabled para que se envíe el valor)
+            engineSelect.value = engine;
+            engineSelect.classList.add('opacity-60', 'cursor-not-allowed', 'pointer-events-none');
             lockBadge.classList.remove('hidden');
 
             // Mostrar hint
@@ -230,7 +229,7 @@
             hint.classList.remove('hidden');
             hint.classList.add('flex');
         } else {
-            engineSelect.disabled = false;
+            engineSelect.classList.remove('opacity-60', 'cursor-not-allowed', 'pointer-events-none');
             lockBadge.classList.add('hidden');
             hint.classList.add('hidden');
             hint.classList.remove('flex');

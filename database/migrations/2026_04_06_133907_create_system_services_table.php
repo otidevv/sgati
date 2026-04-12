@@ -21,6 +21,18 @@ return new class extends Migration
             $table->string('auth_type', 50)->nullable();
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->enum('environment', ['production', 'staging', 'development'])->default('production');
+            $table->string('version', 20)->nullable();
+            $table->enum('provider_type', ['internal', 'external'])->nullable();
+            $table->foreignId('provider_system_id')->nullable()->constrained('systems')->nullOnDelete();
+            $table->string('provider_name', 150)->nullable();
+            $table->date('valid_from')->nullable();
+            $table->date('valid_until')->nullable();
+            $table->text('api_key')->nullable();
+            $table->text('api_secret')->nullable();
+            $table->text('token')->nullable();
+            $table->date('token_expires_at')->nullable();
+            $table->foreignId('requested_by_persona_id')->nullable()->constrained('personas')->nullOnDelete();
             $table->timestamps();
         });
     }

@@ -26,19 +26,7 @@ return new class extends Migration
                 'operador',
             ])->default('soporte');
 
-            // Documento de respaldo
-            $table->enum('document_type', [
-                'resolucion_directoral',
-                'resolucion_jefatural',
-                'memorando',
-                'oficio',
-                'contrato',
-                'acta',
-                'otro',
-            ])->nullable();
-
-            $table->string('document_number', 100)->nullable();
-            $table->date('document_date')->nullable();
+            // Motivo de baja (se rellena al dar de baja)
             $table->text('document_notes')->nullable();
 
             // Control de auditoría

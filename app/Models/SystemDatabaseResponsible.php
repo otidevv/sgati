@@ -9,17 +9,16 @@ class SystemDatabaseResponsible extends Model
 {
     protected $fillable = [
         'system_database_id', 'persona_id', 'level',
-        'document_type', 'document_number', 'document_date', 'document_notes',
+        'document_notes',
         'assigned_at', 'unassigned_at', 'is_active',
     ];
 
     protected function casts(): array
     {
         return [
-            'document_date'  => 'date',
-            'assigned_at'    => 'date',
-            'unassigned_at'  => 'date',
-            'is_active'      => 'boolean',
+            'assigned_at'   => 'date',
+            'unassigned_at' => 'date',
+            'is_active'     => 'boolean',
         ];
     }
 

@@ -5,6 +5,7 @@
 @php
     $activeResponsibles     = $database->responsibles->where('is_active', true);
     $historicalResponsibles = $database->responsibles->where('is_active', false)->sortByDesc('unassigned_at');
+    $docLabels = ['resolucion_directoral'=>'R.D.','resolucion_jefatural'=>'R.J.','memorando'=>'Memo.','oficio'=>'Oficio','contrato'=>'Contrato','acta'=>'Acta','otro'=>'Doc.'];
 
     $engineColors = match($database->engine->value ?? $database->engine) {
         'postgresql' => 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
@@ -176,9 +177,12 @@
                                     <span class="text-xs text-gray-400 dark:text-gray-500">
                                         Desde {{ $resp->assigned_at->format('d/m/Y') }}
                                     </span>
-                                    @if($resp->document_type)
-                                    <span class="text-xs text-gray-400 dark:text-gray-500">
-                                        · {{ $resp->document_number ?? $resp->document_type }}
+                                    @php $firstDoc = $resp->documents->first(); @endphp
+                                    @if($firstDoc?->document_type)
+                                    <span class="inline-flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400">
+                                        · <span class="font-medium">{{ $docLabels[$firstDoc->document_type] ?? $firstDoc->document_type }}</span>
+                                        @if($firstDoc->document_number) {{ $firstDoc->document_number }}@endif
+                                        @if($firstDoc->document_date) · {{ $firstDoc->document_date->format('d/m/Y') }}@endif
                                     </span>
                                     @endif
                                 </div>
@@ -218,7 +222,11 @@
                         @if($resp->documents->isNotEmpty())
                         <div class="mt-2.5 ml-11 flex flex-wrap gap-1.5">
                             @foreach($resp->documents as $doc)
-                            @php $docExt = strtolower(pathinfo($doc->original_name, PATHINFO_EXTENSION)); @endphp
+                            @php
+                                $docExt    = strtolower(pathinfo($doc->original_name, PATHINFO_EXTENSION));
+                                $docMeta   = collect([$docLabels[$doc->document_type] ?? null, $doc->document_number, $doc->document_date?->format('d/m/Y')])->filter()->implode(' · ');
+                                $chipLabel = $doc->description ?: $doc->original_name;
+                            @endphp
                             <div class="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-full
                                         bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700/40 text-xs">
                                 <svg class="w-3 h-3 text-indigo-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -226,15 +234,15 @@
                                 </svg>
                                 <button type="button"
                                         onclick='openDocPreview({
-                                            name:        {{ json_encode($doc->description ?: $doc->original_name) }},
-                                            description: {{ json_encode($doc->description ? $doc->original_name : null) }},
+                                            name:        {{ json_encode($chipLabel) }},
+                                            description: {{ json_encode($docMeta ?: ($doc->description ? $doc->original_name : null)) }},
                                             previewUrl:  "{{ route('systems.databases.responsibles.documents.preview', [$system, $database, $resp, $doc]) }}",
                                             downloadUrl: "{{ route('systems.databases.responsibles.documents.download', [$system, $database, $resp, $doc]) }}",
                                             ext:         {{ json_encode($docExt) }}
                                         })'
-                                        title="Previsualizar {{ $doc->original_name }}"
+                                        title="{{ $docMeta ? $docMeta . ' — ' . $doc->original_name : $doc->original_name }}"
                                         class="truncate max-w-[160px] text-indigo-700 dark:text-indigo-300 hover:underline cursor-pointer">
-                                    {{ $doc->description ?: $doc->original_name }}
+                                    {{ $chipLabel }}
                                 </button>
                                 <form action="{{ route('systems.databases.responsibles.documents.destroy', [$system, $database, $resp, $doc]) }}"
                                       method="POST" class="inline"
@@ -423,49 +431,6 @@
                     </div>
                 </div>
 
-                {{-- Documento de respaldo (opcional) --}}
-                <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-                    <p class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-3">
-                        Documento de respaldo <span class="font-normal text-gray-400 normal-case">(opcional)</span>
-                    </p>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tipo</label>
-                            <select name="document_type" id="resp-document_type"
-                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
-                                           dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                <option value="">Sin documento</option>
-                                <option value="resolucion_directoral">Resolución Directoral</option>
-                                <option value="resolucion_jefatural">Resolución Jefatural</option>
-                                <option value="memorando">Memorando</option>
-                                <option value="oficio">Oficio</option>
-                                <option value="contrato">Contrato</option>
-                                <option value="acta">Acta</option>
-                                <option value="otro">Otro</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">N° de documento</label>
-                            <input type="text" name="document_number" id="resp-document_number"
-                                   placeholder="R.D. N°042-2024"
-                                   class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
-                                          dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Fecha del documento</label>
-                            <input type="date" name="document_date" id="resp-document_date"
-                                   class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
-                                          dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Observaciones</label>
-                            <input type="text" name="document_notes" id="resp-document_notes"
-                                   placeholder="Notas adicionales..."
-                                   class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
-                                          dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        </div>
-                    </div>
-                </div>
             </div>
             <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
                 <button type="button" onclick="closeModal('modal-resp')"
@@ -651,6 +616,53 @@
                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
                                   dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                 </div>
+
+                {{-- Datos del documento de respaldo --}}
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <p class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Datos del documento <span class="font-normal text-gray-400 normal-case">(opcional)</span>
+                    </p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tipo</label>
+                            <select name="document_type" id="doc-document_type"
+                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
+                                           dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <option value="">Sin tipo</option>
+                                <option value="resolucion_directoral">Resolución Directoral</option>
+                                <option value="resolucion_jefatural">Resolución Jefatural</option>
+                                <option value="memorando">Memorando</option>
+                                <option value="oficio">Oficio</option>
+                                <option value="contrato">Contrato</option>
+                                <option value="acta">Acta</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">N° de documento</label>
+                            <input type="text" name="document_number" id="doc-document_number"
+                                   placeholder="R.D. N°042-2024-OTI"
+                                   class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
+                                          dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Fecha del documento</label>
+                            <input type="date" name="document_date" id="doc-document_date"
+                                   class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
+                                          dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Observaciones</label>
+                            <input type="text" name="document_notes" id="doc-document_notes"
+                                   placeholder="Notas adicionales..."
+                                   class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
+                                          dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-b-2xl">
                 <button type="button" onclick="closeModal('modal-doc-upload')"
@@ -793,12 +805,8 @@
             selected.classList.add('flex');
         }
 
-        document.getElementById('resp-level').value           = data.level ?? 'principal';
-        document.getElementById('resp-assigned_at').value     = data.assigned_at ?? '';
-        document.getElementById('resp-document_type').value   = data.document_type ?? '';
-        document.getElementById('resp-document_number').value = data.document_number ?? '';
-        document.getElementById('resp-document_date').value   = data.document_date ?? '';
-        document.getElementById('resp-document_notes').value  = data.document_notes ?? '';
+        document.getElementById('resp-level').value       = data.level       ?? 'principal';
+        document.getElementById('resp-assigned_at').value = data.assigned_at ?? '';
         openModal('modal-resp');
     };
 
@@ -831,9 +839,13 @@
     const docUploadBase = "{{ url('systems/' . $system->id . '/databases/' . $database->id . '/responsibles') }}/";
 
     window.openDocUpload = function (responsibleId) {
-        document.getElementById('doc-upload-form').action = docUploadBase + responsibleId + '/documents';
-        document.getElementById('doc-file-input').value   = '';
-        document.getElementById('doc-description').value  = '';
+        document.getElementById('doc-upload-form').action       = docUploadBase + responsibleId + '/documents';
+        document.getElementById('doc-file-input').value         = '';
+        document.getElementById('doc-description').value        = '';
+        document.getElementById('doc-document_type').value      = '';
+        document.getElementById('doc-document_number').value    = '';
+        document.getElementById('doc-document_date').value      = '';
+        document.getElementById('doc-document_notes').value     = '';
         document.getElementById('doc-file-label').innerHTML =
             'Arrastra el archivo aquí o <span class="text-indigo-600 dark:text-indigo-400 font-medium">haz clic para seleccionar</span>';
         openModal('modal-doc-upload');

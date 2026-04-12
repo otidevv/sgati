@@ -14,11 +14,12 @@ return new class extends Migration
         Schema::create('system_databases', function (Blueprint $table) {
             $table->id();
             $table->foreignId('system_id')->constrained('systems')->cascadeOnDelete();
+            $table->foreignId('database_server_id')->nullable()->constrained('database_servers')->nullOnDelete();
             $table->string('db_name', 100);
             $table->enum('engine', ['postgresql', 'mysql', 'oracle', 'sqlserver', 'sqlite', 'mongodb', 'other']);
-            $table->string('server_host', 100)->nullable();
-            $table->integer('port')->nullable();
             $table->string('schema_name', 100)->nullable();
+            $table->string('db_user', 100)->nullable();
+            $table->text('db_password')->nullable();
             $table->string('responsible', 100)->nullable();
             $table->enum('environment', ['production', 'staging', 'development'])->default('production');
             $table->text('notes')->nullable();
