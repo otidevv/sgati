@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class SystemService extends Model
 {
@@ -16,18 +17,24 @@ class SystemService extends Model
         'valid_from', 'valid_until',
         'api_key', 'api_secret', 'token', 'token_expires_at',
         'requested_by_persona_id',
+        // gateway
+        'gateway_enabled', 'gateway_slug', 'gateway_require_key',
+        'gateway_rate_per_minute', 'gateway_rate_per_day',
+        'gateway_active_from', 'gateway_active_to',
     ];
 
     protected function casts(): array
     {
         return [
-            'is_active'        => 'boolean',
-            'valid_from'       => 'date',
-            'valid_until'      => 'date',
-            'token_expires_at' => 'date',
-            'api_key'          => 'encrypted',
-            'api_secret'       => 'encrypted',
-            'token'            => 'encrypted',
+            'is_active'              => 'boolean',
+            'valid_from'             => 'date',
+            'valid_until'            => 'date',
+            'token_expires_at'       => 'date',
+            'api_key'                => 'encrypted',
+            'api_secret'             => 'encrypted',
+            'token'                  => 'encrypted',
+            'gateway_enabled'        => 'boolean',
+            'gateway_require_key'    => 'boolean',
         ];
     }
 
@@ -54,5 +61,25 @@ class SystemService extends Model
     public function fields(): HasMany
     {
         return $this->hasMany(SystemServiceField::class)->orderBy('sort_order')->orderBy('direction');
+    }
+
+    public function gatewayKeys(): HasMany
+    {
+        return $this->hasMany(ServiceGatewayKey::class, 'system_service_id')->orderByDesc('created_at');
+    }
+
+    public function gatewayLogs(): HasMany
+    {
+        return $this->hasMany(ServiceGatewayLog::class, 'system_service_id')->orderByDesc('created_at');
+    }
+
+    /** Genera y asigna un slug único para el gateway */
+    public function generateGatewaySlug(): void
+    {
+        do {
+            $slug = Str::slug($this->service_name) . '-' . Str::random(8);
+        } while (self::where('gateway_slug', $slug)->exists());
+
+        $this->gateway_slug = $slug;
     }
 }

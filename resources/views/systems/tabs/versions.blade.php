@@ -1,4 +1,71 @@
 <div class="space-y-4">
+
+    {{-- ── Banner de ayuda (colapsable, se recuerda en localStorage) ── --}}
+    <div x-data="{ open: localStorage.getItem('help_versions') !== '0' }" x-init="$watch('open', v => localStorage.setItem('help_versions', v ? '1' : '0'))">
+        <div x-show="open" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             class="rounded-xl border border-blue-200 dark:border-blue-700/50 bg-blue-50 dark:bg-blue-900/20 p-4 mb-1">
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center mt-0.5">
+                    <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-blue-800 dark:text-blue-200">¿Para qué sirve el Historial de Versiones?</p>
+                    <p class="mt-1 text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                        Aquí registras cada <strong>despliegue o actualización</strong> del sistema. Permite saber qué versión está actualmente en producción, cuándo se publicó, qué cambios incluyó y quién la desplegó.
+                    </p>
+                    <div class="mt-2.5 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div class="flex items-start gap-2 p-2 rounded-lg bg-white/60 dark:bg-gray-800/40 border border-blue-100 dark:border-blue-700/30">
+                            <svg class="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
+                            </svg>
+                            <div>
+                                <p class="text-[11px] font-semibold text-blue-800 dark:text-blue-200">Número de versión</p>
+                                <p class="text-[11px] text-blue-600 dark:text-blue-400">Ej: <code class="font-mono">1.0.0</code>, <code class="font-mono">2.3.1</code>, <code class="font-mono">2024.04</code></p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-2 p-2 rounded-lg bg-white/60 dark:bg-gray-800/40 border border-blue-100 dark:border-blue-700/30">
+                            <svg class="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                            <div>
+                                <p class="text-[11px] font-semibold text-blue-800 dark:text-blue-200">Cambios incluidos</p>
+                                <p class="text-[11px] text-blue-600 dark:text-blue-400">Qué se corrigió, mejoró o añadió en ese despliegue</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-2 p-2 rounded-lg bg-white/60 dark:bg-gray-800/40 border border-blue-100 dark:border-blue-700/30">
+                            <svg class="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"/>
+                            </svg>
+                            <div>
+                                <p class="text-[11px] font-semibold text-blue-800 dark:text-blue-200">Ambiente</p>
+                                <p class="text-[11px] text-blue-600 dark:text-blue-400">Si se desplegó en Producción, Staging o Desarrollo</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button @click="open = false" title="Cerrar ayuda"
+                        class="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        {{-- Botón para volver a mostrar la ayuda --}}
+        <div x-show="!open" class="flex justify-end mb-1">
+            <button @click="open = true"
+                    class="inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors">
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                ¿Para qué sirve esto?
+            </button>
+        </div>
+    </div>
+
     <div class="flex items-center justify-between">
         <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
             Historial de Versiones ({{ $system->versions->count() }})

@@ -1,4 +1,68 @@
 <div class="space-y-4">
+
+    {{-- ── Banner de ayuda ── --}}
+    <div x-data="{ open: localStorage.getItem('help_services') !== '0' }" x-init="$watch('open', v => localStorage.setItem('help_services', v ? '1' : '0'))">
+        <div x-show="open" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             class="rounded-xl border border-emerald-200 dark:border-emerald-700/50 bg-emerald-50 dark:bg-emerald-900/20 p-4 mb-1">
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center mt-0.5">
+                    <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-emerald-800 dark:text-emerald-200">¿Para qué sirven los Servicios / APIs?</p>
+                    <p class="mt-1 text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">
+                        Registra los <strong>servicios o APIs</strong> que este sistema ofrece o consume. Permite documentar qué endpoints están disponibles, qué datos manejan y cómo se autentican.
+                    </p>
+                    <div class="mt-2.5 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div class="flex items-start gap-2 p-2 rounded-lg bg-white/60 dark:bg-gray-800/40 border border-emerald-100 dark:border-emerald-700/30">
+                            <span class="w-2 h-2 rounded-full bg-green-500 flex-shrink-0 mt-1"></span>
+                            <div>
+                                <p class="text-[11px] font-semibold text-emerald-800 dark:text-emerald-200">Expuesto — este sistema provee</p>
+                                <p class="text-[11px] text-emerald-600 dark:text-emerald-400">
+                                    APIs que este sistema ofrece para que otros las consuman. Puedes activar el <strong>Gateway</strong> para tener control de acceso y logs automáticos.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-2 p-2 rounded-lg bg-white/60 dark:bg-gray-800/40 border border-emerald-100 dark:border-emerald-700/30">
+                            <span class="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-1"></span>
+                            <div>
+                                <p class="text-[11px] font-semibold text-emerald-800 dark:text-emerald-200">Consumido — este sistema usa</p>
+                                <p class="text-[11px] text-emerald-600 dark:text-emerald-400">
+                                    Servicios externos que este sistema necesita para funcionar. Documenta la URL, credenciales y campos que utiliza.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-2 flex flex-wrap gap-2">
+                        @foreach(['REST API', 'SOAP', 'SFTP', 'SMTP', 'LDAP'] as $tipo)
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-white/80 dark:bg-gray-800/60 border border-emerald-200 dark:border-emerald-700/40 text-emerald-700 dark:text-emerald-300">
+                            {{ $tipo }}
+                        </span>
+                        @endforeach
+                        <span class="text-[11px] text-emerald-500 dark:text-emerald-400 self-center">← tipos disponibles</span>
+                    </div>
+                </div>
+                <button @click="open = false" title="Cerrar ayuda"
+                        class="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded text-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div x-show="!open" class="flex justify-end mb-1">
+            <button @click="open = true"
+                    class="inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors">
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                ¿Para qué sirve esto?
+            </button>
+        </div>
+    </div>
+
     <div class="flex items-center justify-between">
         <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
             Servicios / APIs ({{ $system->services->count() }})

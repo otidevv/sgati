@@ -1,4 +1,72 @@
 <div class="space-y-4">
+
+    {{-- ── Banner de ayuda ── --}}
+    <div x-data="{ open: localStorage.getItem('help_integrations') !== '0' }" x-init="$watch('open', v => localStorage.setItem('help_integrations', v ? '1' : '0'))">
+        <div x-show="open" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             class="rounded-xl border border-violet-200 dark:border-violet-700/50 bg-violet-50 dark:bg-violet-900/20 p-4 mb-1">
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-900/50 flex items-center justify-center mt-0.5">
+                    <svg class="w-4 h-4 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-violet-800 dark:text-violet-200">¿Para qué sirven las Integraciones?</p>
+                    <p class="mt-1 text-xs text-violet-700 dark:text-violet-300 leading-relaxed">
+                        Documenta las <strong>conexiones entre sistemas</strong>. Permite saber qué otros sistemas dependen de este o de cuáles depende este sistema para funcionar.
+                        Es clave para evaluar el impacto antes de hacer cambios o dar de baja un sistema.
+                    </p>
+                    <div class="mt-2.5 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div class="flex items-start gap-2 p-2 rounded-lg bg-white/60 dark:bg-gray-800/40 border border-violet-100 dark:border-violet-700/30">
+                            <span class="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-1"></span>
+                            <div>
+                                <p class="text-[11px] font-semibold text-violet-800 dark:text-violet-200">Salientes — este sistema se integra con...</p>
+                                <p class="text-[11px] text-violet-600 dark:text-violet-400">
+                                    Ej: el sistema de Matrícula <em>consume</em> datos del sistema de Pagos.
+                                    Registra aquí los sistemas externos o internos que este usa.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-2 p-2 rounded-lg bg-white/60 dark:bg-gray-800/40 border border-violet-100 dark:border-violet-700/30">
+                            <span class="w-2 h-2 rounded-full bg-green-500 flex-shrink-0 mt-1"></span>
+                            <div>
+                                <p class="text-[11px] font-semibold text-violet-800 dark:text-violet-200">Entrantes — sistemas que dependen de este</p>
+                                <p class="text-[11px] text-violet-600 dark:text-violet-400">
+                                    Se registran automáticamente cuando otro sistema declara que se integra con este.
+                                    No necesitas crearlas manualmente.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-2 flex flex-wrap gap-2">
+                        @foreach(['API REST', 'Base de datos directa', 'Archivo / SFTP', 'SMTP'] as $tipo)
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-white/80 dark:bg-gray-800/60 border border-violet-200 dark:border-violet-700/40 text-violet-700 dark:text-violet-300">
+                            {{ $tipo }}
+                        </span>
+                        @endforeach
+                        <span class="text-[11px] text-violet-500 dark:text-violet-400 self-center">← tipos de conexión disponibles</span>
+                    </div>
+                </div>
+                <button @click="open = false" title="Cerrar ayuda"
+                        class="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded text-violet-400 hover:text-violet-600 dark:hover:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div x-show="!open" class="flex justify-end mb-1">
+            <button @click="open = true"
+                    class="inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500 hover:text-violet-500 dark:hover:text-violet-400 transition-colors">
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                ¿Para qué sirve esto?
+            </button>
+        </div>
+    </div>
+
     <div class="flex items-center justify-between">
         <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
             Integraciones ({{ $system->integrationsFrom->count() + $system->integrationsTo->count() }})

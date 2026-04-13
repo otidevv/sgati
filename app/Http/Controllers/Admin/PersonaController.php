@@ -93,11 +93,18 @@ class PersonaController extends Controller
         }
 
         try {
-            $response = Http::timeout(8)
+            $response = Http::timeout(10)
+                ->withOptions(['verify' => false])   // APIs internas con cert autofirmado
                 ->get(config('services.dni_api.url') . '/' . $dni);
 
+            if ($response->status() === 404) {
+                return response()->json(['error' => 'DNI no encontrado en el padrón.'], 404);
+            }
+
             if ($response->failed() || $response->json() === null) {
-                return response()->json(['error' => 'No se encontraron datos para este DNI.'], 404);
+                return response()->json([
+                    'error' => 'El servicio respondió con error (HTTP ' . $response->status() . ').',
+                ], 502);
             }
 
             $data = $response->json();
@@ -109,8 +116,14 @@ class PersonaController extends Controller
                 'fecha_nacimiento' => $data['FECHA_NAC'] ?? null,
                 'sexo'             => match($data['SEXO'] ?? '') { '1' => 'M', '2' => 'F', default => '' },
             ]);
-        } catch (\Throwable) {
-            return response()->json(['error' => 'No se pudo conectar con el servicio de consulta.'], 503);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            return response()->json([
+                'error' => 'No se pudo conectar con el servicio de consulta. Verifique que la API esté disponible.',
+            ], 503);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => 'Error inesperado: ' . $e->getMessage(),
+            ], 503);
         }
     }
 

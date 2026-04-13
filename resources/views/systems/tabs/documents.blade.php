@@ -1,4 +1,51 @@
 <div class="space-y-5">
+
+    {{-- ── Banner de ayuda ── --}}
+    <div x-data="{ open: localStorage.getItem('help_documents') !== '0' }" x-init="$watch('open', v => localStorage.setItem('help_documents', v ? '1' : '0'))">
+        <div x-show="open" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             class="rounded-xl border border-teal-200 dark:border-teal-700/50 bg-teal-50 dark:bg-teal-900/20 p-4 mb-1">
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-teal-100 dark:bg-teal-900/50 flex items-center justify-center mt-0.5">
+                    <svg class="w-4 h-4 text-teal-600 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-teal-800 dark:text-teal-200">¿Para qué sirven los Documentos?</p>
+                    <p class="mt-1 text-xs text-teal-700 dark:text-teal-300 leading-relaxed">
+                        Adjunta cualquier archivo relacionado con el sistema: manuales, oficios, resoluciones, contratos y diagramas. Centraliza la documentación oficial para que todo el equipo la encuentre en un solo lugar.
+                    </p>
+                    <div class="mt-2.5 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        @foreach(['Manual de usuario', 'Manual técnico', 'Resolución / Oficio', 'Diagrama'] as $tipo)
+                        <div class="flex items-center gap-1.5 p-1.5 rounded-lg bg-white/60 dark:bg-gray-800/40 border border-teal-100 dark:border-teal-700/30">
+                            <svg class="w-3 h-3 text-teal-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                            </svg>
+                            <p class="text-[11px] text-teal-700 dark:text-teal-300">{{ $tipo }}</p>
+                        </div>
+                        @endforeach
+                    </div>
+                    <p class="mt-2 text-[11px] text-teal-600 dark:text-teal-400">Formatos aceptados: PDF, Word, Excel, imágenes — máx. 50 MB por archivo.</p>
+                </div>
+                <button @click="open = false" title="Cerrar ayuda"
+                        class="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded text-teal-400 hover:text-teal-600 dark:hover:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900/40 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div x-show="!open" class="flex justify-end mb-1">
+            <button @click="open = true"
+                    class="inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500 hover:text-teal-500 dark:hover:text-teal-400 transition-colors">
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                ¿Para qué sirve esto?
+            </button>
+        </div>
+    </div>
+
     <div class="flex items-center justify-between">
         <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
             Documentos ({{ $system->documents->count() }})

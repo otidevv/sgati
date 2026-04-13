@@ -10,12 +10,25 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $counts = System::selectRaw("
+            count(*) as total,
+            count(*) filter (where status = ?) as active,
+            count(*) filter (where status = ?) as development,
+            count(*) filter (where status = ?) as maintenance,
+            count(*) filter (where status = ?) as inactive
+        ", [
+            SystemStatus::Active->value,
+            SystemStatus::Development->value,
+            SystemStatus::Maintenance->value,
+            SystemStatus::Inactive->value,
+        ])->first();
+
         $stats = [
-            'total'       => System::count(),
-            'active'      => System::where('status', SystemStatus::Active)->count(),
-            'development' => System::where('status', SystemStatus::Development)->count(),
-            'maintenance' => System::where('status', SystemStatus::Maintenance)->count(),
-            'inactive'    => System::where('status', SystemStatus::Inactive)->count(),
+            'total'       => (int) $counts->total,
+            'active'      => (int) $counts->active,
+            'development' => (int) $counts->development,
+            'maintenance' => (int) $counts->maintenance,
+            'inactive'    => (int) $counts->inactive,
         ];
 
         $recentSystems = System::with('area')

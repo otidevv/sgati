@@ -27,6 +27,8 @@ use App\Http\Controllers\Admin\DatabaseServerResponsibleController;
 use App\Http\Controllers\Admin\DatabaseServerResponsibleDocumentController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SslCertificateController;
+use App\Http\Controllers\SystemServiceGatewayController;
+use App\Http\Controllers\SystemServiceGatewayKeyController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => redirect()->route('dashboard'));
@@ -86,6 +88,17 @@ Route::middleware(['auth'])->group(function () {
             Route::post('fields',                                [SystemServiceFieldController::class, 'store'])->name('fields.store');
             Route::put('fields/{field}',                         [SystemServiceFieldController::class, 'update'])->name('fields.update');
             Route::delete('fields/{field}',                      [SystemServiceFieldController::class, 'destroy'])->name('fields.destroy');
+
+            // Gateway
+            Route::post('gateway/toggle',                        [SystemServiceGatewayController::class, 'toggle'])->name('gateway.toggle');
+            Route::put('gateway/settings',                       [SystemServiceGatewayController::class, 'updateSettings'])->name('gateway.settings');
+            Route::post('gateway/regenerate-slug',               [SystemServiceGatewayController::class, 'regenerateSlug'])->name('gateway.regenerate-slug');
+            Route::get('gateway/logs',                           [SystemServiceGatewayController::class, 'logs'])->name('gateway.logs');
+            // Gateway keys
+            Route::post('gateway/keys',                          [SystemServiceGatewayKeyController::class, 'store'])->name('gateway.keys.store');
+            Route::post('gateway/keys/{key}/toggle',             [SystemServiceGatewayKeyController::class, 'toggle'])->name('gateway.keys.toggle');
+            Route::put('gateway/keys/{key}',                     [SystemServiceGatewayKeyController::class, 'update'])->name('gateway.keys.update');
+            Route::delete('gateway/keys/{key}',                  [SystemServiceGatewayKeyController::class, 'destroy'])->name('gateway.keys.destroy');
         });
 
         // Integraciones
