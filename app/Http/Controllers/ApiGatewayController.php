@@ -46,18 +46,32 @@ class ApiGatewayController extends Controller
             return response()->json(['error' => 'Esta clave de acceso ha expirado.'], 403);
         }
 
-        // ── 3. Validar API Key en header (si el servicio lo requiere) ────────
-        if ($service->gateway_require_key) {
-            $rawKey = $request->header('X-API-Key') ?? $request->query('api_key');
+        // ── 3. Validar autenticación según el tipo del consumidor ────────────
+        $authType = $gatewayKey->auth_type ?? 'bearer';
+
+        if ($authType !== 'none') {
+            $rawKey = match ($authType) {
+                'bearer'      => $this->extractBearer($request),
+                'api_key'     => $request->header('X-API-Key'),
+                'query_param' => $request->query('api_key'),
+                default       => null,
+            };
+
+            $hint = match ($authType) {
+                'bearer'      => 'Envía el header: Authorization: Bearer <token>',
+                'api_key'     => 'Envía el header: X-API-Key: <token>',
+                'query_param' => 'Agrega el parámetro: ?api_key=<token>',
+                default       => 'Token requerido',
+            };
 
             if (!$rawKey) {
-                $this->log($service, $gatewayKey, $request, $path, 401, 0, 'API key requerida');
-                return response()->json(['error' => 'API key requerida. Envía el header X-API-Key.'], 401);
+                $this->log($service, $gatewayKey, $request, $path, 401, 0, "Token requerido ({$authType})");
+                return response()->json(['error' => 'Autenticación requerida.', 'hint' => $hint], 401);
             }
 
             if (!$gatewayKey->matchesRawKey($rawKey)) {
-                $this->log($service, $gatewayKey, $request, $path, 401, 0, 'API key inválida');
-                return response()->json(['error' => 'API key inválida.'], 401);
+                $this->log($service, $gatewayKey, $request, $path, 401, 0, "Token inválido ({$authType})");
+                return response()->json(['error' => 'Token inválido.'], 401);
             }
         }
 
@@ -175,7 +189,16 @@ class ApiGatewayController extends Controller
             ->withHeaders($responseHeaders);
     }
 
-    // ── Helper ───────────────────────────────────────────────────────────────
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private function extractBearer(Request $request): ?string
+    {
+        $header = $request->header('Authorization', '');
+        if (str_starts_with($header, 'Bearer ')) {
+            return substr($header, 7);
+        }
+        return null;
+    }
 
     private function log(
         $service,

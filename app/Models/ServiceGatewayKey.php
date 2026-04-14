@@ -18,6 +18,7 @@ class ServiceGatewayKey extends Model
         'key_hash',
         'gateway_slug',
         'is_active',
+        'auth_type',
         'rate_per_minute',
         'rate_per_day',
         'expires_at',

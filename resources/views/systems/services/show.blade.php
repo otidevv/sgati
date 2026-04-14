@@ -624,10 +624,45 @@
                              x-transition:leave-end="opacity-0"
                              class="border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 px-5 py-4 space-y-4">
 
-                            {{-- URL del gateway --}}
+                            {{-- URL del gateway + badge auth_type --}}
                             @if($gkey->gateway_slug)
+                            @php
+                                $authType  = $gkey->auth_type ?? 'bearer';
+                                $authLabel = match($authType) {
+                                    'bearer'      => 'Bearer Token',
+                                    'api_key'     => 'API Key Header',
+                                    'query_param' => 'Query Param',
+                                    'none'        => 'Sin autenticación',
+                                    default       => $authType,
+                                };
+                                $authColor = match($authType) {
+                                    'bearer'      => 'blue',
+                                    'api_key'     => 'emerald',
+                                    'query_param' => 'violet',
+                                    'none'        => 'gray',
+                                    default       => 'gray',
+                                };
+                                $authHint  = match($authType) {
+                                    'bearer'      => 'Authorization: Bearer <tu_token>',
+                                    'api_key'     => 'X-API-Key: <tu_token>',
+                                    'query_param' => '?api_key=<tu_token>',
+                                    'none'        => 'Sin credenciales requeridas',
+                                    default       => '',
+                                };
+                            @endphp
                             <div>
-                                <p class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">URL del gateway (exclusiva)</p>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <p class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">URL del gateway (exclusiva)</p>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium
+                                                 bg-{{ $authColor }}-100 dark:bg-{{ $authColor }}-900/40 text-{{ $authColor }}-700 dark:text-{{ $authColor }}-300">
+                                        @if($authType === 'none')
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+                                        @else
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                        @endif
+                                        {{ $authLabel }}
+                                    </span>
+                                </div>
                                 <div class="flex items-center gap-2">
                                     <code id="gw-url-{{ $gkey->id }}"
                                           class="flex-1 font-mono text-xs bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 text-indigo-700 dark:text-indigo-300 break-all">{{ $gkey->gatewayUrl() }}</code>
@@ -637,7 +672,14 @@
                                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                                     </button>
                                 </div>
-                                <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-1">Agrega el path requerido al final · Header: <code class="font-mono">X-API-Key: &lt;tu_clave&gt;</code></p>
+                                @if($authType !== 'none')
+                                <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
+                                    Credencial requerida →
+                                    <code class="font-mono text-{{ $authColor }}-600 dark:text-{{ $authColor }}-400">{{ $authHint }}</code>
+                                </p>
+                                @else
+                                <p class="text-[11px] text-orange-500 mt-1">⚠ Acceso abierto — no requiere credenciales.</p>
+                                @endif
                             </div>
                             @endif
 
@@ -831,6 +873,34 @@
                                     <input type="hidden" name="requesting_system_id" value="{{ $gkey->requesting_system_id }}">
                                     <input type="hidden" name="consumer_organization" value="{{ $gkey->consumer_organization }}">
                                     <input type="hidden" name="purpose" value="{{ $gkey->purpose }}">
+
+                                    {{-- Tipo de autenticación --}}
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tipo de autenticación</label>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            @foreach([
+                                                ['value' => 'bearer',      'label' => 'Bearer Token',       'sub' => 'Authorization: Bearer …', 'color' => 'blue'],
+                                                ['value' => 'api_key',     'label' => 'API Key Header',     'sub' => 'X-API-Key: …',            'color' => 'emerald'],
+                                                ['value' => 'query_param', 'label' => 'Query Param',        'sub' => '?api_key=…',              'color' => 'violet'],
+                                                ['value' => 'none',        'label' => 'Sin autenticación',  'sub' => 'Acceso abierto',          'color' => 'gray'],
+                                            ] as $at)
+                                            <label class="relative cursor-pointer">
+                                                <input type="radio" name="auth_type" value="{{ $at['value'] }}"
+                                                       {{ ($gkey->auth_type ?? 'bearer') === $at['value'] ? 'checked' : '' }}
+                                                       class="sr-only peer">
+                                                <div class="flex items-center gap-2 px-2.5 py-2 rounded-lg border-2 transition-all text-xs
+                                                            border-gray-200 dark:border-gray-600
+                                                            peer-checked:border-{{ $at['color'] }}-500 dark:peer-checked:border-{{ $at['color'] }}-400
+                                                            peer-checked:bg-{{ $at['color'] }}-50 dark:peer-checked:bg-{{ $at['color'] }}-900/20">
+                                                    <div class="min-w-0">
+                                                        <p class="font-semibold text-gray-800 dark:text-gray-200 truncate">{{ $at['label'] }}</p>
+                                                        <p class="text-[10px] text-gray-400 font-mono truncate">{{ $at['sub'] }}</p>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                            @endforeach
+                                        </div>
+                                    </div>
 
                                     <div class="grid grid-cols-2 gap-3">
                                         <div>
@@ -1428,6 +1498,61 @@ function gwUpdateFileName(name) {
                        :placeholder="consumerType === 'internal' ? 'Ej: Sistema de Matrícula — consulta DNI' : consumerType === 'person' ? 'Ej: Javier Torres — acceso investigación' : 'Ej: SUNEDU — verificación docentes'"
                        class="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none">
                 <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">Identifica el uso — puedes tener varios accesos para el mismo consumidor.</p>
+            </div>
+
+            {{-- ── Tipo de autenticación ── --}}
+            <div x-data="{ authType: 'bearer' }">
+                <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Tipo de autenticación <span class="text-red-500">*</span></label>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="auth_type" value="bearer" x-model="authType" class="sr-only peer" checked>
+                        <div class="flex items-center gap-2 px-3 py-2.5 rounded-lg border-2 transition-all
+                                    border-gray-200 dark:border-gray-600 peer-checked:border-blue-500 dark:peer-checked:border-blue-400 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20">
+                            <svg class="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-800 dark:text-gray-200">Bearer Token</p>
+                                <p class="text-[10px] text-gray-400 font-mono">Authorization: Bearer …</p>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="auth_type" value="api_key" x-model="authType" class="sr-only peer">
+                        <div class="flex items-center gap-2 px-3 py-2.5 rounded-lg border-2 transition-all
+                                    border-gray-200 dark:border-gray-600 peer-checked:border-emerald-500 dark:peer-checked:border-emerald-400 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20">
+                            <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-800 dark:text-gray-200">API Key Header</p>
+                                <p class="text-[10px] text-gray-400 font-mono">X-API-Key: …</p>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="auth_type" value="query_param" x-model="authType" class="sr-only peer">
+                        <div class="flex items-center gap-2 px-3 py-2.5 rounded-lg border-2 transition-all
+                                    border-gray-200 dark:border-gray-600 peer-checked:border-violet-500 dark:peer-checked:border-violet-400 peer-checked:bg-violet-50 dark:peer-checked:bg-violet-900/20">
+                            <svg class="w-4 h-4 text-violet-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-800 dark:text-gray-200">Query Param</p>
+                                <p class="text-[10px] text-gray-400 font-mono">?api_key=…</p>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="auth_type" value="none" x-model="authType" class="sr-only peer">
+                        <div class="flex items-center gap-2 px-3 py-2.5 rounded-lg border-2 transition-all
+                                    border-gray-200 dark:border-gray-600 peer-checked:border-gray-400 dark:peer-checked:border-gray-500 peer-checked:bg-gray-100 dark:peer-checked:bg-gray-700">
+                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-800 dark:text-gray-200">Sin autenticación</p>
+                                <p class="text-[10px] text-gray-400">Acceso abierto (no recomendado)</p>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                {{-- Hint dinámico --}}
+                <p x-show="authType === 'none'" class="mt-1.5 text-[11px] text-orange-500 dark:text-orange-400">
+                    ⚠ Cualquier solicitud al endpoint de este consumidor será aceptada sin validar credenciales.
+                </p>
             </div>
 
             <div>

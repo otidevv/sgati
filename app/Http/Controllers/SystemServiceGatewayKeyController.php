@@ -22,6 +22,7 @@ class SystemServiceGatewayKeyController extends Controller
             'consumer_organization'=> 'nullable|string|max:150',
             'consumer_persona_id'  => 'nullable|exists:personas,id',  // persona como consumidor
             'purpose'              => 'nullable|string|max:255',
+            'auth_type'            => 'required|in:bearer,api_key,query_param,none',
             'rate_per_minute'      => 'nullable|integer|min:1|max:32767',
             'rate_per_day'         => 'nullable|integer|min:1|max:32767',
             'expires_at'           => 'nullable|date|after:today',
@@ -55,6 +56,7 @@ class SystemServiceGatewayKeyController extends Controller
             'key_prefix'            => $prefix,
             'key_hash'              => $hash,
             'is_active'             => true,
+            'auth_type'             => $data['auth_type'],
             'consumer_type'         => $data['consumer_type'],
             'requesting_system_id'  => $data['consumer_type'] === 'internal'  ? ($data['requesting_system_id'] ?? null)  : null,
             'consumer_organization' => $data['consumer_type'] === 'external'  ? ($data['consumer_organization'] ?? null) : null,
@@ -133,6 +135,7 @@ class SystemServiceGatewayKeyController extends Controller
             'consumer_organization'=> 'nullable|string|max:150',
             'consumer_persona_id'  => 'nullable|exists:personas,id',
             'purpose'              => 'nullable|string|max:255',
+            'auth_type'            => 'required|in:bearer,api_key,query_param,none',
             'rate_per_minute'      => 'nullable|integer|min:1|max:32767',
             'rate_per_day'         => 'nullable|integer|min:1|max:32767',
             'expires_at'           => 'nullable|date',
@@ -155,6 +158,7 @@ class SystemServiceGatewayKeyController extends Controller
 
         $key->update([
             'name'                  => $data['name'],
+            'auth_type'             => $data['auth_type'],
             'consumer_type'         => $data['consumer_type'],
             'requesting_system_id'  => $data['consumer_type'] === 'internal'  ? ($data['requesting_system_id'] ?? null)  : null,
             'consumer_organization' => $data['consumer_type'] === 'external'  ? ($data['consumer_organization'] ?? null) : null,
