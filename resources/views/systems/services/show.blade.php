@@ -1565,13 +1565,41 @@ function gwUpdateFileName(name) {
             {{-- ── Contacto (solo si no es persona directa) ── --}}
             <div x-show="consumerType !== 'person'" x-transition>
                 <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Persona de contacto</label>
-                <select name="persona_id"
-                        class="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none">
-                    <option value="">— Sin contacto —</option>
-                    @foreach(\App\Models\Persona::orderBy('apellido_paterno')->get(['id','nombres','apellido_paterno','apellido_materno']) as $p)
-                    <option value="{{ $p->id }}">{{ $p->apellido_paterno }} {{ $p->apellido_materno }}, {{ $p->nombres }}</option>
-                    @endforeach
-                </select>
+                <div class="relative" id="gw-contact-search-wrap">
+                    <div class="relative">
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <input type="text" id="gw-contact-search-input" autocomplete="off"
+                               placeholder="Buscar por DNI o apellido/nombre..."
+                               class="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600
+                                      dark:bg-gray-700 dark:text-white text-sm
+                                      focus:ring-amber-500 focus:border-amber-500">
+                    </div>
+                    <input type="hidden" name="persona_id" id="gw-contact-persona_id">
+                    {{-- Dropdown resultados --}}
+                    <div id="gw-contact-dropdown"
+                         class="hidden absolute z-50 w-full mt-1 bg-white dark:bg-gray-800
+                                border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl
+                                max-h-48 overflow-y-auto text-sm">
+                    </div>
+                    {{-- Persona seleccionada --}}
+                    <div id="gw-contact-selected"
+                         class="hidden mt-2 items-center gap-2 px-3 py-2 rounded-lg
+                                bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40">
+                        <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        <span id="gw-contact-selected-name" class="flex-1 text-sm font-medium text-amber-700 dark:text-amber-300 truncate"></span>
+                        <button type="button" onclick="clearPersonaSearch('gw-contact')"
+                                class="text-amber-400 hover:text-red-500 transition-colors flex-shrink-0">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">Escribe al menos 4 caracteres para buscar. Opcional.</p>
+                </div>
             </div>
 
             {{-- ── Límites y restricciones (colapsable) ── --}}
@@ -1634,6 +1662,98 @@ function gwUpdateFileName(name) {
 
 @push('scripts')
 <script>
+// ── Persona autocomplete (contacto en modal gateway key) ─────────────
+(function () {
+    const gwContactSearchUrl = "{{ route('admin.personas.search') }}";
+    let gwContactTimer = null;
+
+    function initGwContactSearch() {
+        const searchInput = document.getElementById('gw-contact-search-input');
+        const hiddenInput = document.getElementById('gw-contact-persona_id');
+        const dropdown    = document.getElementById('gw-contact-dropdown');
+        const selected    = document.getElementById('gw-contact-selected');
+        const selName     = document.getElementById('gw-contact-selected-name');
+
+        if (!searchInput) return;
+
+        searchInput.addEventListener('input', function () {
+            const q = this.value.trim();
+            clearTimeout(gwContactTimer);
+            dropdown.classList.add('hidden');
+            dropdown.innerHTML = '';
+
+            if (q.length < 4) return;
+
+            dropdown.innerHTML = '<p class="px-4 py-3 text-xs text-gray-400 dark:text-gray-500">Buscando...</p>';
+            dropdown.classList.remove('hidden');
+
+            gwContactTimer = setTimeout(async () => {
+                try {
+                    const res  = await fetch(gwContactSearchUrl + '?q=' + encodeURIComponent(q));
+                    const data = await res.json();
+                    dropdown.innerHTML = '';
+
+                    if (!data.length) {
+                        dropdown.innerHTML = '<p class="px-4 py-3 text-xs text-gray-400 dark:text-gray-500">Sin resultados</p>';
+                        return;
+                    }
+
+                    data.forEach(p => {
+                        const label = `${p.apellido_paterno} ${p.apellido_materno ?? ''}, ${p.nombres} &mdash; <span class="font-mono">${p.dni}</span>`;
+                        const btn   = document.createElement('button');
+                        btn.type    = 'button';
+                        btn.className = 'w-full text-left px-4 py-2.5 text-sm text-gray-800 dark:text-gray-200 ' +
+                                        'hover:bg-amber-50 dark:hover:bg-amber-900/20 ' +
+                                        'hover:text-amber-700 dark:hover:text-amber-300 transition-colors';
+                        btn.innerHTML = label;
+                        btn.addEventListener('click', () => {
+                            hiddenInput.value   = p.id;
+                            selName.textContent = `${p.apellido_paterno} ${p.apellido_materno ?? ''}, ${p.nombres} (${p.dni})`;
+                            searchInput.value   = '';
+                            dropdown.classList.add('hidden');
+                            dropdown.innerHTML  = '';
+                            selected.classList.remove('hidden');
+                            selected.classList.add('flex');
+                        });
+                        dropdown.appendChild(btn);
+                    });
+                } catch {
+                    dropdown.innerHTML = '<p class="px-4 py-3 text-xs text-red-400">Error al buscar</p>';
+                }
+            }, 300);
+        });
+
+        document.addEventListener('click', e => {
+            if (!document.getElementById('gw-contact-search-wrap').contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    }
+
+    window.clearPersonaSearch = window.clearPersonaSearch || function (prefix) {
+        const h = document.getElementById(prefix + '-persona_id');
+        if (h) h.value = '';
+        const n = document.getElementById(prefix + '-selected-name');
+        if (n) n.textContent = '';
+        const sel = document.getElementById(prefix + '-selected');
+        if (sel) { sel.classList.add('hidden'); sel.classList.remove('flex'); }
+        const si = document.getElementById(prefix + '-search-input');
+        if (si) si.value = '';
+    };
+
+    // Reset buscador al abrir el modal (cuando se hace clic en 'Nuevo solicitante')
+    const btnNuevoSolicitante = document.querySelector('[onclick="openModal(\'modal-gateway-key\')"]');
+    if (btnNuevoSolicitante) {
+        btnNuevoSolicitante.addEventListener('click', function () {
+            clearPersonaSearch('gw-contact');
+            const dd = document.getElementById('gw-contact-dropdown');
+            if (dd) { dd.classList.add('hidden'); dd.innerHTML = ''; }
+        });
+    }
+
+    initGwContactSearch();
+})();
+
 (function () {
     const fieldStoreUrl  = "{{ route('systems.services.fields.store', [$system, $service]) }}";
     const fieldUpdateBase = "{{ url('systems/' . $system->id . '/services/' . $service->id . '/fields') }}/";

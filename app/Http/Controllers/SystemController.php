@@ -13,6 +13,8 @@ class SystemController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('systems.viewAny');
+
         $systems = System::with(['area', 'responsible', 'infrastructure'])
             ->when($request->status, fn($q) => $q->where('status', $request->status))
             ->when($request->area_id, fn($q) => $q->where('area_id', $request->area_id))

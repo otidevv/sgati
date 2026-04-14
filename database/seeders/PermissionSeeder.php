@@ -41,9 +41,13 @@ class PermissionSeeder extends Seeder
             // Reportes
             ['name' => 'reports.view',             'label' => 'Ver reportes',                  'module' => 'reports'],
             ['name' => 'reports.export',           'label' => 'Exportar reportes',             'module' => 'reports'],
+            // Áreas
+            ['name' => 'areas.viewAny',            'label' => 'Ver listado de áreas',          'module' => 'areas'],
+            ['name' => 'areas.create',             'label' => 'Crear áreas',                   'module' => 'areas'],
+            ['name' => 'areas.edit',               'label' => 'Editar áreas',                  'module' => 'areas'],
+            ['name' => 'areas.delete',             'label' => 'Eliminar áreas',                'module' => 'areas'],
             // Administración
             ['name' => 'admin.users',              'label' => 'Gestionar usuarios',            'module' => 'admin'],
-            ['name' => 'admin.areas',              'label' => 'Gestionar áreas',               'module' => 'admin'],
             ['name' => 'admin.roles',              'label' => 'Gestionar roles y permisos',    'module' => 'admin'],
         ];
 
@@ -68,16 +72,19 @@ class PermissionSeeder extends Seeder
                 'integrations.create', 'integrations.edit', 'integrations.delete',
                 'documents.download', 'documents.upload', 'documents.delete',
                 'reports.view', 'reports.export',
+                'areas.viewAny', 'areas.create', 'areas.edit', 'areas.delete',
             ],
             'documenter' => [
                 'systems.viewAny',
                 'documents.download', 'documents.upload', 'documents.delete',
                 'reports.view',
+                'areas.viewAny',
             ],
             'viewer' => [
                 'systems.viewAny',
                 'documents.download',
                 'reports.view',
+                'areas.viewAny',
             ],
         ];
 

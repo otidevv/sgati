@@ -10,6 +10,7 @@
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Gestión de Áreas</h1>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Unidades organizativas de UNAMAD</p>
         </div>
+        @can('areas.create')
         <a href="{{ route('admin.areas.create') }}"
            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white
                   text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
@@ -18,7 +19,19 @@
             </svg>
             Nueva Área
         </a>
+        @endcan
     </div>
+
+    @if(session('error'))
+    <div class="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20
+                border border-red-200 dark:border-red-800 rounded-lg">
+        <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <p class="text-sm text-red-700 dark:text-red-300">{{ session('error') }}</p>
+    </div>
+    @endif
 
     <x-data-table id="areas-table" search-placeholder="Buscar área…">
 
@@ -69,6 +82,7 @@
                 </td>
                 <td class="px-5 py-3.5 text-right">
                     <div class="inline-flex items-center gap-1">
+                        @can('areas.edit')
                         <a href="{{ route('admin.areas.edit', $area) }}" title="Editar"
                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg
                                   text-gray-400 dark:text-gray-500
@@ -79,16 +93,24 @@
                                       d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                             </svg>
                         </a>
+                        @endcan
+                        @can('areas.delete')
                         <form id="del-area-{{ $area->id }}"
                               action="{{ route('admin.areas.destroy', $area) }}"
                               method="POST" class="inline">
                             @csrf @method('DELETE')
-                            <button type="button" title="Eliminar"
+                            <button type="button" title="{{ $area->systems_count > 0 ? 'Tiene sistemas asociados' : 'Eliminar' }}"
+                                    @if($area->systems_count > 0)
+                                    disabled
+                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg
+                                           text-gray-200 dark:text-gray-700 cursor-not-allowed"
+                                    @else
                                     onclick="dtConfirmDelete('del-area-{{ $area->id }}', '{{ addslashes($area->name) }}')"
                                     class="inline-flex items-center justify-center w-8 h-8 rounded-lg
                                            text-gray-400 dark:text-gray-500
                                            hover:text-red-600 dark:hover:text-red-400
-                                           hover:bg-red-50 dark:hover:bg-red-900/30 transition-all">
+                                           hover:bg-red-50 dark:hover:bg-red-900/30 transition-all"
+                                    @endif>
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                           d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7
@@ -96,6 +118,7 @@
                                 </svg>
                             </button>
                         </form>
+                        @endcan
                     </div>
                 </td>
             </tr>
@@ -115,6 +138,7 @@
                 </div>
                 <h3 class="mt-4 text-sm font-semibold text-gray-900 dark:text-white">No hay áreas registradas</h3>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Comienza registrando las unidades organizativas.</p>
+                @can('areas.create')
                 <a href="{{ route('admin.areas.create') }}"
                    class="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white
                           text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
@@ -123,6 +147,7 @@
                     </svg>
                     Registrar primera área
                 </a>
+                @endcan
             </div>
         </x-slot:empty>
         @endif

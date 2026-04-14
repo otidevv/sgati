@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\DatabaseServerController;
 use App\Http\Controllers\Admin\DatabaseServerResponsibleController;
 use App\Http\Controllers\Admin\DatabaseServerResponsibleDocumentController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SslCertificateController;
 use App\Http\Controllers\SystemServiceGatewayController;
 use App\Http\Controllers\SystemServiceGatewayKeyController;
@@ -145,6 +146,8 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('personas', PersonaController::class);
         Route::resource('users', UserController::class);
         Route::resource('areas', AreaController::class);
+        Route::get('roles',                              [RoleController::class, 'index'])->name('roles.index');
+        Route::put('roles/{role}/permissions',           [RoleController::class, 'updatePermissions'])->name('roles.permissions');
         Route::resource('servers', ServerController::class);
 
         // Certificados SSL
