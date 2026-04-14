@@ -71,13 +71,7 @@
         <input type="hidden" name="api_secret"              x-model="api_secret">
         <input type="hidden" name="token"                   x-model="token">
         <input type="hidden" name="token_expires_at"        x-model="token_expires_at">
-        {{-- Gateway (expuesto) --}}
-        <input type="hidden" name="gateway_enabled"         :value="gateway_enabled ? '1' : '0'">
-        <input type="hidden" name="gateway_require_key"     :value="gateway_require_key ? '1' : '0'">
-        <input type="hidden" name="gateway_rate_per_minute" x-model="gateway_rate_per_minute">
-        <input type="hidden" name="gateway_rate_per_day"    x-model="gateway_rate_per_day">
-        <input type="hidden" name="gateway_active_from"     x-model="gateway_active_from">
-        <input type="hidden" name="gateway_active_to"       x-model="gateway_active_to">
+        {{-- Gateway: se activa automáticamente al registrar el primer consumidor --}}
 
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
 
@@ -465,37 +459,6 @@
                         </div>
                     </div>
 
-                    {{-- Responsable (persona search) --}}
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Responsable / Solicitante</label>
-                        <div class="relative" id="requester-search-wrap-exp">
-                            <div class="relative">
-                                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                                </svg>
-                                <input type="text" id="persona-search-exp" autocomplete="off"
-                                       placeholder="Buscar por DNI o nombre…"
-                                       class="w-full pl-9 pr-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600
-                                              bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm
-                                              focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                            </div>
-                            <div id="persona-dropdown-exp"
-                                 class="hidden absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-48 overflow-y-auto text-sm"></div>
-                            <div id="persona-selected-exp"
-                                 class="hidden mt-2 items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/40">
-                                <svg class="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                </svg>
-                                <span id="persona-selected-name-exp" class="flex-1 text-sm font-medium text-blue-700 dark:text-blue-300 truncate"></span>
-                                <button type="button" id="persona-clear-exp" class="text-blue-400 hover:text-red-500 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                    </svg>
-                                </button>
-                            </div>
-                            <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Escribe al menos 4 caracteres para buscar</p>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -630,12 +593,8 @@
                 </div>
             </div>
 
-            {{-- ══════════════════════════════════════════════════════════
-                 PASO 4 (EXPUESTO) — Gateway
-            ══════════════════════════════════════════════════════════ --}}
-            <div x-show="currentStep === 4 && direction === 'exposed'" x-transition:enter="transition ease-out duration-200"
-                 x-transition:enter-start="opacity-0 translate-x-4"
-                 x-transition:enter-end="opacity-100 translate-x-0">
+            {{-- Paso 4 Gateway eliminado: el gateway se activa al registrar el primer consumidor --}}
+            <div x-show="false">
 
                 <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700">
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Configuración del Gateway</h2>
@@ -980,9 +939,9 @@
                 </div>
 
                 <div class="flex items-center gap-3">
-                    {{-- Botón siguiente (pasos 2, 3, 4) --}}
+                    {{-- Botón siguiente --}}
                     <button type="button" @click="nextStep()"
-                            x-show="currentStep > 1 && currentStep < 5"
+                            x-show="currentStep > 1 && currentStep < totalSteps()"
                             :disabled="!canProceed()"
                             class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg
                                    hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
@@ -992,9 +951,9 @@
                         </svg>
                     </button>
 
-                    {{-- Botón guardar (solo paso 5) --}}
+                    {{-- Botón guardar (último paso) --}}
                     <button type="submit"
-                            x-show="currentStep === 5"
+                            x-show="currentStep === totalSteps()"
                             class="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-green-600 rounded-lg
                                    hover:bg-green-700 transition-colors shadow-sm">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1069,12 +1028,7 @@ function serviceWizard() {
         ],
 
         init() {
-            // Escuchar selección de persona (expuesto)
-            document.addEventListener('requester-selected-exp', e => {
-                this.requested_by_persona_id = e.detail.id;
-                this.requester_name = e.detail.name;
-            });
-            // Escuchar selección de persona (consumido)
+            // Escuchar selección de persona (solo para APIs consumidas)
             document.addEventListener('requester-selected-con', e => {
                 this.requested_by_persona_id = e.detail.id;
                 this.requester_name = e.detail.name;
@@ -1097,11 +1051,8 @@ function serviceWizard() {
                 }
             });
 
-            // Inicializar persona autocomplete para ambos formularios
+            // Inicializar persona autocomplete (solo para APIs consumidas)
             this.$nextTick(() => {
-                initPersonaSearch('exp', id => {
-                    this.requested_by_persona_id = id;
-                });
                 initPersonaSearch('con', id => {
                     this.requested_by_persona_id = id;
                 });
@@ -1109,15 +1060,21 @@ function serviceWizard() {
         },
 
         totalSteps() {
-            return 5;
+            // Expuesto: 1 Dirección · 2 Info · 3 Backend · 4 Resumen (4 pasos)
+            // Consumido: 1 Dirección · 2 Info · 3 Proveedor · 4 Credenciales · 5 Resumen (5 pasos)
+            return this.direction === 'exposed' ? 4 : 5;
         },
 
         stepLabel() {
+            if (this.direction === 'exposed') {
+                const labels = { 1: 'Dirección', 2: 'Información básica', 3: 'Backend real', 4: 'Resumen' };
+                return labels[this.currentStep] || '';
+            }
             const labels = {
                 1: 'Dirección',
                 2: 'Información básica',
-                3: this.direction === 'exposed' ? 'Backend real' : 'Proveedor',
-                4: this.direction === 'exposed' ? 'Gateway' : 'Credenciales',
+                3: 'Proveedor',
+                4: 'Credenciales',
                 5: 'Resumen',
             };
             return labels[this.currentStep] || '';
@@ -1134,13 +1091,20 @@ function serviceWizard() {
         },
 
         nextStep() {
-            if (this.currentStep < this.totalSteps()) {
+            // Para expuesto: paso 3 → paso 4 (resumen), saltando el antiguo paso 4 Gateway
+            // Para consumido: flujo normal 1→2→3→4→5
+            if (this.direction === 'exposed' && this.currentStep === 3) {
+                this.currentStep = 4; // resumen
+            } else if (this.currentStep < this.totalSteps()) {
                 this.currentStep++;
             }
         },
 
         prevStep() {
-            if (this.currentStep > 1) {
+            // Para expuesto: paso 4 (resumen) → paso 3 (backend)
+            if (this.direction === 'exposed' && this.currentStep === 4) {
+                this.currentStep = 3;
+            } else if (this.currentStep > 1) {
                 this.currentStep--;
             }
         },
@@ -1188,7 +1152,6 @@ function serviceWizard() {
                     { label: 'URL del backend', value: this.endpoint_url, mono: true },
                     { label: 'Vigencia desde',  value: this.valid_from },
                     { label: 'Vigencia hasta',  value: this.valid_until },
-                    { label: 'Responsable',     value: this.requester_name },
                 ];
                 if (this.backendHasAuth) {
                     backendRows.push({ label: 'Auth del backend', value: this.auth_type || 'Configurada' });

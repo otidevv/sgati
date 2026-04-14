@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
+use App\Models\System;
 
 class ServiceGatewayKey extends Model
 {
@@ -13,6 +15,7 @@ class ServiceGatewayKey extends Model
         'name',
         'key_prefix',
         'key_hash',
+        'gateway_slug',
         'is_active',
         'rate_per_minute',
         'rate_per_day',
@@ -22,6 +25,11 @@ class ServiceGatewayKey extends Model
         'last_used_at',
         'total_requests',
         'notes',
+        // consumer info
+        'consumer_type',
+        'requesting_system_id',
+        'consumer_organization',
+        'purpose',
     ];
 
     protected function casts(): array
@@ -45,6 +53,11 @@ class ServiceGatewayKey extends Model
         return $this->belongsTo(Persona::class);
     }
 
+    public function requestingSystem(): BelongsTo
+    {
+        return $this->belongsTo(System::class, 'requesting_system_id');
+    }
+
     public function logs(): HasMany
     {
         return $this->hasMany(ServiceGatewayLog::class, 'gateway_key_id');
@@ -64,5 +77,28 @@ class ServiceGatewayKey extends Model
     public function matchesRawKey(string $rawKey): bool
     {
         return hash('sha256', $rawKey) === $this->key_hash;
+    }
+
+    /**
+     * Genera un slug único para la URL del gateway de este consumidor.
+     * Formato: {servicio-slug}-{sufijo-random-8}
+     */
+    public function generateGatewaySlug(): void
+    {
+        $base = Str::slug($this->name ?? 'consumidor');
+        $base = substr($base, 0, 40); // máx 40 chars del nombre
+
+        do {
+            $slug = $base . '-' . Str::random(8);
+        } while (self::where('gateway_slug', $slug)->exists());
+
+        $this->gateway_slug = $slug;
+    }
+
+    /** URL pública completa del gateway para este consumidor */
+    public function gatewayUrl(string $path = ''): string
+    {
+        $base = url('/api/gw/' . $this->gateway_slug);
+        return $path ? $base . '/' . ltrim($path, '/') : $base;
     }
 }

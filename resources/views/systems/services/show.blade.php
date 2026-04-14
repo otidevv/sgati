@@ -429,274 +429,393 @@
                  GATEWAY (solo servicios "expuestos")
             ═══════════════════════════════════════════════════════ --}}
             @if($service->direction === 'exposed')
-            @php
-                $gatewayUrl = $service->gateway_slug
-                    ? url('/api/gw/' . $service->gateway_slug)
-                    : null;
-            @endphp
 
             {{-- Banner key recién generada --}}
             @if(session('new_raw_key'))
             <div id="new-key-banner"
-                 class="bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-300 dark:border-emerald-600 rounded-xl p-4">
+                 class="bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-300 dark:border-emerald-600 rounded-xl p-4 space-y-3">
                 <div class="flex items-start gap-3">
                     <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
                     </svg>
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold text-emerald-800 dark:text-emerald-200">API key generada — cópiala ahora</p>
-                        <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">Esta clave no se mostrará de nuevo. Guárdala en un lugar seguro.</p>
-                        <div class="mt-2 flex items-center gap-2">
-                            <code id="raw-key-display"
-                                  class="flex-1 block font-mono text-xs bg-white dark:bg-gray-800 border border-emerald-300 dark:border-emerald-600 rounded px-3 py-2 text-emerald-900 dark:text-emerald-100 break-all select-all">
-                                {{ session('new_raw_key') }}
-                            </code>
+                        <p class="text-sm font-semibold text-emerald-800 dark:text-emerald-200">Solicitante registrado — copia los datos ahora</p>
+                        <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">La API key no se mostrará de nuevo. Guárdala en un lugar seguro.</p>
+                        <p class="text-xs font-medium text-emerald-700 dark:text-emerald-300 mt-2 mb-1">API Key</p>
+                        <div class="flex items-center gap-2">
+                            <code id="raw-key-display" class="flex-1 block font-mono text-xs bg-white dark:bg-gray-800 border border-emerald-300 dark:border-emerald-600 rounded px-3 py-2 text-emerald-900 dark:text-emerald-100 break-all select-all">{{ session('new_raw_key') }}</code>
                             <button onclick="navigator.clipboard.writeText(document.getElementById('raw-key-display').textContent.trim())"
                                     class="flex-shrink-0 inline-flex items-center gap-1 px-3 py-2 text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors">
-                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
-                                </svg>
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
                                 Copiar
                             </button>
                         </div>
+                        @if(session('new_gateway_url'))
+                        <p class="text-xs font-medium text-emerald-700 dark:text-emerald-300 mt-3 mb-1">URL de gateway (exclusiva de este solicitante)</p>
+                        <div class="flex items-center gap-2">
+                            <code id="new-gw-url-display" class="flex-1 block font-mono text-xs bg-white dark:bg-gray-800 border border-emerald-300 dark:border-emerald-600 rounded px-3 py-2 text-indigo-700 dark:text-indigo-300 break-all select-all">{{ session('new_gateway_url') }}</code>
+                            <button onclick="navigator.clipboard.writeText(document.getElementById('new-gw-url-display').textContent.trim())"
+                                    class="flex-shrink-0 inline-flex items-center gap-1 px-3 py-2 text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                                Copiar
+                            </button>
+                        </div>
+                        <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-1">Envía las peticiones a esta URL con el header <code class="font-mono">X-API-Key: &lt;api_key&gt;</code></p>
+                        @endif
                     </div>
                 </div>
             </div>
             @endif
 
-            {{-- Card principal: estado + URL + configuración --}}
+            {{-- ── Solicitantes / Consumidores ── --}}
             <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
-                    <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                        <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">API Gateway</h3>
-                        @if($service->gateway_enabled)
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Activo
-                        </span>
-                        @else
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
-                            <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>Inactivo
-                        </span>
-                        @endif
-                    </div>
-                    @can('services.create/edit/delete')
-                    <form method="POST" action="{{ route('systems.services.gateway.toggle', [$system, $service]) }}">
-                        @csrf
-                        <button type="submit"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors
-                                       {{ $service->gateway_enabled
-                                           ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50'
-                                           : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50' }}">
-                            @if($service->gateway_enabled)
-                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                            Desactivar
-                            @else
-                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z"/></svg>
-                            Activar
-                            @endif
-                        </button>
-                    </form>
-                    @endcan
-                </div>
 
-                <div class="p-6 space-y-5">
-                    {{-- URL pública --}}
-                    @if($gatewayUrl)
+                {{-- Cabecera --}}
+                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
                     <div>
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mb-1.5">URL pública del gateway</p>
                         <div class="flex items-center gap-2">
-                            <code class="flex-1 font-mono text-xs bg-gray-50 dark:bg-gray-700/60 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 text-indigo-700 dark:text-indigo-300 break-all">
-                                {{ $gatewayUrl }}
-                            </code>
-                            <button onclick="navigator.clipboard.writeText('{{ $gatewayUrl }}')"
-                                    title="Copiar URL"
-                                    class="flex-shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                </svg>
-                            </button>
+                            <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Solicitantes / Consumidores
+                                <span class="ml-1 px-1.5 py-0.5 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-500 rounded">{{ $service->gatewayKeys->count() }}</span>
+                            </h3>
+                        </div>
+                        {{-- Estado del gateway + botón de configuración --}}
+                        <div class="flex items-center gap-2 mt-1.5">
+                            @if($service->gateway_enabled)
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Gateway activo
+                            </span>
+                            @else
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+                                <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>Gateway inactivo
+                            </span>
+                            @endif
+                            @if($service->gateway_require_key)
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                Requiere API key
+                            </span>
+                            @endif
                             @can('services.create/edit/delete')
-                            <form method="POST" action="{{ route('systems.services.gateway.regenerate-slug', [$system, $service]) }}"
-                                  onsubmit="return confirm('¿Regenerar la URL? Los accesos actuales dejarán de funcionar.')">
-                                @csrf
-                                <button type="submit" title="Regenerar URL"
-                                        class="flex-shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                                    </svg>
-                                </button>
-                            </form>
+                            <button onclick="openModal('modal-gw-settings')" title="Configuración del gateway"
+                                    class="inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                Configuración
+                            </button>
                             @endcan
                         </div>
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">La URL real del backend permanece oculta.</p>
-                    </div>
-                    @else
-                    <p class="text-sm text-gray-400 dark:text-gray-500 italic">Activa el gateway para generar la URL pública.</p>
-                    @endif
-
-                    {{-- Estadísticas del día --}}
-                    @if($service->gateway_enabled && array_sum($gatewayStats) > 0)
-                    <div class="grid grid-cols-2 gap-3">
-                        @foreach([
-                            ['label' => 'Hoy',          'value' => $gatewayStats['today'],        'color' => 'blue'],
-                            ['label' => 'Esta semana',   'value' => $gatewayStats['week'],         'color' => 'indigo'],
-                            ['label' => 'Errores hoy',  'value' => $gatewayStats['errors_today'], 'color' => $gatewayStats['errors_today'] > 0 ? 'red' : 'gray'],
-                            ['label' => 'Tiempo prom.', 'value' => $gatewayStats['avg_ms'] . ' ms', 'color' => 'gray'],
-                        ] as $stat)
-                        <div class="bg-gray-50 dark:bg-gray-700/40 rounded-lg p-3 text-center">
-                            <p class="text-lg font-bold text-{{ $stat['color'] }}-600 dark:text-{{ $stat['color'] }}-400">{{ $stat['value'] }}</p>
-                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $stat['label'] }}</p>
-                        </div>
-                        @endforeach
-                    </div>
-                    @endif
-
-                    {{-- Configuración --}}
-                    @can('services.create/edit/delete')
-                    <details class="group">
-                        <summary class="cursor-pointer list-none flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors select-none">
-                            <svg class="w-3.5 h-3.5 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
-                            Configuración
-                        </summary>
-                        <form method="POST" action="{{ route('systems.services.gateway.settings', [$system, $service]) }}"
-                              class="mt-3 p-4 bg-gray-50 dark:bg-gray-700/40 rounded-lg space-y-3">
-                            @csrf @method('PUT')
-                            <div class="grid grid-cols-1 gap-3">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                                        Límite por minuto <span class="font-normal text-gray-400">(vacío = sin límite)</span>
-                                    </label>
-                                    <input type="number" name="gateway_rate_per_minute" min="1" max="32767"
-                                           value="{{ $service->gateway_rate_per_minute }}"
-                                           class="w-full text-sm px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                                        Límite por día <span class="font-normal text-gray-400">(vacío = sin límite)</span>
-                                    </label>
-                                    <input type="number" name="gateway_rate_per_day" min="1" max="32767"
-                                           value="{{ $service->gateway_rate_per_day }}"
-                                           class="w-full text-sm px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
-                                </div>
-                            </div>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="hidden" name="gateway_require_key" value="0">
-                                <input type="checkbox" name="gateway_require_key" value="1"
-                                       {{ $service->gateway_require_key ? 'checked' : '' }}
-                                       class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500">
-                                <span class="text-sm text-gray-700 dark:text-gray-300">Requerir API key</span>
-                            </label>
-                            <button type="submit"
-                                    class="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors">
-                                Guardar configuración
-                            </button>
-                        </form>
-                    </details>
-                    @endcan
-                </div>
-            </div>
-
-            {{-- ── API Keys ── --}}
-            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-                        </svg>
-                        <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Claves de acceso
-                            <span class="ml-1 px-1.5 py-0.5 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-500 rounded">{{ $service->gatewayKeys->count() }}</span>
-                        </h3>
                     </div>
                     @can('services.create/edit/delete')
                     <button onclick="openModal('modal-gateway-key')"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-lg transition-colors">
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-lg transition-colors flex-shrink-0">
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        Nueva clave
+                        Nuevo solicitante
                     </button>
                     @endcan
                 </div>
 
+                {{-- Lista de consumidores --}}
                 @if($service->gatewayKeys->isEmpty())
-                <div class="px-6 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
-                    No hay claves de acceso.
-                    @if(!$service->gateway_require_key)
-                    <br><span class="text-xs">El gateway no requiere clave actualmente.</span>
-                    @endif
+                <div class="px-6 py-10 text-center">
+                    <svg class="mx-auto w-10 h-10 text-gray-200 dark:text-gray-700 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <p class="text-sm text-gray-400 dark:text-gray-500">Ningún solicitante registrado aún.</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Al registrar el primero se activará el gateway automáticamente.</p>
                 </div>
                 @else
-                <div class="divide-y divide-gray-100 dark:divide-gray-700">
+                <div class="divide-y divide-gray-100 dark:divide-gray-700/60">
                     @foreach($service->gatewayKeys as $gkey)
                     @php
-                        $keyExpired = $gkey->isExpired();
-                        $keyValid   = $gkey->isValid();
+                        $keyExpired   = $gkey->isExpired();
+                        $consumerType = $gkey->consumer_type ?? 'external';
+                        $isInternal   = $consumerType === 'internal';
+                        $isPerson     = $consumerType === 'person';
+                        $iconBg       = $isInternal ? 'bg-indigo-100 dark:bg-indigo-900/40'
+                                      : ($isPerson ? 'bg-violet-100 dark:bg-violet-900/40'
+                                      : 'bg-amber-50 dark:bg-amber-900/30');
+                        $badgeClass   = $isInternal ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
+                                      : ($isPerson ? 'bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400'
+                                      : 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400');
+                        $badgeLabel   = $isInternal ? 'Sistema interno' : ($isPerson ? 'Persona' : 'Org. externa');
+                        $ks           = $gatewayKeyStats[$gkey->id] ?? ['today' => 0, 'week' => 0, 'errors_today' => 0, 'avg_ms' => 0];
                     @endphp
-                    <div class="px-6 py-3 flex items-center gap-3 flex-wrap">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ $gkey->name }}</span>
-                                @if($keyExpired)
-                                <span class="text-xs text-red-500 dark:text-red-400">Expirada</span>
-                                @elseif(!$gkey->is_active)
-                                <span class="text-xs text-gray-400 dark:text-gray-500">Desactivada</span>
+                    <div x-data="{ open: {{ session('new_key_id') == $gkey->id ? 'true' : 'false' }}, editing: false }">
+
+                        {{-- Fila compacta (siempre visible) --}}
+                        <div class="px-5 py-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors select-none"
+                             @click="open = !open">
+
+                            {{-- Ícono tipo --}}
+                            <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center {{ $iconBg }}">
+                                @if($isInternal && $gkey->requestingSystem)
+                                <span class="text-xs font-bold text-indigo-700 dark:text-indigo-300">
+                                    {{ strtoupper(substr($gkey->requestingSystem->acronym ?? $gkey->requestingSystem->name, 0, 2)) }}
+                                </span>
+                                @elseif($isInternal)
+                                <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"/></svg>
+                                @elseif($isPerson)
+                                <svg class="w-4 h-4 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                 @else
-                                <span class="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Activa
-                                </span>
-                                @endif
-                                <code class="text-xs font-mono text-gray-400 dark:text-gray-500">{{ $gkey->key_prefix }}••••••••</code>
-                            </div>
-                            <div class="mt-0.5 flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500 flex-wrap">
-                                <span>{{ number_format($gkey->total_requests) }} consultas</span>
-                                @if($gkey->last_used_at)
-                                <span>Último uso: {{ $gkey->last_used_at->diffForHumans() }}</span>
-                                @endif
-                                @if($gkey->expires_at)
-                                <span class="{{ $keyExpired ? 'text-red-500' : '' }}">Vence: {{ $gkey->expires_at->format('d/m/Y') }}</span>
-                                @endif
-                                @if($gkey->rate_per_minute || $gkey->rate_per_day)
-                                <span>
-                                    Límite:
-                                    @if($gkey->rate_per_minute) {{ $gkey->rate_per_minute }}/min @endif
-                                    @if($gkey->rate_per_day) {{ $gkey->rate_per_day }}/día @endif
-                                </span>
-                                @endif
-                                @if($gkey->persona)
-                                <span>{{ $gkey->persona->full_name ?? $gkey->persona->name }}</span>
+                                <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                                 @endif
                             </div>
-                        </div>
-                        @can('services.create/edit/delete')
-                        <div class="flex items-center gap-1 flex-shrink-0">
-                            <form method="POST" action="{{ route('systems.services.gateway.keys.toggle', [$system, $service, $gkey]) }}">
-                                @csrf
-                                <button type="submit" title="{{ $gkey->is_active ? 'Desactivar' : 'Activar' }}"
-                                        class="inline-flex items-center justify-center w-7 h-7 rounded text-gray-400 dark:text-gray-500
-                                               {{ $gkey->is_active ? 'hover:text-yellow-600 dark:hover:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/30' : 'hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30' }}
-                                               transition-all">
-                                    @if($gkey->is_active)
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+
+                            {{-- Info principal --}}
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ $gkey->name }}</span>
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium {{ $badgeClass }}">{{ $badgeLabel }}</span>
+                                    @if($keyExpired)
+                                    <span class="inline-flex items-center gap-1 text-xs text-red-500"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Expirada</span>
+                                    @elseif(!$gkey->is_active)
+                                    <span class="inline-flex items-center gap-1 text-xs text-gray-400"><span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>Desactivada</span>
                                     @else
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span class="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Activa</span>
                                     @endif
-                                </button>
-                            </form>
-                            <form method="POST" action="{{ route('systems.services.gateway.keys.destroy', [$system, $service, $gkey]) }}" class="inline">
-                                @csrf @method('DELETE')
-                                <button type="button" x-data
-                                        @click.prevent="sgDeleteForm($el.closest('form'), '¿Eliminar la clave {{ addslashes($gkey->name) }}?')"
-                                        title="Eliminar"
-                                        class="inline-flex items-center justify-center w-7 h-7 rounded text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all">
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                </button>
-                            </form>
+                                </div>
+                                <div class="mt-0.5 flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
+                                    @if($isInternal && $gkey->requestingSystem)
+                                    <span class="text-indigo-500 dark:text-indigo-400">{{ $gkey->requestingSystem->acronym ?? $gkey->requestingSystem->name }}</span>
+                                    @elseif($isPerson && $gkey->persona)
+                                    <span class="text-violet-500 dark:text-violet-400">{{ trim(($gkey->persona->apellido_paterno ?? '') . ' ' . ($gkey->persona->nombres ?? $gkey->persona->name ?? '')) }}</span>
+                                    @elseif($gkey->consumer_organization)
+                                    <span class="text-amber-600 dark:text-amber-400">{{ $gkey->consumer_organization }}</span>
+                                    @endif
+                                    <span>{{ number_format($gkey->total_requests) }} consultas totales</span>
+                                    @if($gkey->last_used_at)<span>Último uso {{ $gkey->last_used_at->diffForHumans() }}</span>@endif
+                                </div>
+                            </div>
+
+                            {{-- Mini stats (hoy) --}}
+                            @if($ks['today'] > 0 || $ks['errors_today'] > 0)
+                            <div class="hidden sm:flex items-center gap-3 text-xs flex-shrink-0">
+                                <div class="text-center">
+                                    <p class="font-semibold text-blue-600 dark:text-blue-400">{{ $ks['today'] }}</p>
+                                    <p class="text-gray-400 text-[10px]">hoy</p>
+                                </div>
+                                @if($ks['errors_today'] > 0)
+                                <div class="text-center">
+                                    <p class="font-semibold text-red-500">{{ $ks['errors_today'] }}</p>
+                                    <p class="text-gray-400 text-[10px]">errores</p>
+                                </div>
+                                @endif
+                            </div>
+                            @endif
+
+                            {{-- Chevron --}}
+                            <svg class="w-4 h-4 text-gray-300 dark:text-gray-600 flex-shrink-0 transition-transform duration-200"
+                                 :class="open ? 'rotate-90' : ''"
+                                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
                         </div>
-                        @endcan
+
+                        {{-- Panel de detalle (expandible) --}}
+                        <div x-show="open"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 -translate-y-1"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100"
+                             x-transition:leave-end="opacity-0"
+                             class="border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 px-5 py-4 space-y-4">
+
+                            {{-- URL del gateway --}}
+                            @if($gkey->gateway_slug)
+                            <div>
+                                <p class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">URL del gateway (exclusiva)</p>
+                                <div class="flex items-center gap-2">
+                                    <code id="gw-url-{{ $gkey->id }}"
+                                          class="flex-1 font-mono text-xs bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 text-indigo-700 dark:text-indigo-300 break-all">{{ $gkey->gatewayUrl() }}</code>
+                                    <button onclick="navigator.clipboard.writeText(document.getElementById('gw-url-{{ $gkey->id }}').textContent.trim())"
+                                            title="Copiar URL"
+                                            class="flex-shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-400 hover:text-indigo-600 hover:border-indigo-400 transition-colors">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                    </button>
+                                </div>
+                                <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-1">Agrega el path requerido al final · Header: <code class="font-mono">X-API-Key: &lt;tu_clave&gt;</code></p>
+                            </div>
+                            @endif
+
+                            {{-- Indicadores de uso --}}
+                            <div>
+                                <p class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Actividad</p>
+                                <div class="grid grid-cols-4 gap-2">
+                                    @foreach([
+                                        ['label' => 'Hoy',           'value' => $ks['today'],                                       'color' => 'blue'],
+                                        ['label' => 'Esta semana',   'value' => $ks['week'],                                        'color' => 'indigo'],
+                                        ['label' => 'Errores hoy',  'value' => $ks['errors_today'],                                 'color' => $ks['errors_today'] > 0 ? 'red' : 'gray'],
+                                        ['label' => 'Tiempo prom.', 'value' => $ks['avg_ms'] > 0 ? $ks['avg_ms'] . ' ms' : '—',    'color' => 'gray'],
+                                    ] as $st)
+                                    <div class="bg-white dark:bg-gray-700/60 rounded-lg p-3 text-center border border-gray-100 dark:border-gray-700">
+                                        <p class="text-base font-bold text-{{ $st['color'] }}-600 dark:text-{{ $st['color'] }}-400">{{ $st['value'] }}</p>
+                                        <p class="text-[10px] text-gray-400 mt-0.5">{{ $st['label'] }}</p>
+                                    </div>
+                                    @endforeach
+                                </div>
+                                <div class="mt-2 flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500">
+                                    <span>Total: <strong class="text-gray-600 dark:text-gray-300">{{ number_format($gkey->total_requests) }}</strong> consultas</span>
+                                    @if($gkey->last_used_at)<span>Último uso: {{ $gkey->last_used_at->format('d/m/Y H:i') }}</span>@endif
+                                </div>
+                            </div>
+
+                            {{-- Configuración de la clave --}}
+                            <div class="grid grid-cols-2 gap-3 text-xs">
+                                <div class="space-y-1.5">
+                                    <p class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Configuración</p>
+                                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-gray-500 dark:text-gray-400">
+                                        <span>Prefijo: <code class="font-mono text-gray-700 dark:text-gray-300">{{ $gkey->key_prefix }}••••••••</code></span>
+                                        @if($gkey->rate_per_minute)<span>Límite: <strong>{{ $gkey->rate_per_minute }}/min</strong></span>@endif
+                                        @if($gkey->rate_per_day)<span>Límite: <strong>{{ $gkey->rate_per_day }}/día</strong></span>@endif
+                                        @if($gkey->expires_at)
+                                        <span class="{{ $keyExpired ? 'text-red-500' : '' }}">
+                                            Vence: <strong>{{ $gkey->expires_at->format('d/m/Y') }}</strong>
+                                        </span>
+                                        @endif
+                                    </div>
+                                    @if(!empty($gkey->allowed_ips))
+                                    <div>
+                                        <p class="text-[11px] text-gray-400 mb-0.5">IPs permitidas:</p>
+                                        <div class="flex flex-wrap gap-1">
+                                            @foreach($gkey->allowed_ips as $ip)
+                                            <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[11px] font-mono text-gray-600 dark:text-gray-300">{{ $ip }}</code>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    @endif
+                                </div>
+                                @if($gkey->purpose || $gkey->notes || $gkey->persona)
+                                <div class="space-y-1">
+                                    <p class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Notas</p>
+                                    @if($gkey->purpose)<p class="text-gray-500 dark:text-gray-400 italic">{{ $gkey->purpose }}</p>@endif
+                                    @if($gkey->notes)<p class="text-gray-400 dark:text-gray-500">{{ $gkey->notes }}</p>@endif
+                                    @if($gkey->persona && !$isPerson)
+                                    <p class="text-gray-500 dark:text-gray-400">Contacto: {{ $gkey->persona->full_name ?? $gkey->persona->name }}</p>
+                                    @endif
+                                </div>
+                                @endif
+                            </div>
+
+                            {{-- Acciones --}}
+                            @can('services.create/edit/delete')
+                            <div class="flex items-center gap-2 pt-1 border-t border-gray-200 dark:border-gray-700">
+                                <button type="button" @click="editing = !editing"
+                                        :class="editing ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400'"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    Editar
+                                </button>
+                                <form method="POST" action="{{ route('systems.services.gateway.keys.toggle', [$system, $service, $gkey]) }}">
+                                    @csrf
+                                    <button type="submit"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors
+                                                   {{ $gkey->is_active
+                                                       ? 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-900/50'
+                                                       : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50' }}">
+                                        @if($gkey->is_active)
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                        Desactivar
+                                        @else
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        Activar
+                                        @endif
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ route('systems.services.gateway.keys.destroy', [$system, $service, $gkey]) }}" class="inline">
+                                    @csrf @method('DELETE')
+                                    <button type="button" x-data
+                                            @click.prevent="sgDeleteForm($el.closest('form'), '¿Eliminar el acceso de {{ addslashes($gkey->name) }}?')"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        Eliminar
+                                    </button>
+                                </form>
+                            </div>
+
+                            {{-- Formulario de edición inline --}}
+                            <div x-show="editing"
+                                 x-transition:enter="transition ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 -translate-y-1"
+                                 x-transition:enter-end="opacity-100 translate-y-0"
+                                 class="mt-3 pt-3 border-t border-indigo-100 dark:border-indigo-900/40">
+                                <p class="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-3">Editar configuración del solicitante</p>
+                                <form method="POST" action="{{ route('systems.services.gateway.keys.update', [$system, $service, $gkey]) }}"
+                                      class="space-y-3">
+                                    @csrf @method('PUT')
+                                    {{-- Campos ocultos para mantener valores no editados --}}
+                                    <input type="hidden" name="consumer_type" value="{{ $gkey->consumer_type ?? 'external' }}">
+                                    <input type="hidden" name="requesting_system_id" value="{{ $gkey->requesting_system_id }}">
+                                    <input type="hidden" name="consumer_organization" value="{{ $gkey->consumer_organization }}">
+                                    <input type="hidden" name="purpose" value="{{ $gkey->purpose }}">
+
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                Nombre del acceso
+                                            </label>
+                                            <input type="text" name="name" value="{{ $gkey->name }}" required maxlength="120"
+                                                   class="w-full text-sm px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                Vencimiento <span class="font-normal text-gray-400">(vacío = sin vencimiento)</span>
+                                            </label>
+                                            <input type="date" name="expires_at"
+                                                   value="{{ $gkey->expires_at ? $gkey->expires_at->format('Y-m-d') : '' }}"
+                                                   class="w-full text-sm px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                Límite por minuto <span class="font-normal text-gray-400">(vacío = usa el global)</span>
+                                            </label>
+                                            <input type="number" name="rate_per_minute" min="1" max="32767"
+                                                   value="{{ $gkey->rate_per_minute }}"
+                                                   placeholder="ej. 60"
+                                                   class="w-full text-sm px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                Límite por día <span class="font-normal text-gray-400">(vacío = usa el global)</span>
+                                            </label>
+                                            <input type="number" name="rate_per_day" min="1" max="32767"
+                                                   value="{{ $gkey->rate_per_day }}"
+                                                   placeholder="ej. 5000"
+                                                   class="w-full text-sm px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            IPs permitidas <span class="font-normal text-gray-400">(separadas por coma o espacio · vacío = cualquier IP)</span>
+                                        </label>
+                                        <input type="text" name="allowed_ips"
+                                               value="{{ is_array($gkey->allowed_ips) ? implode(', ', $gkey->allowed_ips) : $gkey->allowed_ips }}"
+                                               placeholder="192.168.1.10, 10.0.0.5"
+                                               class="w-full text-sm font-mono px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Notas internas</label>
+                                        <textarea name="notes" rows="2" maxlength="500"
+                                                  class="w-full text-sm px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none">{{ $gkey->notes }}</textarea>
+                                    </div>
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button type="button" @click="editing = false"
+                                                class="px-3 py-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+                                            Cancelar
+                                        </button>
+                                        <button type="submit"
+                                                class="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            Guardar cambios
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            @endcan
+                        </div>
                     </div>
                     @endforeach
                 </div>
@@ -761,8 +880,85 @@
 
         </div>{{-- /col derecha --}}
 
+
     </div>{{-- /grid --}}
 </div>{{-- /max-w-6xl --}}
+
+{{-- ════════ MODAL: Configuración del Gateway ════════ --}}
+@if($service->direction === 'exposed')
+<div id="modal-gw-settings" class="hidden fixed inset-0 z-50 items-center justify-center p-4" role="dialog" aria-modal="true">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal('modal-gw-settings')"></div>
+    <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white">Configuración del Gateway</h3>
+            </div>
+            <button onclick="closeModal('modal-gw-settings')" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <form method="POST" action="{{ route('systems.services.gateway.settings', [$system, $service]) }}">
+            @csrf @method('PUT')
+            <div class="p-6 space-y-4">
+                <p class="text-xs text-gray-400 dark:text-gray-500">Estos límites se aplican globalmente. Cada solicitante puede tener sus propios límites adicionales.</p>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Límite por minuto <span class="font-normal text-gray-400">(vacío = sin límite global)</span>
+                    </label>
+                    <input type="number" name="gateway_rate_per_minute" min="1" max="32767"
+                           value="{{ $service->gateway_rate_per_minute }}"
+                           class="w-full text-sm px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Límite por día <span class="font-normal text-gray-400">(vacío = sin límite global)</span>
+                    </label>
+                    <input type="number" name="gateway_rate_per_day" min="1" max="32767"
+                           value="{{ $service->gateway_rate_per_day }}"
+                           class="w-full text-sm px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                </div>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="hidden" name="gateway_require_key" value="0">
+                    <input type="checkbox" name="gateway_require_key" value="1"
+                           {{ $service->gateway_require_key ? 'checked' : '' }}
+                           class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500">
+                    <span class="text-sm text-gray-700 dark:text-gray-300">Requerir API key en todas las peticiones</span>
+                </label>
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-3">
+                    <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Estado del gateway</p>
+                    <form method="POST" action="{{ route('systems.services.gateway.toggle', [$system, $service]) }}">
+                        @csrf
+                        <button type="submit"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors
+                                       {{ $service->gateway_enabled
+                                           ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100'
+                                           : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100' }}">
+                            @if($service->gateway_enabled)
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                            Desactivar gateway global
+                            @else
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z"/></svg>
+                            Activar gateway
+                            @endif
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="px-6 pb-5 flex justify-end gap-2">
+                <button type="button" onclick="closeModal('modal-gw-settings')"
+                        class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors">
+                    Guardar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+@endif
 
 {{-- ════════ MODAL: Agregar / Editar Campo ════════ --}}
 <div id="modal-field" class="hidden fixed inset-0 z-50 items-center justify-center p-4" role="dialog" aria-modal="true">
@@ -909,52 +1105,168 @@
     </div>
 </div>
 
-{{-- ════════ MODAL: Nueva API key ════════ --}}
+{{-- ════════ MODAL: Nuevo solicitante / consumidor ════════ --}}
 @can('services.create/edit/delete')
 <div id="modal-gateway-key" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm items-center justify-center p-4">
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md">
-        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Nueva clave de acceso</h3>
-            <button onclick="closeModal('modal-gateway-key')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+         x-data="{ consumerType: 'internal' }">
+        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between sticky top-0 bg-white dark:bg-gray-800 z-10">
+            <div>
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Nuevo solicitante de acceso</h3>
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Se generará una clave única para este consumidor.</p>
+            </div>
+            <button onclick="closeModal('modal-gateway-key')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 ml-4 flex-shrink-0">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
         <form method="POST" action="{{ route('systems.services.gateway.keys.store', [$system, $service]) }}"
-              class="p-6 space-y-4">
+              class="p-6 space-y-5">
             @csrf
+
+            {{-- ── Tipo de consumidor ── --}}
             <div>
-                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Nombre / descripción <span class="text-red-500">*</span></label>
-                <input type="text" name="name" required maxlength="120" placeholder="Ej: Aplicación SUNEDU — consultas padron"
-                       class="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none">
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Límite / minuto</label>
-                    <input type="number" name="rate_per_minute" min="1" max="32767" placeholder="Sin límite"
-                           class="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none">
+                <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">¿Quién consume esta API?</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="consumer_type" value="internal" x-model="consumerType" class="sr-only peer" checked>
+                        <div class="flex flex-col items-center gap-1.5 p-2.5 rounded-lg border-2 transition-all text-center
+                                    border-gray-200 dark:border-gray-600 peer-checked:border-indigo-500 dark:peer-checked:border-indigo-400
+                                    peer-checked:bg-indigo-50 dark:peer-checked:bg-indigo-900/20">
+                            <svg class="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"/>
+                            </svg>
+                            <p class="text-xs font-medium text-gray-800 dark:text-gray-200 leading-tight">Sistema interno</p>
+                        </div>
+                    </label>
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="consumer_type" value="person" x-model="consumerType" class="sr-only peer">
+                        <div class="flex flex-col items-center gap-1.5 p-2.5 rounded-lg border-2 transition-all text-center
+                                    border-gray-200 dark:border-gray-600 peer-checked:border-violet-500 dark:peer-checked:border-violet-400
+                                    peer-checked:bg-violet-50 dark:peer-checked:bg-violet-900/20">
+                            <svg class="w-5 h-5 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            <p class="text-xs font-medium text-gray-800 dark:text-gray-200 leading-tight">Persona</p>
+                        </div>
+                    </label>
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="consumer_type" value="external" x-model="consumerType" class="sr-only peer">
+                        <div class="flex flex-col items-center gap-1.5 p-2.5 rounded-lg border-2 transition-all text-center
+                                    border-gray-200 dark:border-gray-600 peer-checked:border-amber-500 dark:peer-checked:border-amber-400
+                                    peer-checked:bg-amber-50 dark:peer-checked:bg-amber-900/20">
+                            <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                            <p class="text-xs font-medium text-gray-800 dark:text-gray-200 leading-tight">Org. externa</p>
+                        </div>
+                    </label>
                 </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Límite / día</label>
-                    <input type="number" name="rate_per_day" min="1" max="32767" placeholder="Sin límite"
-                           class="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none">
+            </div>
+
+            {{-- ── Sistema interno ── --}}
+            <div x-show="consumerType === 'internal'" x-transition>
+                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Sistema solicitante</label>
+                <select name="requesting_system_id"
+                        class="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                    <option value="">— Selecciona el sistema —</option>
+                    @foreach($allSystems as $s)
+                    <option value="{{ $s->id }}">{{ $s->name }}{{ $s->acronym ? ' ('.$s->acronym.')' : '' }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- ── Persona directa ── --}}
+            <div x-show="consumerType === 'person'" x-transition>
+                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Persona solicitante <span class="text-red-500">*</span></label>
+                <select name="consumer_persona_id"
+                        class="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none">
+                    <option value="">— Selecciona la persona —</option>
+                    @foreach(\App\Models\Persona::orderBy('apellido_paterno')->get(['id','nombres','apellido_paterno','apellido_materno']) as $p)
+                    <option value="{{ $p->id }}">{{ $p->apellido_paterno }} {{ $p->apellido_materno }}, {{ $p->nombres }}</option>
+                    @endforeach
+                </select>
+                <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">La persona recibirá su propia clave de acceso. También se usará como contacto.</p>
+            </div>
+
+            {{-- ── Organización externa ── --}}
+            <div x-show="consumerType === 'external'" x-transition>
+                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Organización / aplicación</label>
+                <input type="text" name="consumer_organization" maxlength="150"
+                       placeholder="Ej: SUNEDU, App Móvil Alumnos, Portal Web ORI…"
+                       class="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none">
+            </div>
+
+            {{-- ── Nombre del acceso + propósito ── --}}
+            <div>
+                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    Nombre de este acceso <span class="text-red-500">*</span>
+                </label>
+                <input type="text" name="name" required maxlength="120"
+                       :placeholder="consumerType === 'internal' ? 'Ej: Sistema de Matrícula — consulta DNI' : consumerType === 'person' ? 'Ej: Javier Torres — acceso investigación' : 'Ej: SUNEDU — verificación docentes'"
+                       class="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none">
+                <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">Identifica el uso — puedes tener varios accesos para el mismo consumidor.</p>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Propósito / uso</label>
+                <input type="text" name="purpose" maxlength="255"
+                       placeholder="Ej: Verificar DNI en el proceso de matrícula"
+                       class="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none">
+            </div>
+
+            {{-- ── Contacto (solo si no es persona directa) ── --}}
+            <div x-show="consumerType !== 'person'" x-transition>
+                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Persona de contacto</label>
+                <select name="persona_id"
+                        class="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none">
+                    <option value="">— Sin contacto —</option>
+                    @foreach(\App\Models\Persona::orderBy('apellido_paterno')->get(['id','nombres','apellido_paterno','apellido_materno']) as $p)
+                    <option value="{{ $p->id }}">{{ $p->apellido_paterno }} {{ $p->apellido_materno }}, {{ $p->nombres }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- ── Límites y restricciones (colapsable) ── --}}
+            <div x-data="{ openAdv: false }">
+                <button type="button" @click="openAdv = !openAdv"
+                        class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+                    <svg class="w-3.5 h-3.5 transition-transform" :class="openAdv ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                    Opciones avanzadas (límites, IPs, vencimiento)
+                </button>
+                <div x-show="openAdv" x-transition class="mt-3 space-y-3 pl-4 border-l-2 border-gray-100 dark:border-gray-700">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Límite / minuto</label>
+                            <input type="number" name="rate_per_minute" min="1" max="32767" placeholder="Sin límite"
+                                   class="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Límite / día</label>
+                            <input type="number" name="rate_per_day" min="1" max="32767" placeholder="Sin límite"
+                                   class="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">IPs permitidas <span class="font-normal text-gray-400">(vacío = todas)</span></label>
+                        <input type="text" name="allowed_ips" placeholder="192.168.1.10, 10.0.0.1"
+                               class="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Vence el</label>
+                        <input type="date" name="expires_at"
+                               class="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Notas internas</label>
+                        <textarea name="notes" rows="2" maxlength="500"
+                                  class="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none resize-none"></textarea>
+                    </div>
                 </div>
             </div>
-            <div>
-                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Fecha de expiración</label>
-                <input type="date" name="expires_at"
-                       class="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none">
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">IPs permitidas <span class="font-normal text-gray-400">(separadas por coma, vacío = todas)</span></label>
-                <input type="text" name="allowed_ips" placeholder="192.168.1.0, 10.0.0.1"
-                       class="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none">
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Notas</label>
-                <textarea name="notes" rows="2" maxlength="500" placeholder="Contexto adicional..."
-                          class="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none resize-none"></textarea>
-            </div>
-            <div class="flex items-center justify-end gap-3 pt-2">
+
+            <div class="flex items-center justify-end gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
                 <button type="button" onclick="closeModal('modal-gateway-key')"
                         class="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
                     Cancelar
@@ -962,7 +1274,7 @@
                 <button type="submit"
                         class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
-                    Generar clave
+                    Registrar y generar clave
                 </button>
             </div>
         </form>

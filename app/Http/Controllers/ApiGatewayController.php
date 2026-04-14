@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\ServiceGatewayKey;
 use App\Models\ServiceGatewayLog;
-use App\Models\SystemService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
@@ -14,57 +13,65 @@ class ApiGatewayController extends Controller
     /**
      * Recibe cualquier petición HTTP al gateway y la redirige al backend real.
      * Ruta: ANY /api/gw/{slug}/{path?}
+     *
+     * El slug pertenece al CONSUMIDOR (ServiceGatewayKey), no al servicio.
+     * Cada consumidor tiene su propia URL de gateway.
      */
     public function handle(Request $request, string $slug, string $path = '')
     {
-        // ── 1. Encontrar servicio activo ─────────────────────────────────────
-        $service = SystemService::where('gateway_slug', $slug)
-            ->where('gateway_enabled', true)
-            ->where('direction', 'exposed')
+        // ── 1. Encontrar la clave del consumidor por su slug ─────────────────
+        $gatewayKey = ServiceGatewayKey::with('service')
+            ->where('gateway_slug', $slug)
             ->first();
 
-        if (!$service) {
-            return response()->json(['error' => 'Gateway no encontrado o deshabilitado.'], 404);
+        if (!$gatewayKey || !$gatewayKey->service) {
+            return response()->json(['error' => 'Gateway no encontrado.'], 404);
         }
 
-        // ── 2. Validar API Key ───────────────────────────────────────────────
-        $gatewayKey = null;
+        $service = $gatewayKey->service;
+
+        // El servicio debe estar activo y ser expuesto
+        if (!$service->is_active || $service->direction !== 'exposed') {
+            return response()->json(['error' => 'El servicio no está disponible.'], 503);
+        }
+
+        // ── 2. Validar que la clave del consumidor esté activa ───────────────
+        if (!$gatewayKey->is_active) {
+            $this->log($service, $gatewayKey, $request, $path, 403, 0, 'Clave desactivada');
+            return response()->json(['error' => 'Esta clave de acceso ha sido desactivada.'], 403);
+        }
+
+        if ($gatewayKey->isExpired()) {
+            $this->log($service, $gatewayKey, $request, $path, 403, 0, 'Clave expirada');
+            return response()->json(['error' => 'Esta clave de acceso ha expirado.'], 403);
+        }
+
+        // ── 3. Validar API Key en header (si el servicio lo requiere) ────────
         if ($service->gateway_require_key) {
             $rawKey = $request->header('X-API-Key') ?? $request->query('api_key');
 
             if (!$rawKey) {
-                $this->log($service, null, $request, $path, 401, 0, 'API key requerida');
+                $this->log($service, $gatewayKey, $request, $path, 401, 0, 'API key requerida');
                 return response()->json(['error' => 'API key requerida. Envía el header X-API-Key.'], 401);
             }
 
-            $prefix = substr($rawKey, 0, 8);
-            $hash   = hash('sha256', $rawKey);
-
-            $gatewayKey = $service->gatewayKeys()
-                ->where('key_prefix', $prefix)
-                ->where('key_hash', $hash)
-                ->where('is_active', true)
-                ->where(fn($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
-                ->first();
-
-            if (!$gatewayKey) {
-                $this->log($service, null, $request, $path, 401, 0, 'API key inválida o expirada');
-                return response()->json(['error' => 'API key inválida o expirada.'], 401);
-            }
-
-            // Whitelist de IPs
-            if (!empty($gatewayKey->allowed_ips) && !in_array($request->ip(), $gatewayKey->allowed_ips)) {
-                $this->log($service, $gatewayKey, $request, $path, 403, 0, 'IP no permitida: ' . $request->ip());
-                return response()->json(['error' => 'Tu IP no está autorizada para esta clave.'], 403);
+            if (!$gatewayKey->matchesRawKey($rawKey)) {
+                $this->log($service, $gatewayKey, $request, $path, 401, 0, 'API key inválida');
+                return response()->json(['error' => 'API key inválida.'], 401);
             }
         }
 
-        // ── 3. Verificar horario de operación ───────────────────────────────
+        // ── 4. Whitelist de IPs ──────────────────────────────────────────────
+        if (!empty($gatewayKey->allowed_ips) && !in_array($request->ip(), $gatewayKey->allowed_ips)) {
+            $this->log($service, $gatewayKey, $request, $path, 403, 0, 'IP no permitida: ' . $request->ip());
+            return response()->json(['error' => 'Tu IP no está autorizada para esta clave.'], 403);
+        }
+
+        // ── 5. Verificar horario de operación ────────────────────────────────
         if ($service->gateway_active_from && $service->gateway_active_to) {
             $now  = now()->format('H:i');
             $from = $service->gateway_active_from;
             $to   = $service->gateway_active_to;
-            // Soporta rangos que cruzan medianoche (ej: 22:00 – 06:00)
             $inRange = ($from <= $to)
                 ? ($now >= $from && $now <= $to)
                 : ($now >= $from || $now <= $to);
@@ -77,12 +84,10 @@ class ApiGatewayController extends Controller
             }
         }
 
-        // ── 4. Rate limiting ─────────────────────────────────────────────────
-        $limitIdentifier = $gatewayKey ? "key:{$gatewayKey->id}" : "ip:{$request->ip()}";
-        $baseKey         = "gw:{$service->id}:{$limitIdentifier}";
-
-        $perMinute = $gatewayKey?->rate_per_minute ?? $service->gateway_rate_per_minute;
-        $perDay    = $gatewayKey?->rate_per_day    ?? $service->gateway_rate_per_day;
+        // ── 6. Rate limiting (límite por consumidor, fallback al servicio) ───
+        $baseKey   = "gw:{$service->id}:key:{$gatewayKey->id}";
+        $perMinute = $gatewayKey->rate_per_minute ?? $service->gateway_rate_per_minute;
+        $perDay    = $gatewayKey->rate_per_day    ?? $service->gateway_rate_per_day;
 
         if ($perMinute && !RateLimiter::attempt("{$baseKey}:min", $perMinute, fn() => true, 60)) {
             $this->log($service, $gatewayKey, $request, $path, 429, 0, 'Rate limit por minuto excedido');
@@ -100,11 +105,10 @@ class ApiGatewayController extends Controller
             ], 429);
         }
 
-        // ── 5. Construir URL destino ─────────────────────────────────────────
+        // ── 7. Construir URL destino ─────────────────────────────────────────
         $backendBase = rtrim($service->endpoint_url, '/');
         $targetUrl   = $path ? $backendBase . '/' . ltrim($path, '/') : $backendBase;
         $queryString = $request->getQueryString();
-        // quitar api_key del query para no reenviarlo al backend
         if ($queryString) {
             parse_str($queryString, $params);
             unset($params['api_key']);
@@ -114,8 +118,8 @@ class ApiGatewayController extends Controller
             }
         }
 
-        // ── 6. Preparar headers a reenviar ───────────────────────────────────
-        $skipHeaders = ['host', 'x-api-key', 'transfer-encoding', 'content-length', 'cookie', 'accept-encoding'];
+        // ── 8. Preparar headers a reenviar ───────────────────────────────────
+        $skipHeaders    = ['host', 'x-api-key', 'transfer-encoding', 'content-length', 'cookie', 'accept-encoding'];
         $forwardHeaders = [];
         foreach ($request->headers->all() as $name => $values) {
             if (!in_array(strtolower($name), $skipHeaders)) {
@@ -123,13 +127,12 @@ class ApiGatewayController extends Controller
             }
         }
 
-        // ── 7. Proxiar la petición ───────────────────────────────────────────
+        // ── 9. Proxiar la petición ───────────────────────────────────────────
         $startTime = microtime(true);
-        $responseStatus = null;
 
         try {
-            $client  = Http::withHeaders($forwardHeaders)->timeout(30)->withOptions(['verify' => false]);
-            $method  = strtolower($request->method());
+            $client = Http::withHeaders($forwardHeaders)->timeout(30)->withOptions(['verify' => false]);
+            $method = strtolower($request->method());
 
             if (in_array($method, ['post', 'put', 'patch'])) {
                 $contentType = strtolower($request->header('Content-Type', ''));
@@ -144,8 +147,8 @@ class ApiGatewayController extends Controller
                 $proxyResponse = $client->$method($targetUrl);
             }
 
-            $responseStatus  = $proxyResponse->status();
-            $responseTimeMs  = (int) ((microtime(true) - $startTime) * 1000);
+            $responseStatus = $proxyResponse->status();
+            $responseTimeMs = (int) ((microtime(true) - $startTime) * 1000);
 
         } catch (\Exception $e) {
             $responseTimeMs = (int) ((microtime(true) - $startTime) * 1000);
@@ -153,17 +156,15 @@ class ApiGatewayController extends Controller
             return response()->json(['error' => 'El backend no está disponible.', 'detail' => $e->getMessage()], 502);
         }
 
-        // ── 8. Registrar en log y actualizar key ────────────────────────────
+        // ── 10. Registrar y actualizar contadores ────────────────────────────
         $this->log($service, $gatewayKey, $request, $path, $responseStatus, $responseTimeMs);
 
-        if ($gatewayKey) {
-            $gatewayKey->increment('total_requests');
-            $gatewayKey->update(['last_used_at' => now()]);
-        }
+        $gatewayKey->increment('total_requests');
+        $gatewayKey->update(['last_used_at' => now()]);
 
-        // ── 9. Devolver respuesta del backend ────────────────────────────────
+        // ── 11. Devolver respuesta del backend ───────────────────────────────
         $skipResponseHeaders = ['transfer-encoding', 'content-encoding', 'set-cookie'];
-        $responseHeaders = [];
+        $responseHeaders     = [];
         foreach ($proxyResponse->headers() as $name => $values) {
             if (!in_array(strtolower($name), $skipResponseHeaders)) {
                 $responseHeaders[$name] = is_array($values) ? $values[0] : $values;
@@ -174,16 +175,16 @@ class ApiGatewayController extends Controller
             ->withHeaders($responseHeaders);
     }
 
-    // ── Helpers ─────────────────────────────────────────────────────────────
+    // ── Helper ───────────────────────────────────────────────────────────────
 
     private function log(
-        SystemService    $service,
+        $service,
         ?ServiceGatewayKey $key,
-        Request          $request,
-        string           $path,
-        ?int             $status,
-        int              $timeMs,
-        ?string          $error = null
+        Request $request,
+        string $path,
+        ?int $status,
+        int $timeMs,
+        ?string $error = null
     ): void {
         ServiceGatewayLog::create([
             'system_service_id' => $service->id,

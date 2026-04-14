@@ -33,34 +33,43 @@ class SystemServiceController extends Controller
 
     public function show(System $system, SystemService $service)
     {
-        $service->load(['providerSystem', 'requestedBy', 'documents', 'fields', 'gatewayKeys.persona']);
+        $service->load(['providerSystem', 'requestedBy', 'documents', 'fields', 'gatewayKeys.persona', 'gatewayKeys.requestingSystem']);
 
         $allSystems = System::where('id', '!=', $system->id)->orderBy('name')->get(['id', 'name', 'acronym']);
 
         // Datos del gateway (solo relevante para servicios expuestos)
-        $gatewayStats = [];
+        $gatewayKeyStats   = [];
         $gatewayRecentLogs = collect();
         if ($service->direction === 'exposed') {
-            $raw = ServiceGatewayLog::selectRaw("
-                count(*) filter (where created_at::date = current_date) as today,
-                count(*) filter (where created_at >= date_trunc('week', now())) as week,
+            // Stats por consumidor (hoy, semana, errores, tiempo promedio)
+            $keyStatsRaw = ServiceGatewayLog::selectRaw("
+                gateway_key_id,
+                count(*) filter (where created_at::date = current_date)                            as today,
+                count(*) filter (where created_at >= date_trunc('week', now()))                    as week,
                 count(*) filter (where created_at::date = current_date and response_status >= 400) as errors_today,
-                avg(response_time_ms) filter (where created_at::date = current_date) as avg_ms
-            ")->where('system_service_id', $service->id)->first();
+                avg(response_time_ms) filter (where created_at::date = current_date)               as avg_ms
+            ")
+            ->where('system_service_id', $service->id)
+            ->whereNotNull('gateway_key_id')
+            ->groupBy('gateway_key_id')
+            ->get();
 
-            $gatewayStats = [
-                'today'        => (int) $raw->today,
-                'week'         => (int) $raw->week,
-                'errors_today' => (int) $raw->errors_today,
-                'avg_ms'       => (int) $raw->avg_ms,
-            ];
+            foreach ($keyStatsRaw as $row) {
+                $gatewayKeyStats[$row->gateway_key_id] = [
+                    'today'        => (int) $row->today,
+                    'week'         => (int) $row->week,
+                    'errors_today' => (int) $row->errors_today,
+                    'avg_ms'       => (int) $row->avg_ms,
+                ];
+            }
+
             $gatewayRecentLogs = $service->gatewayLogs()
                 ->with('gatewayKey:id,name,key_prefix')
                 ->limit(20)->get();
         }
 
         return view('systems.services.show', compact(
-            'system', 'service', 'allSystems', 'gatewayStats', 'gatewayRecentLogs'
+            'system', 'service', 'allSystems', 'gatewayKeyStats', 'gatewayRecentLogs'
         ));
     }
 
@@ -83,22 +92,8 @@ class SystemServiceController extends Controller
         if (empty($data['api_secret'])) unset($data['api_secret']);
         if (empty($data['token']))      unset($data['token']);
 
-        // ── Gateway (solo para servicios expuestos) ───────────────────────────
-        if (($data['direction'] ?? '') === 'exposed') {
-            $data['gateway_enabled']         = $request->boolean('gateway_enabled');
-            $data['gateway_require_key']     = $request->boolean('gateway_require_key');
-            $data['gateway_rate_per_minute'] = $request->filled('gateway_rate_per_minute') ? (int) $request->gateway_rate_per_minute : null;
-            $data['gateway_rate_per_day']    = $request->filled('gateway_rate_per_day')    ? (int) $request->gateway_rate_per_day    : null;
-            $data['gateway_active_from']     = $request->filled('gateway_active_from') ? $request->gateway_active_from : null;
-            $data['gateway_active_to']       = $request->filled('gateway_active_to')   ? $request->gateway_active_to   : null;
-        }
-
+        // El gateway se activa automáticamente al registrar el primer consumidor (SystemServiceGatewayKeyController)
         $service = $system->services()->create($data);
-
-        if (!empty($data['gateway_enabled'])) {
-            $service->generateGatewaySlug();
-            $service->save();
-        }
 
         return redirect()->route('systems.services.show', [$system, $service])
             ->with('success', 'Servicio/API registrado correctamente.');
