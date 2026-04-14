@@ -86,6 +86,30 @@ class SystemServiceGatewayKeyController extends Controller
             ->with('new_gateway_url', $key->gatewayUrl());
     }
 
+    /**
+     * Regenera la API key del consumidor. La clave anterior deja de funcionar inmediatamente.
+     * La nueva clave se muestra UNA SOLA VEZ en el banner de sesión.
+     */
+    public function regenerateKey(System $system, SystemService $service, ServiceGatewayKey $key)
+    {
+        abort_if($key->system_service_id !== $service->id, 403);
+
+        $rawKey = Str::random(40);
+        $prefix = substr($rawKey, 0, 8);
+        $hash   = hash('sha256', $rawKey);
+
+        $key->update([
+            'key_prefix' => $prefix,
+            'key_hash'   => $hash,
+        ]);
+
+        return back()
+            ->with('success', "Clave de \"{$key->name}\" regenerada. Copia el nuevo token — no se mostrará de nuevo.")
+            ->with('new_raw_key', $rawKey)
+            ->with('new_key_id', $key->id)
+            ->with('new_gateway_url', $key->gatewayUrl());
+    }
+
     /** Activa o desactiva una key. */
     public function toggle(Request $request, System $system, SystemService $service, ServiceGatewayKey $key)
     {

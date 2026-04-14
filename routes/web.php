@@ -29,6 +29,7 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SslCertificateController;
 use App\Http\Controllers\SystemServiceGatewayController;
 use App\Http\Controllers\SystemServiceGatewayKeyController;
+use App\Http\Controllers\SystemServiceGatewayKeyDocumentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => redirect()->route('dashboard'));
@@ -95,10 +96,16 @@ Route::middleware(['auth'])->group(function () {
             Route::post('gateway/regenerate-slug',               [SystemServiceGatewayController::class, 'regenerateSlug'])->name('gateway.regenerate-slug');
             Route::get('gateway/logs',                           [SystemServiceGatewayController::class, 'logs'])->name('gateway.logs');
             // Gateway keys
-            Route::post('gateway/keys',                          [SystemServiceGatewayKeyController::class, 'store'])->name('gateway.keys.store');
-            Route::post('gateway/keys/{key}/toggle',             [SystemServiceGatewayKeyController::class, 'toggle'])->name('gateway.keys.toggle');
-            Route::put('gateway/keys/{key}',                     [SystemServiceGatewayKeyController::class, 'update'])->name('gateway.keys.update');
-            Route::delete('gateway/keys/{key}',                  [SystemServiceGatewayKeyController::class, 'destroy'])->name('gateway.keys.destroy');
+            Route::post('gateway/keys',                                        [SystemServiceGatewayKeyController::class, 'store'])->name('gateway.keys.store');
+            Route::post('gateway/keys/{key}/toggle',                           [SystemServiceGatewayKeyController::class, 'toggle'])->name('gateway.keys.toggle');
+            Route::post('gateway/keys/{key}/regenerate',                       [SystemServiceGatewayKeyController::class, 'regenerateKey'])->name('gateway.keys.regenerate');
+            Route::put('gateway/keys/{key}',                                   [SystemServiceGatewayKeyController::class, 'update'])->name('gateway.keys.update');
+            Route::delete('gateway/keys/{key}',                                [SystemServiceGatewayKeyController::class, 'destroy'])->name('gateway.keys.destroy');
+            // Gateway key documents
+            Route::post('gateway/keys/{key}/documents',                        [SystemServiceGatewayKeyDocumentController::class, 'store'])->name('gateway.keys.documents.store');
+            Route::get('gateway/keys/{key}/documents/{document}/download',     [SystemServiceGatewayKeyDocumentController::class, 'download'])->name('gateway.keys.documents.download');
+            Route::get('gateway/keys/{key}/documents/{document}/preview',      [SystemServiceGatewayKeyDocumentController::class, 'preview'])->name('gateway.keys.documents.preview');
+            Route::delete('gateway/keys/{key}/documents/{document}',           [SystemServiceGatewayKeyDocumentController::class, 'destroy'])->name('gateway.keys.documents.destroy');
         });
 
         // Integraciones

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 use App\Models\System;
+use App\Models\ServiceGatewayKeyDocument;
 
 class ServiceGatewayKey extends Model
 {
@@ -61,6 +62,11 @@ class ServiceGatewayKey extends Model
     public function logs(): HasMany
     {
         return $this->hasMany(ServiceGatewayLog::class, 'gateway_key_id');
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(ServiceGatewayKeyDocument::class, 'gateway_key_id')->orderBy('created_at', 'desc');
     }
 
     public function isExpired(): bool

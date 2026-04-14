@@ -33,7 +33,7 @@ class SystemServiceController extends Controller
 
     public function show(System $system, SystemService $service)
     {
-        $service->load(['providerSystem', 'requestedBy', 'documents', 'fields', 'gatewayKeys.persona', 'gatewayKeys.requestingSystem']);
+        $service->load(['providerSystem', 'requestedBy', 'documents', 'fields', 'gatewayKeys.persona', 'gatewayKeys.requestingSystem', 'gatewayKeys.documents']);
 
         $allSystems = System::where('id', '!=', $system->id)->orderBy('name')->get(['id', 'name', 'acronym']);
 

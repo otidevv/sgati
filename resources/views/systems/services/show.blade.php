@@ -663,6 +663,77 @@
                                 </div>
                             </div>
 
+                            {{-- Documentos del solicitante --}}
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <p class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        Documentos
+                                        @if($gkey->documents->isNotEmpty())
+                                        <span class="ml-1 px-1.5 py-0.5 text-[10px] font-medium bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded">{{ $gkey->documents->count() }}</span>
+                                        @endif
+                                    </p>
+                                    @can('services.create/edit/delete')
+                                    <button type="button"
+                                            onclick="openGwKeyDocModal({{ $gkey->id }}, '{{ addslashes($gkey->name) }}')"
+                                            class="inline-flex items-center gap-1 text-[11px] text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 transition-colors">
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                        Adjuntar
+                                    </button>
+                                    @endcan
+                                </div>
+                                @if($gkey->documents->isEmpty())
+                                <p class="text-xs text-gray-400 dark:text-gray-500 italic">Sin documentos adjuntos. Adjunta la solicitud, resolución u oficio que autoriza este acceso.</p>
+                                @else
+                                <div class="space-y-1.5">
+                                    @foreach($gkey->documents as $doc)
+                                    @php
+                                        $docExt  = strtolower(pathinfo($doc->original_name, PATHINFO_EXTENSION));
+                                        $docMeta = collect([
+                                            ['solicitud' => 'Solicitud', 'resolucion_directoral' => 'R.D.', 'resolucion_jefatural' => 'R.J.',
+                                             'memorando' => 'Memorando', 'oficio' => 'Oficio', 'contrato' => 'Contrato',
+                                             'acta' => 'Acta', 'convenio' => 'Convenio', 'otro' => 'Otro'][$doc->document_type] ?? null,
+                                            $doc->document_number,
+                                            $doc->document_date?->format('d/m/Y'),
+                                        ])->filter()->implode(' · ');
+                                        $chipLabel = $doc->description ?: $doc->original_name;
+                                    @endphp
+                                    <div class="flex items-center gap-2 py-1 px-2 rounded-lg bg-white dark:bg-gray-700/60 border border-gray-200 dark:border-gray-600 group/doc">
+                                        <svg class="w-4 h-4 text-indigo-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                        </svg>
+                                        <div class="flex-1 min-w-0">
+                                            <button type="button"
+                                                    onclick='openDocPreview({ name: {{ json_encode($chipLabel) }}, description: {{ json_encode($docMeta ?: null) }}, previewUrl: "{{ route('systems.services.gateway.keys.documents.preview', [$system, $service, $gkey, $doc]) }}", downloadUrl: "{{ route('systems.services.gateway.keys.documents.download', [$system, $service, $gkey, $doc]) }}", ext: {{ json_encode($docExt) }} })'
+                                                    class="text-xs text-indigo-700 dark:text-indigo-300 hover:underline truncate block text-left max-w-xs">
+                                                {{ $chipLabel }}
+                                            </button>
+                                            @if($docMeta)
+                                            <p class="text-[10px] text-gray-400 dark:text-gray-500">{{ $docMeta }}</p>
+                                            @endif
+                                        </div>
+                                        <div class="flex items-center gap-1 opacity-0 group-hover/doc:opacity-100 transition-opacity flex-shrink-0">
+                                            <a href="{{ route('systems.services.gateway.keys.documents.download', [$system, $service, $gkey, $doc]) }}"
+                                               title="Descargar"
+                                               class="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors">
+                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                            </a>
+                                            @can('services.create/edit/delete')
+                                            <form method="POST" action="{{ route('systems.services.gateway.keys.documents.destroy', [$system, $service, $gkey, $doc]) }}" class="inline">
+                                                @csrf @method('DELETE')
+                                                <button type="button" x-data
+                                                        @click.prevent="sgDeleteForm($el.closest('form'), '¿Eliminar {{ addslashes($doc->original_name) }}?')"
+                                                        class="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                </button>
+                                            </form>
+                                            @endcan
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                                @endif
+                            </div>
+
                             {{-- Configuración de la clave --}}
                             <div class="grid grid-cols-2 gap-3 text-xs">
                                 <div class="space-y-1.5">
@@ -702,7 +773,7 @@
 
                             {{-- Acciones --}}
                             @can('services.create/edit/delete')
-                            <div class="flex items-center gap-2 pt-1 border-t border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center flex-wrap gap-2 pt-1 border-t border-gray-200 dark:border-gray-700">
                                 <button type="button" @click="editing = !editing"
                                         :class="editing ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400'"
                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors">
@@ -723,6 +794,15 @@
                                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                         Activar
                                         @endif
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ route('systems.services.gateway.keys.regenerate', [$system, $service, $gkey]) }}" class="inline"
+                                      onsubmit="return confirm('¿Regenerar la clave de {{ addslashes($gkey->name) }}?\n\nLa clave actual dejará de funcionar de inmediato.')">
+                                    @csrf
+                                    <button type="submit"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/50 transition-colors">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                        Regenerar token
                                     </button>
                                 </form>
                                 <form method="POST" action="{{ route('systems.services.gateway.keys.destroy', [$system, $service, $gkey]) }}" class="inline">
@@ -883,6 +963,149 @@
 
     </div>{{-- /grid --}}
 </div>{{-- /max-w-6xl --}}
+
+{{-- ════════ MODAL: Adjuntar documento a solicitante ════════ --}}
+@if($service->direction === 'exposed')
+<div id="modal-gw-key-doc"
+     class="hidden fixed inset-0 z-50 items-center justify-center p-4"
+     role="dialog" aria-modal="true">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal('modal-gw-key-doc')"></div>
+    <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                </svg>
+                <div>
+                    <h3 class="text-base font-semibold text-gray-900 dark:text-white">Adjuntar Documento</h3>
+                    <p id="gw-key-doc-subtitle" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5"></p>
+                </div>
+            </div>
+            <button onclick="closeModal('modal-gw-key-doc')"
+                    class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <form id="gw-key-doc-form" method="POST" enctype="multipart/form-data">
+            @csrf
+            <div class="p-6 space-y-4">
+
+                {{-- Drop zone --}}
+                <div x-data="{ dragging: false }"
+                     @dragover.prevent="dragging = true"
+                     @dragleave.prevent="dragging = false"
+                     @drop.prevent="dragging = false; $refs.gwDocFile.files = $event.dataTransfer.files; gwUpdateFileName($event.dataTransfer.files[0]?.name)"
+                     :class="dragging ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-gray-300 dark:border-gray-600 hover:border-indigo-400'"
+                     class="border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer"
+                     onclick="document.getElementById('gw-doc-file-input').click()">
+                    <svg class="w-10 h-10 mx-auto text-gray-300 dark:text-gray-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    <p id="gw-doc-file-label" class="text-sm text-gray-500 dark:text-gray-400">
+                        Arrastra el archivo aquí o <span class="text-indigo-600 dark:text-indigo-400 font-medium">haz clic para seleccionar</span>
+                    </p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">PDF, Word, Excel, imagen · Máx. 10 MB</p>
+                    <input id="gw-doc-file-input" x-ref="gwDocFile" type="file" name="file"
+                           accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                           class="hidden" required
+                           onchange="gwUpdateFileName(this.files[0]?.name)">
+                </div>
+
+                {{-- Descripción --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Descripción <span class="text-gray-400 font-normal">(opcional)</span>
+                    </label>
+                    <input type="text" name="description"
+                           placeholder="Ej: Oficio de autorización de acceso"
+                           class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+
+                {{-- Datos del documento --}}
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <p class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-3">
+                        Datos del documento <span class="font-normal text-gray-400 normal-case">(opcional)</span>
+                    </p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tipo</label>
+                            <select name="document_type"
+                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <option value="">Sin tipo</option>
+                                <option value="solicitud">Solicitud</option>
+                                <option value="resolucion_directoral">Resolución Directoral</option>
+                                <option value="resolucion_jefatural">Resolución Jefatural</option>
+                                <option value="memorando">Memorando</option>
+                                <option value="oficio">Oficio</option>
+                                <option value="contrato">Contrato</option>
+                                <option value="acta">Acta</option>
+                                <option value="convenio">Convenio</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">N° de documento</label>
+                            <input type="text" name="document_number"
+                                   placeholder="Of. N°042-2024-OTI"
+                                   class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Fecha del documento</label>
+                            <input type="date" name="document_date"
+                                   class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Observaciones</label>
+                            <input type="text" name="document_notes"
+                                   placeholder="Notas adicionales..."
+                                   class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-b-2xl">
+                <button type="button" onclick="closeModal('modal-gw-key-doc')"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    Subir documento
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- URLs de documentos por clave (para JS) --}}
+<script>
+const gwKeyDocUrls = {
+    @foreach($service->gatewayKeys as $gkey)
+    {{ $gkey->id }}: '{{ route('systems.services.gateway.keys.documents.store', [$system, $service, $gkey]) }}',
+    @endforeach
+};
+
+function openGwKeyDocModal(keyId, keyName) {
+    document.getElementById('gw-key-doc-subtitle').textContent = 'Solicitante: ' + keyName;
+    document.getElementById('gw-key-doc-form').action = gwKeyDocUrls[keyId];
+    document.getElementById('gw-doc-file-label').innerHTML =
+        'Arrastra el archivo aquí o <span class="text-indigo-600 font-medium">haz clic para seleccionar</span>';
+    document.getElementById('gw-doc-file-input').value = '';
+    openModal('modal-gw-key-doc');
+}
+
+function gwUpdateFileName(name) {
+    if (name) {
+        document.getElementById('gw-doc-file-label').textContent = name;
+    }
+}
+</script>
+@endif
 
 {{-- ════════ MODAL: Configuración del Gateway ════════ --}}
 @if($service->direction === 'exposed')
