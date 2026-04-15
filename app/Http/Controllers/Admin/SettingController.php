@@ -35,11 +35,14 @@ class SettingController extends Controller
             'mail_from_name'   => $mailDb['mail_from_name']    ?? config('mail.from.name', ''),
             'mail_configured'  => !empty($mailDb),
             // Seguridad: primero BD, luego defaults
-            'session_lifetime'        => (int) ($secDb['session_lifetime']        ?? config('session.lifetime', 120)),
-            'session_inactivity'      => (int) ($secDb['session_inactivity']      ?? 0),
+            'session_lifetime'        => (int)  ($secDb['session_lifetime']        ?? config('session.lifetime', 120)),
+            'session_inactivity'      => (int)  ($secDb['session_inactivity']      ?? 0),
             'session_expire_on_close' => (bool) ($secDb['session_expire_on_close'] ?? config('session.expire_on_close', false)),
-            'max_login_attempts'      => (int) ($secDb['max_login_attempts']      ?? 5),
-            'lockout_duration'        => (int) ($secDb['lockout_duration']        ?? 1),
+            'max_login_attempts'      => (int)  ($secDb['max_login_attempts']      ?? 5),
+            'lockout_duration'        => (int)  ($secDb['lockout_duration']        ?? 1),
+            'password_reset_enabled'  => (bool) ($secDb['password_reset_enabled']  ?? true),
+            'two_factor_enabled'      => (bool) ($secDb['two_factor_enabled']      ?? false),
+            'single_session_enabled'  => (bool) ($secDb['single_session_enabled']  ?? false),
             'security_configured'     => !empty($secDb),
         ];
 
@@ -83,14 +86,20 @@ class SettingController extends Controller
     public function updateSecurity(Request $request)
     {
         $data = $request->validate([
-            'session_lifetime'       => ['required', 'integer', 'min:5', 'max:1440'],
-            'session_inactivity'     => ['required', 'integer', 'min:0', 'max:480'],
-            'session_expire_on_close'=> ['nullable', 'boolean'],
-            'max_login_attempts'     => ['required', 'integer', 'min:1', 'max:20'],
-            'lockout_duration'       => ['required', 'integer', 'min:1', 'max:60'],
+            'session_lifetime'        => ['required', 'integer', 'min:5', 'max:1440'],
+            'session_inactivity'      => ['required', 'integer', 'min:0', 'max:480'],
+            'session_expire_on_close' => ['nullable', 'boolean'],
+            'max_login_attempts'      => ['required', 'integer', 'min:1', 'max:20'],
+            'lockout_duration'        => ['required', 'integer', 'min:1', 'max:60'],
+            'password_reset_enabled'  => ['nullable', 'boolean'],
+            'two_factor_enabled'      => ['nullable', 'boolean'],
+            'single_session_enabled'  => ['nullable', 'boolean'],
         ]);
 
         $data['session_expire_on_close'] = $request->boolean('session_expire_on_close') ? '1' : '0';
+        $data['password_reset_enabled']  = $request->boolean('password_reset_enabled')  ? '1' : '0';
+        $data['two_factor_enabled']      = $request->boolean('two_factor_enabled')      ? '1' : '0';
+        $data['single_session_enabled']  = $request->boolean('single_session_enabled')  ? '1' : '0';
 
         foreach ($data as $key => $value) {
             Setting::set($key, $value, 'security');

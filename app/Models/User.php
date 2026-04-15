@@ -20,6 +20,8 @@ class User extends Authenticatable
         'area_id',
         'persona_id',
         'is_active',
+        'two_factor_code',
+        'two_factor_expires_at',
     ];
 
     protected $hidden = [
@@ -30,9 +32,10 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
-            'is_active'         => 'boolean',
+            'email_verified_at'     => 'datetime',
+            'password'              => 'hashed',
+            'is_active'             => 'boolean',
+            'two_factor_expires_at' => 'datetime',
         ];
     }
 

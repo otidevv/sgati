@@ -302,6 +302,160 @@
                             </div>
                         @endif
 
+                        {{-- Guía de configuración --}}
+                        <div x-data="{ open: false, active: null }" class="rounded-lg border border-blue-200 dark:border-blue-800/60 bg-blue-50/50 dark:bg-blue-900/10 overflow-hidden">
+
+                            {{-- Header colapsable --}}
+                            <button type="button" @click="open = !open"
+                                    class="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span class="text-sm font-semibold text-blue-700 dark:text-blue-300">Guía rápida de configuración SMTP</span>
+                                    <span class="text-xs text-blue-500 dark:text-blue-400">(click para autocompletar)</span>
+                                </div>
+                                <svg class="w-4 h-4 text-blue-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+
+                            {{-- Contenido --}}
+                            <div x-show="open" x-collapse class="border-t border-blue-200 dark:border-blue-800/60">
+                                <div class="p-4 space-y-3">
+
+                                    {{-- Cards de proveedores --}}
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+                                        {{-- Gmail --}}
+                                        <div :class="active === 'gmail' ? 'ring-2 ring-blue-500 border-blue-400' : 'border-gray-200 dark:border-gray-600'"
+                                             class="rounded-lg border bg-white dark:bg-gray-800 p-3 cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all"
+                                             @click="
+                                                active = 'gmail';
+                                                document.querySelector('[name=mail_mailer]').value = 'smtp';
+                                                document.querySelector('[name=mail_host]').value = 'smtp.gmail.com';
+                                                document.querySelector('[name=mail_port]').value = '587';
+                                                document.querySelector('[name=mail_encryption]').value = 'tls';
+                                             ">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6z" fill="#EA4335" opacity=".2"/>
+                                                    <path d="M22 6l-10 7L2 6" stroke="#EA4335" stroke-width="1.5" stroke-linecap="round"/>
+                                                </svg>
+                                                <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">Gmail</span>
+                                                <span :class="active === 'gmail' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'"
+                                                      class="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full transition-colors"
+                                                      x-text="active === 'gmail' ? '✓ Seleccionado' : 'Seleccionar'">
+                                                </span>
+                                            </div>
+                                            <pre class="text-[10px] leading-relaxed font-mono text-gray-500 dark:text-gray-400 whitespace-pre-wrap break-all">MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_ENCRYPTION=tls
+MAIL_USERNAME=tucorreo@gmail.com
+MAIL_PASSWORD=zzzzxxxxxzxxxvmgq  ← sin espacios</pre>
+                                            <div class="mt-2 space-y-1.5">
+                                                <p class="text-[10px] text-amber-600 dark:text-amber-400 flex items-start gap-1">
+                                                    <svg class="w-3 h-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                                                    </svg>
+                                                    Usa una <strong>Contraseña de aplicación</strong> de Google, no tu contraseña habitual. Requiere tener verificación en 2 pasos activada en tu cuenta.
+                                                </p>
+                                                <p class="text-[10px] text-blue-600 dark:text-blue-400 flex items-start gap-1">
+                                                    <svg class="w-3 h-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                    </svg>
+                                                    Google te la muestra como <code class="bg-blue-100 dark:bg-blue-900/40 px-1 rounded font-mono">zzzzx xxxxx zxxx vmgq</code> (con espacios) — pégala <strong>sin espacios</strong>: <code class="bg-blue-100 dark:bg-blue-900/40 px-1 rounded font-mono">zzzzxxxxxzxxxvmgq</code>
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {{-- Outlook / Office 365 --}}
+                                        <div :class="active === 'outlook' ? 'ring-2 ring-blue-500 border-blue-400' : 'border-gray-200 dark:border-gray-600'"
+                                             class="rounded-lg border bg-white dark:bg-gray-800 p-3 cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all"
+                                             @click="
+                                                active = 'outlook';
+                                                document.querySelector('[name=mail_mailer]').value = 'smtp';
+                                                document.querySelector('[name=mail_host]').value = 'smtp.office365.com';
+                                                document.querySelector('[name=mail_port]').value = '587';
+                                                document.querySelector('[name=mail_encryption]').value = 'starttls';
+                                             ">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none">
+                                                    <rect x="2" y="4" width="20" height="16" rx="2" fill="#0078D4" opacity=".2"/>
+                                                    <path d="M22 6l-10 7L2 6" stroke="#0078D4" stroke-width="1.5" stroke-linecap="round"/>
+                                                </svg>
+                                                <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">Outlook / Office 365</span>
+                                                <span :class="active === 'outlook' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'"
+                                                      class="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full transition-colors"
+                                                      x-text="active === 'outlook' ? '✓ Seleccionado' : 'Seleccionar'">
+                                                </span>
+                                            </div>
+                                            <pre class="text-[10px] leading-relaxed font-mono text-gray-500 dark:text-gray-400 whitespace-pre-wrap break-all">MAIL_HOST=smtp.office365.com
+MAIL_PORT=587
+MAIL_ENCRYPTION=starttls
+MAIL_USERNAME=tucorreo@dominio.com
+MAIL_PASSWORD="tu_contraseña"</pre>
+                                            <p class="mt-2 text-[10px] text-blue-600 dark:text-blue-400 flex items-start gap-1">
+                                                <svg class="w-3 h-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                                Usa tu correo y contraseña de Microsoft 365. Si tienes MFA activado, genera una contraseña de aplicación desde el portal de seguridad.
+                                            </p>
+                                        </div>
+
+                                        {{-- SMTP Personalizado --}}
+                                        <div :class="active === 'custom' ? 'ring-2 ring-blue-500 border-blue-400' : 'border-gray-200 dark:border-gray-600'"
+                                             class="rounded-lg border bg-white dark:bg-gray-800 p-3 cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all"
+                                             @click="
+                                                active = 'custom';
+                                                document.querySelector('[name=mail_mailer]').value = 'smtp';
+                                                document.querySelector('[name=mail_host]').value = '';
+                                                document.querySelector('[name=mail_port]').value = '587';
+                                                document.querySelector('[name=mail_encryption]').value = 'tls';
+                                             ">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/>
+                                                </svg>
+                                                <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">SMTP Personalizado</span>
+                                                <span :class="active === 'custom' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'"
+                                                      class="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full transition-colors"
+                                                      x-text="active === 'custom' ? '✓ Seleccionado' : 'Seleccionar'">
+                                                </span>
+                                            </div>
+                                            <pre class="text-[10px] leading-relaxed font-mono text-gray-500 dark:text-gray-400 whitespace-pre-wrap break-all">MAIL_HOST=tu.servidor.smtp
+MAIL_PORT=587
+MAIL_ENCRYPTION=tls
+MAIL_USERNAME=usuario@dominio.com
+MAIL_PASSWORD="tu_contraseña_smtp"</pre>
+                                            <p class="mt-2 text-[10px] text-gray-500 dark:text-gray-400 flex items-start gap-1">
+                                                <svg class="w-3 h-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                                Ingresa el host de tu proveedor de hosting o servidor de correo institucional.
+                                            </p>
+                                        </div>
+
+                                    </div>
+
+                                    {{-- Referencia de puertos --}}
+                                    <div class="flex flex-wrap gap-3 pt-1">
+                                        <p class="text-[11px] text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wider self-center">Puertos comunes:</p>
+                                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-[11px] font-mono text-gray-600 dark:text-gray-300">
+                                            <strong>587</strong> — TLS / STARTTLS <span class="text-emerald-500">(recomendado)</span>
+                                        </span>
+                                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-[11px] font-mono text-gray-600 dark:text-gray-300">
+                                            <strong>465</strong> — SSL
+                                        </span>
+                                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-[11px] font-mono text-gray-600 dark:text-gray-300">
+                                            <strong>25</strong> — Sin cifrado <span class="text-red-400">(no recomendado)</span>
+                                        </span>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
                         {{-- Fila 1: Mailer + Encriptación --}}
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
@@ -541,6 +695,102 @@
                                         <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">min. bloqueo</p>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-gray-100 dark:border-gray-700"></div>
+
+                        {{-- ── Autenticación Avanzada ── --}}
+                        <div>
+                            <div class="flex items-center gap-2 mb-4">
+                                <div class="w-7 h-7 rounded-lg bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                    </svg>
+                                </div>
+                                <p class="text-sm font-semibold text-gray-700 dark:text-gray-300">Autenticación Avanzada</p>
+                            </div>
+
+                            <div class="space-y-3">
+
+                                {{-- Toggle: Recuperación de contraseña --}}
+                                <label class="flex items-start gap-3 cursor-pointer select-none group p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+                                    <div class="relative mt-0.5 flex-shrink-0">
+                                        <input type="hidden" name="password_reset_enabled" value="0">
+                                        <input type="checkbox" name="password_reset_enabled" value="1"
+                                               {{ $settings['password_reset_enabled'] ? 'checked' : '' }}
+                                               class="sr-only peer">
+                                        <div class="w-10 h-6 rounded-full border-2 border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 peer-checked:bg-violet-500 peer-checked:border-violet-500 transition-colors"></div>
+                                        <div class="absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4"></div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Recuperación de contraseña</span>
+                                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                                            Permite a los usuarios restablecer su contraseña mediante un enlace enviado al correo. Si se desactiva, la opción "¿Olvidaste tu contraseña?" no estará disponible.
+                                        </p>
+                                    </div>
+                                    <span class="flex-shrink-0 mt-0.5">
+                                        @if($settings['password_reset_enabled'])
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">Activo</span>
+                                        @else
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400">Inactivo</span>
+                                        @endif
+                                    </span>
+                                </label>
+
+                                {{-- Toggle: 2FA por email --}}
+                                <label class="flex items-start gap-3 cursor-pointer select-none group p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+                                    <div class="relative mt-0.5 flex-shrink-0">
+                                        <input type="hidden" name="two_factor_enabled" value="0">
+                                        <input type="checkbox" name="two_factor_enabled" value="1"
+                                               {{ $settings['two_factor_enabled'] ? 'checked' : '' }}
+                                               class="sr-only peer">
+                                        <div class="w-10 h-6 rounded-full border-2 border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 peer-checked:bg-violet-500 peer-checked:border-violet-500 transition-colors"></div>
+                                        <div class="absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4"></div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Verificación en 2 pasos (2FA por email)</span>
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">Requiere SMTP</span>
+                                        </div>
+                                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                                            Al iniciar sesión, el usuario recibirá un código de 6 dígitos en su correo que deberá ingresar para completar el acceso. El código expira en 10 minutos.
+                                        </p>
+                                    </div>
+                                    <span class="flex-shrink-0 mt-0.5">
+                                        @if($settings['two_factor_enabled'])
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">Activo</span>
+                                        @else
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400">Inactivo</span>
+                                        @endif
+                                    </span>
+                                </label>
+
+                                {{-- Toggle: Sesión única --}}
+                                <label class="flex items-start gap-3 cursor-pointer select-none group p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+                                    <div class="relative mt-0.5 flex-shrink-0">
+                                        <input type="hidden" name="single_session_enabled" value="0">
+                                        <input type="checkbox" name="single_session_enabled" value="1"
+                                               {{ $settings['single_session_enabled'] ? 'checked' : '' }}
+                                               class="sr-only peer">
+                                        <div class="w-10 h-6 rounded-full border-2 border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 peer-checked:bg-violet-500 peer-checked:border-violet-500 transition-colors"></div>
+                                        <div class="absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4"></div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Sesión única por usuario</span>
+                                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                                            Un usuario solo puede tener una sesión activa a la vez. Si inicia sesión desde otro dispositivo o navegador, la sesión anterior se cierra automáticamente.
+                                        </p>
+                                    </div>
+                                    <span class="flex-shrink-0 mt-0.5">
+                                        @if($settings['single_session_enabled'])
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">Activo</span>
+                                        @else
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400">Inactivo</span>
+                                        @endif
+                                    </span>
+                                </label>
+
                             </div>
                         </div>
 
