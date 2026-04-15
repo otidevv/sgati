@@ -17,6 +17,8 @@ class ServerController extends Controller
 {
     public function index()
     {
+        $this->authorize('servers.viewAny');
+
         $servers = Server::withCount(['deployments', 'activeContainers', 'databaseServers'])
             ->with(['primaryIp', 'ips'])
             ->orderBy('name')
@@ -27,6 +29,8 @@ class ServerController extends Controller
 
     public function create()
     {
+        $this->authorize('servers.create');
+
         return view('admin.servers.form', [
             'server'    => new Server,
             'functions' => ServerFunction::cases(),
@@ -36,6 +40,8 @@ class ServerController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('servers.create');
+
         $data = $request->validate($this->serverRules());
 
         $data['slug']               = Str::slug($data['name']);
@@ -64,6 +70,8 @@ class ServerController extends Controller
 
     public function show(Server $server)
     {
+        $this->authorize('servers.view');
+
         $server->load([
             'ips',
             'activeContainers.system',
@@ -78,6 +86,8 @@ class ServerController extends Controller
 
     public function edit(Server $server)
     {
+        $this->authorize('servers.edit');
+
         $server->load(['ips', 'responsibles.persona']);
 
         return view('admin.servers.form', [
@@ -89,6 +99,8 @@ class ServerController extends Controller
 
     public function update(Request $request, Server $server)
     {
+        $this->authorize('servers.edit');
+
         $rules = $this->serverRules('update', $server->id);
         $data  = $request->validate($rules);
 
@@ -123,6 +135,8 @@ class ServerController extends Controller
 
     public function destroy(Server $server)
     {
+        $this->authorize('servers.delete');
+
         // ── Eliminar conexión en Guacamole primero ────────────────────
         if ($server->guacamole_connection_id) {
             try {

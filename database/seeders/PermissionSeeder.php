@@ -41,6 +41,18 @@ class PermissionSeeder extends Seeder
             // Reportes
             ['name' => 'reports.view',             'label' => 'Ver reportes',                  'module' => 'reports'],
             ['name' => 'reports.export',           'label' => 'Exportar reportes',             'module' => 'reports'],
+            // Servidores
+            ['name' => 'servers.viewAny',          'label' => 'Ver listado de servidores',     'module' => 'servers'],
+            ['name' => 'servers.view',             'label' => 'Ver detalle de servidor',       'module' => 'servers'],
+            ['name' => 'servers.create',           'label' => 'Registrar servidores',          'module' => 'servers'],
+            ['name' => 'servers.edit',             'label' => 'Editar servidores',             'module' => 'servers'],
+            ['name' => 'servers.delete',           'label' => 'Eliminar servidores',           'module' => 'servers'],
+            // Certificados SSL
+            ['name' => 'ssl_certificates.viewAny', 'label' => 'Ver listado de certificados SSL',  'module' => 'ssl_certificates'],
+            ['name' => 'ssl_certificates.view',    'label' => 'Ver detalle de certificado SSL',   'module' => 'ssl_certificates'],
+            ['name' => 'ssl_certificates.create',  'label' => 'Registrar certificados SSL',       'module' => 'ssl_certificates'],
+            ['name' => 'ssl_certificates.edit',    'label' => 'Editar certificados SSL',          'module' => 'ssl_certificates'],
+            ['name' => 'ssl_certificates.delete',  'label' => 'Eliminar certificados SSL',        'module' => 'ssl_certificates'],
             // Áreas
             ['name' => 'areas.viewAny',            'label' => 'Ver listado de áreas',          'module' => 'areas'],
             ['name' => 'areas.create',             'label' => 'Crear áreas',                   'module' => 'areas'],
@@ -72,6 +84,8 @@ class PermissionSeeder extends Seeder
                 'integrations.create', 'integrations.edit', 'integrations.delete',
                 'documents.download', 'documents.upload', 'documents.delete',
                 'reports.view', 'reports.export',
+                'servers.viewAny', 'servers.view', 'servers.create', 'servers.edit', 'servers.delete',
+                'ssl_certificates.viewAny', 'ssl_certificates.view', 'ssl_certificates.create', 'ssl_certificates.edit', 'ssl_certificates.delete',
                 'areas.viewAny', 'areas.create', 'areas.edit', 'areas.delete',
             ],
             'documenter' => [

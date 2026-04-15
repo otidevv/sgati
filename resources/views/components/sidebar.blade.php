@@ -2,7 +2,7 @@
 
 <aside
     :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
-    class="fixed inset-y-0 left-0 z-30 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 flex flex-col"
+    class="fixed inset-y-0 left-0 z-30 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 flex flex-col"
 >
     {{-- Logo --}}
     <div class="flex items-center gap-3 px-6 h-16 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
@@ -113,6 +113,7 @@
             <div class="space-y-0.5">
 
                 {{-- Servidores --}}
+                @can('servers.viewAny')
                 @php $active = request()->routeIs('admin.servers.*'); @endphp
                 <a href="{{ route('admin.servers.index') }}" class="{{ $linkBase }} {{ $active ? $linkActive : $linkInactive }}">
                     <div class="{{ $iconBase }} {{ $active ? $iconActive : $iconInactive }}">
@@ -123,8 +124,10 @@
                     <span>Servidores</span>
                     @if($active)<div class="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400"></div>@endif
                 </a>
+                @endcan
 
                 {{-- Certificados SSL --}}
+                @can('ssl_certificates.viewAny')
                 @php $active = request()->routeIs('admin.ssl-certificates.*'); @endphp
                 <a href="{{ route('admin.ssl-certificates.index') }}" class="{{ $linkBase }} {{ $active ? $linkActive : $linkInactive }}">
                     <div class="{{ $iconBase }} {{ $active ? $iconActive : $iconInactive }}">
@@ -135,6 +138,7 @@
                     <span>Certificados SSL</span>
                     @if($active)<div class="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400"></div>@endif
                 </a>
+                @endcan
 
             </div>
         </div>

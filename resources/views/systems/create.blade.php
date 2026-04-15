@@ -104,34 +104,20 @@
                     @error('status')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label for="area_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Área</label>
-                        <select id="area_id" name="area_id"
-                                class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                            <option value="">Sin área asignada</option>
-                            @foreach($areas as $area)
-                            <option value="{{ $area->id }}" {{ old('area_id') == $area->id ? 'selected' : '' }}>
-                                {{ $area->name }}{{ $area->acronym ? " ({$area->acronym})" : '' }}
-                            </option>
-                            @endforeach
-                        </select>
-                        @error('area_id')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
-                    </div>
-                    <div>
-                        <label for="responsible_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Responsable</label>
-                        <select id="responsible_id" name="responsible_id"
-                                class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                            <option value="">Sin responsable asignado</option>
-                            @foreach($users as $user)
-                            <option value="{{ $user->id }}" {{ old('responsible_id') == $user->id ? 'selected' : '' }}>
-                                {{ $user->name }}
-                            </option>
-                            @endforeach
-                        </select>
-                        @error('responsible_id')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
-                    </div>
+                <div>
+                    <label for="area_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Área</label>
+                    <select id="area_id" name="area_id"
+                            class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <option value="">Sin área asignada</option>
+                        @foreach($areas as $area)
+                        <option value="{{ $area->id }}" {{ old('area_id') == $area->id ? 'selected' : '' }}>
+                            {{ $area->name }}{{ $area->acronym ? " ({$area->acronym})" : '' }}
+                        </option>
+                        @endforeach
+                    </select>
+                    @error('area_id')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                 </div>
+                <input type="hidden" name="responsible_id" value="{{ auth()->id() }}">
             </div>
         </div>
 

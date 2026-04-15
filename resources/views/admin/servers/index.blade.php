@@ -10,6 +10,7 @@
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Servidores</h1>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Infraestructura física y virtual de la OTI</p>
         </div>
+        @can('servers.create')
         <a href="{{ route('admin.servers.create') }}"
            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white
                   text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
@@ -18,6 +19,7 @@
             </svg>
             Nuevo Servidor
         </a>
+        @endcan
     </div>
 
     {{-- Tarjetas resumen --}}
@@ -182,6 +184,7 @@
                                       d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                             </svg>
                         </a>
+                        @can('servers.edit')
                         <a href="{{ route('admin.servers.edit', $server) }}" title="Editar"
                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg
                                   text-gray-400 dark:text-gray-500
@@ -192,6 +195,8 @@
                                       d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                             </svg>
                         </a>
+                        @endcan
+                        @can('servers.delete')
                         <form id="del-server-{{ $server->id }}"
                               action="{{ route('admin.servers.destroy', $server) }}"
                               method="POST" class="inline">
@@ -208,6 +213,7 @@
                                 </svg>
                             </button>
                         </form>
+                        @endcan
                     </div>
                 </td>
             </tr>
@@ -226,6 +232,7 @@
                 </div>
                 <h3 class="mt-4 text-sm font-semibold text-gray-900 dark:text-white">Sin servidores registrados</h3>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Registra el primer servidor de la OTI.</p>
+                @can('servers.create')
                 <a href="{{ route('admin.servers.create') }}"
                    class="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white
                           text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
@@ -234,6 +241,7 @@
                     </svg>
                     Registrar servidor
                 </a>
+                @endcan
             </div>
         </x-slot:empty>
         @endif

@@ -67,6 +67,8 @@ class SslCertificateController extends Controller
 
     public function index()
     {
+        $this->authorize('ssl_certificates.viewAny');
+
         $certificates = SslCertificate::withCount('infrastructures')
             ->orderBy('valid_until')
             ->get();
@@ -76,11 +78,15 @@ class SslCertificateController extends Controller
 
     public function create()
     {
+        $this->authorize('ssl_certificates.create');
+
         return view('admin.ssl-certificates.create');
     }
 
     public function store(Request $request)
     {
+        $this->authorize('ssl_certificates.create');
+
         $data = $request->validate([
             'name'        => 'required|string|max:150',
             'issuer'      => 'nullable|string|max:255',
@@ -117,6 +123,8 @@ class SslCertificateController extends Controller
 
     public function show(SslCertificate $sslCertificate)
     {
+        $this->authorize('ssl_certificates.view');
+
         $sslCertificate->load('infrastructures.system');
 
         return view('admin.ssl-certificates.show', compact('sslCertificate'));
@@ -124,11 +132,15 @@ class SslCertificateController extends Controller
 
     public function edit(SslCertificate $sslCertificate)
     {
+        $this->authorize('ssl_certificates.edit');
+
         return view('admin.ssl-certificates.edit', compact('sslCertificate'));
     }
 
     public function update(Request $request, SslCertificate $sslCertificate)
     {
+        $this->authorize('ssl_certificates.edit');
+
         $data = $request->validate([
             'name'        => 'required|string|max:150',
             'issuer'      => 'nullable|string|max:255',
@@ -180,6 +192,8 @@ class SslCertificateController extends Controller
 
     public function destroy(SslCertificate $sslCertificate)
     {
+        $this->authorize('ssl_certificates.delete');
+
         foreach (['cert_file_path', 'key_file_path', 'chain_file_path', 'pfx_file_path'] as $field) {
             $this->deleteFile($sslCertificate->$field);
         }

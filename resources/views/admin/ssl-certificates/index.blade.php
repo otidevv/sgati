@@ -10,6 +10,7 @@
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Certificados SSL</h1>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Certificados digitales gestionados por la OTI</p>
         </div>
+        @can('ssl_certificates.create')
         <a href="{{ route('admin.ssl-certificates.create') }}"
            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white
                   text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
@@ -18,6 +19,7 @@
             </svg>
             Nuevo Certificado
         </a>
+        @endcan
     </div>
 
     @if(session('success'))
@@ -59,6 +61,7 @@
         </div>
         <h4 class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-1">Sin certificados registrados</h4>
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Registra el primer certificado SSL de la OTI.</p>
+        @can('ssl_certificates.create')
         <a href="{{ route('admin.ssl-certificates.create') }}"
            class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400
                   bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg transition-colors">
@@ -67,6 +70,7 @@
             </svg>
             Registrar certificado
         </a>
+        @endcan
     </div>
     @else
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -132,14 +136,18 @@
                     @endif
                 </div>
                 <div class="flex items-center gap-2">
+                    @can('ssl_certificates.edit')
                     <a href="{{ route('admin.ssl-certificates.edit', $cert) }}"
                        class="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                         Editar
                     </a>
+                    @endcan
+                    @can('ssl_certificates.view')
                     <a href="{{ route('admin.ssl-certificates.show', $cert) }}"
                        class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
                         Ver detalle →
                     </a>
+                    @endcan
                 </div>
             </div>
         </div>
