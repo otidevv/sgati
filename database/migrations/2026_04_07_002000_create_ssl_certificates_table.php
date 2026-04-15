@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('cert_file_path', 500)->nullable();
             $table->string('key_file_path', 500)->nullable();
             $table->string('chain_file_path', 500)->nullable();
+            $table->string('pfx_file_path', 500)->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
         });

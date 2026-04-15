@@ -19,6 +19,7 @@ class SystemResponsible extends Model
             'assigned_at'   => 'date',
             'unassigned_at' => 'date',
             'is_active'     => 'boolean',
+            'level'         => 'array',
         ];
     }
 

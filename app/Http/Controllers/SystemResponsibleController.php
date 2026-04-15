@@ -8,16 +8,22 @@ use Illuminate\Http\Request;
 
 class SystemResponsibleController extends Controller
 {
-    private const LEVELS = 'lider_proyecto,desarrollador,mantenimiento,administrador,analista,soporte,supervision';
+    private const LEVELS = ['lider_proyecto','desarrollador','mantenimiento','administrador','analista','soporte','supervision'];
+
+    private function levelRules(): array
+    {
+        return [
+            'persona_id'  => 'required|exists:personas,id',
+            'level'       => 'required|array|min:1',
+            'level.*'     => 'in:' . implode(',', self::LEVELS),
+            'assigned_at' => 'required|date',
+            'is_active'   => 'boolean',
+        ];
+    }
 
     public function store(Request $request, System $system)
     {
-        $data = $request->validate([
-            'persona_id'  => 'required|exists:personas,id',
-            'level'       => 'required|in:' . self::LEVELS,
-            'assigned_at' => 'required|date',
-            'is_active'   => 'boolean',
-        ]);
+        $data = $request->validate($this->levelRules());
 
         $data['is_active'] = $request->boolean('is_active', true);
 

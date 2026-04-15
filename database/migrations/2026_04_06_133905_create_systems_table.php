@@ -20,7 +20,7 @@ return new class extends Migration
             $table->enum('status', ['active', 'inactive', 'development', 'maintenance'])->default('development');
             $table->foreignId('area_id')->nullable()->constrained('areas')->nullOnDelete();
             $table->foreignId('responsible_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->string('tech_stack', 255)->nullable();
+            $table->text('tech_stack')->nullable();
             $table->string('repo_url', 255)->nullable();
             $table->text('observations')->nullable();
             $table->timestamps();

@@ -21,6 +21,13 @@ return new class extends Migration
             $table->string('auth_type', 50)->nullable();
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->boolean('gateway_enabled')->default(false);
+            $table->string('gateway_slug', 80)->nullable()->unique();
+            $table->boolean('gateway_require_key')->default(false);
+            $table->unsignedSmallInteger('gateway_rate_per_minute')->nullable();
+            $table->unsignedSmallInteger('gateway_rate_per_day')->nullable();
+            $table->time('gateway_active_from')->nullable();
+            $table->time('gateway_active_to')->nullable();
             $table->enum('environment', ['production', 'staging', 'development'])->default('production');
             $table->string('version', 20)->nullable();
             $table->enum('provider_type', ['internal', 'external'])->nullable();

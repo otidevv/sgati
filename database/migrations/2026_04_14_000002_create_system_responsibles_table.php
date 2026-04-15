@@ -19,12 +19,7 @@ return new class extends Migration
                   ->constrained('personas')
                   ->restrictOnDelete();
 
-            $table->enum('level', [
-                'principal',   // Responsable principal del sistema
-                'soporte',     // Soporte técnico
-                'supervision', // Supervisión / auditoría
-                'operador',    // Operador con acceso limitado
-            ])->default('soporte');
+            $table->json('level')->default('["soporte"]');
 
             $table->text('document_notes')->nullable();
 

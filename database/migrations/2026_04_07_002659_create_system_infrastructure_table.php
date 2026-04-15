@@ -21,6 +21,8 @@ return new class extends Migration
             $table->string('web_server', 50)->nullable();
             $table->boolean('ssl_enabled')->default(false);
             $table->date('ssl_expiry')->nullable();
+            $table->foreignId('ssl_certificate_id')->nullable()->constrained('ssl_certificates')->nullOnDelete();
+            $table->date('ssl_custom_expiry')->nullable();
             $table->enum('environment', ['production', 'staging', 'development'])->default('production');
             $table->text('notes')->nullable();
             $table->timestamps();
