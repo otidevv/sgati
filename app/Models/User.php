@@ -22,6 +22,7 @@ class User extends Authenticatable
         'is_active',
         'two_factor_code',
         'two_factor_expires_at',
+        'session_token',
     ];
 
     protected $hidden = [

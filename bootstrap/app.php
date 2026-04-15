@@ -15,9 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role'            => \App\Http\Middleware\RoleMiddleware::class,
             'session.timeout' => \App\Http\Middleware\SessionTimeout::class,
+            'single.session'  => \App\Http\Middleware\EnsureSingleSession::class,
         ]);
         $middleware->web(append: [
             \App\Http\Middleware\SessionTimeout::class,
+            \App\Http\Middleware\EnsureSingleSession::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
