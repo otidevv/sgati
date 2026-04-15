@@ -47,9 +47,8 @@ class SystemRepositoryController extends Controller
 
         Repository::create($data);
 
-        return redirect()->route('systems.show', $system)
-            ->with('success', 'Repositorio registrado correctamente.')
-            ->with('tab', 'repositories');
+        return redirect(route('systems.show', $system) . '#repositories')
+            ->with('success', 'Repositorio registrado correctamente.');
     }
 
     public function edit(System $system, Repository $repository)
@@ -83,17 +82,15 @@ class SystemRepositoryController extends Controller
 
         $repository->update($data);
 
-        return redirect()->route('systems.show', $system)
-            ->with('success', 'Repositorio actualizado correctamente.')
-            ->with('tab', 'repositories');
+        return redirect(route('systems.show', $system) . '#repositories')
+            ->with('success', 'Repositorio actualizado correctamente.');
     }
 
     public function destroy(System $system, Repository $repository)
     {
         $repository->delete();
 
-        return redirect()->route('systems.show', $system)
-            ->with('success', 'Repositorio eliminado.')
-            ->with('tab', 'repositories');
+        return redirect(route('systems.show', $system) . '#repositories')
+            ->with('success', 'Repositorio eliminado.');
     }
 }

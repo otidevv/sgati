@@ -29,7 +29,7 @@ class SystemVersionController extends Controller
 
         $system->versions()->create($data);
 
-        return redirect()->route('systems.show', $system)
+        return redirect(route('systems.show', $system) . '#versions')
             ->with('success', 'Versión registrada correctamente.');
     }
 
@@ -52,7 +52,7 @@ class SystemVersionController extends Controller
 
         $version->update($data);
 
-        return redirect()->route('systems.show', $system)
+        return redirect(route('systems.show', $system) . '#versions')
             ->with('success', 'Versión actualizada correctamente.');
     }
 
@@ -60,7 +60,7 @@ class SystemVersionController extends Controller
     {
         $version->delete();
 
-        return redirect()->route('systems.show', $system)
+        return redirect(route('systems.show', $system) . '#versions')
             ->with('success', 'Versión eliminada.');
     }
 }

@@ -27,7 +27,7 @@ class SystemServiceFieldController extends Controller
 
         $service->fields()->create($data);
 
-        return back()->with('success', 'Campo registrado.');
+        return redirect(route('systems.show', $system) . '#services')->with('success', 'Campo registrado.');
     }
 
     public function update(Request $request, System $system, SystemService $service, SystemServiceField $field)
@@ -45,12 +45,12 @@ class SystemServiceFieldController extends Controller
 
         $field->update($data);
 
-        return back()->with('success', 'Campo actualizado.');
+        return redirect(route('systems.show', $system) . '#services')->with('success', 'Campo actualizado.');
     }
 
     public function destroy(System $system, SystemService $service, SystemServiceField $field)
     {
         $field->delete();
-        return back()->with('success', 'Campo eliminado.');
+        return redirect(route('systems.show', $system) . '#services')->with('success', 'Campo eliminado.');
     }
 }

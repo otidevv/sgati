@@ -23,7 +23,7 @@ class SystemDatabaseResponsibleController extends Controller
 
         $database->responsibles()->create($data);
 
-        return back()->with('success', 'Responsable asignado correctamente.');
+        return redirect(route('systems.show', $system) . '#databases')->with('success', 'Responsable asignado correctamente.');
     }
 
     public function update(Request $request, System $system, SystemDatabase $database, SystemDatabaseResponsible $responsible)
@@ -36,7 +36,7 @@ class SystemDatabaseResponsibleController extends Controller
 
         $responsible->update($data);
 
-        return back()->with('success', 'Responsable actualizado correctamente.');
+        return redirect(route('systems.show', $system) . '#databases')->with('success', 'Responsable actualizado correctamente.');
     }
 
     public function deactivate(Request $request, System $system, SystemDatabase $database, SystemDatabaseResponsible $responsible)
@@ -52,7 +52,7 @@ class SystemDatabaseResponsibleController extends Controller
             'document_notes' => $data['deactivate_notes'] ?: $responsible->document_notes,
         ]);
 
-        return back()->with('success', 'Responsable dado de baja correctamente.');
+        return redirect(route('systems.show', $system) . '#databases')->with('success', 'Responsable dado de baja correctamente.');
     }
 
     public function reactivate(Request $request, System $system, SystemDatabase $database, SystemDatabaseResponsible $responsible)
@@ -67,13 +67,13 @@ class SystemDatabaseResponsibleController extends Controller
             'unassigned_at' => null,
         ]);
 
-        return back()->with('success', 'Responsable reactivado correctamente.');
+        return redirect(route('systems.show', $system) . '#databases')->with('success', 'Responsable reactivado correctamente.');
     }
 
     public function destroy(System $system, SystemDatabase $database, SystemDatabaseResponsible $responsible)
     {
         $responsible->delete();
 
-        return back()->with('success', 'Responsable eliminado del historial.');
+        return redirect(route('systems.show', $system) . '#databases')->with('success', 'Responsable eliminado del historial.');
     }
 }

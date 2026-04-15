@@ -32,7 +32,7 @@ class SystemServiceDocumentController extends Controller
             'description'   => $request->input('description') ?: null,
         ]);
 
-        return back()->with('success', 'Documento adjuntado correctamente.');
+        return redirect(route('systems.show', $system) . '#services')->with('success', 'Documento adjuntado correctamente.');
     }
 
     public function download(System $system, SystemService $service, SystemServiceDocument $document)
@@ -65,6 +65,6 @@ class SystemServiceDocumentController extends Controller
     {
         Storage::disk('local')->delete($document->file_path);
         $document->delete();
-        return back()->with('success', 'Documento eliminado.');
+        return redirect(route('systems.show', $system) . '#services')->with('success', 'Documento eliminado.');
     }
 }

@@ -126,7 +126,7 @@ class SystemServiceController extends Controller
     public function destroy(System $system, SystemService $service)
     {
         $service->delete();
-        return redirect()->route('systems.show', $system)
+        return redirect(route('systems.show', $system) . '#services')
             ->with('success', 'Servicio/API eliminado.');
     }
 }

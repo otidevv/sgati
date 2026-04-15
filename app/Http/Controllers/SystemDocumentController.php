@@ -41,7 +41,7 @@ class SystemDocumentController extends Controller
             'notes'       => $request->notes,
         ]);
 
-        return back()->with('success', 'Documento cargado correctamente.');
+        return redirect(route('systems.show', $system) . '#documents')->with('success', 'Documento cargado correctamente.');
     }
 
     public function destroy(System $system, SystemDocument $document)
@@ -50,7 +50,7 @@ class SystemDocumentController extends Controller
         Storage::disk('local')->delete($document->file_path);
         $document->delete();
 
-        return back()->with('success', 'Documento eliminado.');
+        return redirect(route('systems.show', $system) . '#documents')->with('success', 'Documento eliminado.');
     }
 
     public function download(System $system, SystemDocument $document)

@@ -50,7 +50,7 @@ class SystemInfrastructureController extends Controller
             $data
         );
 
-        return redirect()->route('systems.show', $system)
+        return redirect(route('systems.show', $system) . '#infrastructure')
             ->with('success', 'Infraestructura actualizada correctamente.');
     }
 }

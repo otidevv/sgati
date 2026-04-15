@@ -36,7 +36,7 @@ class SystemDatabaseController extends Controller
 
         $system->databases()->create($data);
 
-        return redirect()->route('systems.show', $system)
+        return redirect(route('systems.show', $system) . '#databases')
             ->with('success', 'Base de datos registrada correctamente.');
     }
 
@@ -65,7 +65,7 @@ class SystemDatabaseController extends Controller
 
         $database->update($data);
 
-        return redirect()->route('systems.show', $system)
+        return redirect(route('systems.show', $system) . '#databases')
             ->with('success', 'Base de datos actualizada.');
     }
 
@@ -73,7 +73,7 @@ class SystemDatabaseController extends Controller
     {
         $database->delete();
 
-        return redirect()->route('systems.show', $system)
+        return redirect(route('systems.show', $system) . '#databases')
             ->with('success', 'Base de datos eliminada.');
     }
 }

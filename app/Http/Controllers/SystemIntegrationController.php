@@ -30,7 +30,7 @@ class SystemIntegrationController extends Controller
 
         SystemIntegration::create($data);
 
-        return redirect()->route('systems.show', $system)
+        return redirect(route('systems.show', $system) . '#integrations')
             ->with('success', 'Integración registrada correctamente.');
     }
 
@@ -55,7 +55,7 @@ class SystemIntegrationController extends Controller
 
         $integration->update($data);
 
-        return redirect()->route('systems.show', $system)
+        return redirect(route('systems.show', $system) . '#integrations')
             ->with('success', 'Integración actualizada.');
     }
 
@@ -63,7 +63,7 @@ class SystemIntegrationController extends Controller
     {
         $integration->delete();
 
-        return redirect()->route('systems.show', $system)
+        return redirect(route('systems.show', $system) . '#integrations')
             ->with('success', 'Integración eliminada.');
     }
 }

@@ -23,7 +23,7 @@ class SystemResponsibleController extends Controller
 
         $system->responsibles()->create($data);
 
-        return back()->with('success', 'Responsable asignado correctamente.');
+        return redirect(route('systems.show', $system) . '#responsibles')->with('success', 'Responsable asignado correctamente.');
     }
 
     public function update(Request $request, System $system, SystemResponsible $responsible)
@@ -39,7 +39,7 @@ class SystemResponsibleController extends Controller
 
         $responsible->update($data);
 
-        return back()->with('success', 'Responsable actualizado correctamente.');
+        return redirect(route('systems.show', $system) . '#responsibles')->with('success', 'Responsable actualizado correctamente.');
     }
 
     public function reactivate(Request $request, System $system, SystemResponsible $responsible)
@@ -54,7 +54,7 @@ class SystemResponsibleController extends Controller
             'unassigned_at' => null,
         ]);
 
-        return back()->with('success', 'Responsable reactivado correctamente.');
+        return redirect(route('systems.show', $system) . '#responsibles')->with('success', 'Responsable reactivado correctamente.');
     }
 
     public function deactivate(Request $request, System $system, SystemResponsible $responsible)
@@ -70,13 +70,13 @@ class SystemResponsibleController extends Controller
             'document_notes' => $data['deactivate_notes'] ?: $responsible->document_notes,
         ]);
 
-        return back()->with('success', 'Responsable dado de baja correctamente.');
+        return redirect(route('systems.show', $system) . '#responsibles')->with('success', 'Responsable dado de baja correctamente.');
     }
 
     public function destroy(System $system, SystemResponsible $responsible)
     {
         $responsible->delete();
 
-        return back()->with('success', 'Responsable eliminado del historial.');
+        return redirect(route('systems.show', $system) . '#responsibles')->with('success', 'Responsable eliminado del historial.');
     }
 }

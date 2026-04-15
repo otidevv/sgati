@@ -37,7 +37,7 @@ class SystemDatabaseResponsibleDocumentController extends Controller
             'document_notes'  => $data['document_notes']  ?: null,
         ]);
 
-        return back()->with('success', 'Documento adjuntado correctamente.');
+        return redirect(route('systems.show', $system) . '#databases')->with('success', 'Documento adjuntado correctamente.');
     }
 
     public function download(System $system, SystemDatabase $database, SystemDatabaseResponsible $responsible, SystemDatabaseResponsibleDocument $document)
@@ -83,7 +83,7 @@ class SystemDatabaseResponsibleDocumentController extends Controller
         $this->disk()->delete($document->file_path);
         $document->delete();
 
-        return back()->with('success', 'Documento eliminado.');
+        return redirect(route('systems.show', $system) . '#databases')->with('success', 'Documento eliminado.');
     }
 
     /** @return \Illuminate\Filesystem\FilesystemAdapter */

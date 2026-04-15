@@ -2,7 +2,7 @@
 @section('title', $system->acronym ?? $system->name)
 
 @section('content')
-<div class="space-y-6" x-data="{ tab: '{{ session('tab', 'general') }}' }">
+<div class="space-y-6" x-data="{ tab: window.location.hash ? window.location.hash.slice(1) : 'general' }">
 
     {{-- Hero Header --}}
     @php
@@ -116,7 +116,7 @@
             ];
             @endphp
             @foreach($quickStats as $qs)
-            <button @click="tab = '{{ $qs['tab'] }}'"
+            <button @click="tab = '{{ $qs['tab'] }}'; window.location.hash = '{{ $qs['tab'] }}'"
                     style="display: flex; flex-direction: column; align-items: center; padding: 1rem; transition: background-color 0.2s; cursor: pointer; border: none; background: none;"
                     onmouseover="this.style.backgroundColor='rgba(255,255,255,0.1)'"
                     onmouseout="this.style.backgroundColor='transparent'">
@@ -146,7 +146,7 @@
                 ];
                 @endphp
                 @foreach($tabs as $t)
-                <button @click="tab = '{{ $t['id'] }}'"
+                <button @click="tab = '{{ $t['id'] }}'; window.location.hash = '{{ $t['id'] }}'"
                         x-bind:style="tab === '{{ $t['id'] }}' ? 'border-bottom: 2px solid {{ $accentColor }}; color: {{ $accentColor }};' : 'border-bottom: 2px solid transparent; color: rgb(107 114 128);'"
                         class="flex items-center gap-2 px-4 py-4 text-sm font-medium transition-colors whitespace-nowrap focus:outline-none cursor-pointer dark:text-gray-400 dark:hover:text-gray-200">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
