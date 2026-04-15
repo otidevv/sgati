@@ -77,6 +77,7 @@ class SystemController extends Controller
             'integrationsFrom.targetSystem',
             'integrationsTo.sourceSystem',
             'documents.uploadedBy', 'statusLogs.changedBy',
+            'responsibles.persona', 'responsibles.documents',
         ]);
 
         $allSystems = System::where('id', '!=', $system->id)->get(['id', 'name', 'acronym']);

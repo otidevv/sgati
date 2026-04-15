@@ -81,6 +81,11 @@ class System extends Model
         return $this->hasMany(SystemDocument::class)->orderByDesc('created_at');
     }
 
+    public function responsibles()
+    {
+        return $this->hasMany(SystemResponsible::class)->with('persona', 'documents')->orderByDesc('assigned_at');
+    }
+
     public function statusLogs()
     {
         return $this->hasMany(SystemStatusLog::class)->orderByDesc('created_at');

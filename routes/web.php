@@ -28,6 +28,8 @@ use App\Http\Controllers\Admin\DatabaseServerResponsibleDocumentController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SslCertificateController;
+use App\Http\Controllers\SystemResponsibleController;
+use App\Http\Controllers\SystemResponsibleDocumentController;
 use App\Http\Controllers\SystemServiceGatewayController;
 use App\Http\Controllers\SystemServiceGatewayKeyController;
 use App\Http\Controllers\SystemServiceGatewayKeyDocumentController;
@@ -124,6 +126,18 @@ Route::middleware(['auth'])->group(function () {
         // Repositorios
         Route::resource('repositories', SystemRepositoryController::class)
             ->except(['index', 'show']);
+
+        // Responsables del sistema
+        Route::post('responsibles',                                                      [SystemResponsibleController::class, 'store'])->name('responsibles.store');
+        Route::put('responsibles/{responsible}',                                         [SystemResponsibleController::class, 'update'])->name('responsibles.update');
+        Route::patch('responsibles/{responsible}/deactivate',                            [SystemResponsibleController::class, 'deactivate'])->name('responsibles.deactivate');
+        Route::patch('responsibles/{responsible}/reactivate',                            [SystemResponsibleController::class, 'reactivate'])->name('responsibles.reactivate');
+        Route::delete('responsibles/{responsible}',                                      [SystemResponsibleController::class, 'destroy'])->name('responsibles.destroy');
+
+        Route::post('responsibles/{responsible}/documents',                              [SystemResponsibleDocumentController::class, 'store'])->name('responsibles.documents.store');
+        Route::get('responsibles/{responsible}/documents/{document}/download',           [SystemResponsibleDocumentController::class, 'download'])->name('responsibles.documents.download');
+        Route::get('responsibles/{responsible}/documents/{document}/preview',            [SystemResponsibleDocumentController::class, 'preview'])->name('responsibles.documents.preview');
+        Route::delete('responsibles/{responsible}/documents/{document}',                 [SystemResponsibleDocumentController::class, 'destroy'])->name('responsibles.documents.destroy');
     });
 
     // ── Repositorio general de documentos ────────────────────────────────
