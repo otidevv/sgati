@@ -25,9 +25,20 @@ class System extends Model
     {
         static::creating(function ($system) {
             if (empty($system->slug)) {
-                $system->slug = Str::slug($system->name);
+                $system->slug = static::uniqueSlug(Str::slug($system->name));
             }
         });
+    }
+
+    public static function uniqueSlug(string $base): string
+    {
+        $slug = $base;
+        $i    = 1;
+        while (static::where('slug', $slug)->exists()) {
+            $slug = "{$base}-{$i}";
+            $i++;
+        }
+        return $slug;
     }
 
     public function area()

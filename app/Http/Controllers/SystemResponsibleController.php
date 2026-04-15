@@ -34,12 +34,7 @@ class SystemResponsibleController extends Controller
 
     public function update(Request $request, System $system, SystemResponsible $responsible)
     {
-        $data = $request->validate([
-            'persona_id'  => 'required|exists:personas,id',
-            'level'       => 'required|in:' . self::LEVELS,
-            'assigned_at' => 'required|date',
-            'is_active'   => 'boolean',
-        ]);
+        $data = $request->validate($this->levelRules());
 
         $data['is_active'] = $request->boolean('is_active', true);
 

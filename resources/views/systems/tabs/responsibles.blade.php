@@ -89,9 +89,11 @@
     <div class="divide-y divide-gray-100 dark:divide-gray-700/60">
         @foreach($activeResponsibles as $resp)
         @php
-            $initials    = strtoupper(substr($resp->persona->apellido_paterno, 0, 1) . substr($resp->persona->apellido_materno ?? '', 0, 1));
-            $borderClass = $leftBorder[$resp->level] ?? 'border-gray-300';
-            $avatarClass = $avatarColors[$resp->level] ?? 'bg-gray-100 text-gray-600';
+            $initials     = strtoupper(substr($resp->persona->apellido_paterno, 0, 1) . substr($resp->persona->apellido_materno ?? '', 0, 1));
+            $levels       = (array) $resp->level;
+            $primaryLevel = $levels[0] ?? 'soporte';
+            $borderClass  = $leftBorder[$primaryLevel] ?? 'border-gray-300';
+            $avatarClass  = $avatarColors[$primaryLevel] ?? 'bg-gray-100 text-gray-600';
         @endphp
         <div class="px-4 py-3 border-l-[3px] {{ $borderClass }} hover:bg-gray-50/60 dark:hover:bg-gray-700/30 transition-colors group/row">
             <div class="flex items-start gap-3">
@@ -134,9 +136,11 @@
                     </div>
                     {{-- Badges --}}
                     <div class="flex items-center gap-2 mt-1 flex-wrap">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide {{ $levelColors[$resp->level] ?? '' }}">
-                            {{ $levelLabels[$resp->level] ?? $resp->level }}
+                        @foreach($levels as $lvl)
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide {{ $levelColors[$lvl] ?? '' }}">
+                            {{ $levelLabels[$lvl] ?? $lvl }}
                         </span>
+                        @endforeach
                         <span class="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
                             Activo
@@ -236,6 +240,7 @@
             @php
                 $initials    = strtoupper(substr($resp->persona->apellido_paterno, 0, 1) . substr($resp->persona->apellido_materno ?? '', 0, 1));
                 $avatarClass = 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400';
+                $histLevels  = (array) $resp->level;
             @endphp
             <div class="px-4 py-3 border-l-[3px] border-gray-300 dark:border-gray-600 opacity-75 hover:opacity-100 hover:bg-gray-100/60 dark:hover:bg-gray-700/30 transition-all group/hist">
                 <div class="flex items-start gap-3">
@@ -273,9 +278,11 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-2 mt-1 flex-wrap">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide {{ $levelColors[$resp->level] ?? '' }} opacity-60">
-                                {{ $levelLabels[$resp->level] ?? $resp->level }}
+                            @foreach($histLevels as $lvl)
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide {{ $levelColors[$lvl] ?? '' }} opacity-60">
+                                {{ $levelLabels[$lvl] ?? $lvl }}
                             </span>
+                            @endforeach
                             <span class="inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500 font-medium">
                                 <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -380,32 +387,41 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                            Nivel <span class="text-red-500">*</span>
+                {{-- Niveles (multi) --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Nivel(es) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="grid grid-cols-2 gap-2" id="sys-resp-levels-grid">
+                        @foreach([
+                            'lider_proyecto' => ['label'=>'Líder de Proyecto','color'=>'blue'],
+                            'desarrollador'  => ['label'=>'Desarrollador','color'=>'emerald'],
+                            'mantenimiento'  => ['label'=>'Mantenimiento','color'=>'amber'],
+                            'administrador'  => ['label'=>'Administrador','color'=>'indigo'],
+                            'analista'       => ['label'=>'Analista','color'=>'cyan'],
+                            'soporte'        => ['label'=>'Soporte Técnico','color'=>'slate'],
+                            'supervision'    => ['label'=>'Supervisión','color'=>'violet'],
+                        ] as $val => $item)
+                        <label class="sys-level-card flex items-center gap-2.5 px-3 py-2 rounded-lg border
+                                      border-gray-200 dark:border-gray-600 cursor-pointer transition-all
+                                      hover:border-emerald-400 dark:hover:border-emerald-500">
+                            <input type="checkbox" name="level[]" value="{{ $val }}"
+                                   class="sys-level-cb rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                            <span class="text-xs font-medium text-gray-700 dark:text-gray-300 leading-tight">{{ $item['label'] }}</span>
                         </label>
-                        <select name="level" id="sys-resp-level" required
-                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
-                                       dark:text-white focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
-                            <option value="lider_proyecto">Líder de Proyecto</option>
-                            <option value="desarrollador">Desarrollador</option>
-                            <option value="mantenimiento">Mantenimiento</option>
-                            <option value="administrador">Administrador</option>
-                            <option value="analista">Analista</option>
-                            <option value="soporte">Soporte Técnico</option>
-                            <option value="supervision">Supervisión</option>
-                        </select>
+                        @endforeach
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                            Fecha de asignación <span class="text-red-500">*</span>
-                        </label>
-                        <input type="date" name="assigned_at" id="sys-resp-assigned_at" required
-                               value="{{ now()->format('Y-m-d') }}"
-                               class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
-                                      dark:text-white focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
-                    </div>
+                    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Selecciona al menos un nivel</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Fecha de asignación <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" name="assigned_at" id="sys-resp-assigned_at" required
+                           value="{{ now()->format('Y-m-d') }}"
+                           class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
+                                  dark:text-white focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
                 </div>
 
                 <div class="flex items-center gap-3">
@@ -748,6 +764,35 @@ const sysPersonaSearchUrl = "{{ route('admin.personas.search') }}";
 const sysRespStoreUrl  = "{{ route('systems.responsibles.store', $system) }}";
 const sysRespBase      = "{{ url('systems/' . $system->id . '/responsibles') }}/";
 
+function sysRespResetLevels() {
+    document.querySelectorAll('#sys-resp-levels-grid .sys-level-cb').forEach(cb => {
+        cb.checked = false;
+        cb.closest('label').classList.remove('border-emerald-500','bg-emerald-50','dark:bg-emerald-900/20');
+    });
+}
+
+function sysRespSetLevels(levels) {
+    const arr = Array.isArray(levels) ? levels : (levels ? [levels] : []);
+    document.querySelectorAll('#sys-resp-levels-grid .sys-level-cb').forEach(cb => {
+        const active = arr.includes(cb.value);
+        cb.checked = active;
+        const card = cb.closest('label');
+        card.classList.toggle('border-emerald-500', active);
+        card.classList.toggle('bg-emerald-50', active);
+        card.classList.toggle('dark:bg-emerald-900/20', active);
+    });
+}
+
+// Toggle visual state on checkbox click
+document.querySelectorAll('#sys-resp-levels-grid .sys-level-cb').forEach(cb => {
+    cb.addEventListener('change', function () {
+        const card = this.closest('label');
+        card.classList.toggle('border-emerald-500', this.checked);
+        card.classList.toggle('bg-emerald-50', this.checked);
+        card.classList.toggle('dark:bg-emerald-900/20', this.checked);
+    });
+});
+
 function sysRespOpenModal() {
     document.getElementById('sys-resp-modal-title').textContent  = 'Asignar Responsable';
     document.getElementById('sys-resp-submit-label').textContent = 'Asignar';
@@ -763,6 +808,7 @@ function sysRespOpenModal() {
     document.getElementById('sys-resp-dropdown').classList.add('hidden');
     document.getElementById('sys-resp-assigned_at').value = new Date().toISOString().slice(0, 10);
     document.getElementById('sys-resp-is_active').checked = true;
+    sysRespResetLevels();
     openSysModal('sys-modal-responsible');
 }
 
@@ -779,7 +825,7 @@ function sysRespEdit(id, data) {
         sel.classList.remove('hidden');
         sel.classList.add('flex');
     }
-    document.getElementById('sys-resp-level').value       = data.level       ?? 'soporte';
+    sysRespSetLevels(data.level ?? ['soporte']);
     document.getElementById('sys-resp-assigned_at').value = data.assigned_at ?? '';
     document.getElementById('sys-resp-is_active').checked = data.is_active == 1;
     openSysModal('sys-modal-responsible');
@@ -806,6 +852,16 @@ function sysRespToggleHistory() {
     const hidden  = panel.classList.toggle('hidden');
     chevron.style.transform = hidden ? '' : 'rotate(180deg)';
 }
+
+// Validar al menos un nivel seleccionado antes de enviar
+document.getElementById('sys-resp-form').addEventListener('submit', function (e) {
+    const checked = document.querySelectorAll('#sys-resp-levels-grid .sys-level-cb:checked');
+    if (!checked.length) {
+        e.preventDefault();
+        document.getElementById('sys-resp-levels-grid').classList.add('ring-2','ring-red-400','rounded-lg');
+        setTimeout(() => document.getElementById('sys-resp-levels-grid').classList.remove('ring-2','ring-red-400','rounded-lg'), 2000);
+    }
+});
 
 // ── Documentos ────────────────────────────────────────────────────────
 const sysDocBase = "{{ url('systems/' . $system->id . '/responsibles') }}/";
