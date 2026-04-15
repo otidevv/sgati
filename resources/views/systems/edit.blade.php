@@ -151,11 +151,42 @@
             </div>
             <div class="p-6 space-y-4">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label for="tech_stack" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stack Tecnológico</label>
-                        <input type="text" id="tech_stack" name="tech_stack" value="{{ old('tech_stack', $system->tech_stack) }}"
-                               class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                               placeholder="Laravel, PostgreSQL, Vue.js…">
+                    {{-- Stack Tecnológico (tag input) --}}
+                    <div x-data="{
+                        tags: {{ json_encode(old('tech_stack') ? json_decode(old('tech_stack'), true) : ($system->tech_stack ?? [])) }},
+                        input: '',
+                        add() {
+                            const val = this.input.trim();
+                            if (val && !this.tags.includes(val)) {
+                                this.tags.push(val);
+                            }
+                            this.input = '';
+                        },
+                        remove(i) { this.tags.splice(i, 1); }
+                    }">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stack Tecnológico</label>
+                        <div class="flex gap-2">
+                            <input type="text" x-model="input"
+                                   @keydown.enter.prevent="add()"
+                                   class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                   placeholder="Laravel, PHP, Vue.js…">
+                            <button type="button" @click="add()"
+                                    class="flex-shrink-0 px-3 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+                                Agregar
+                            </button>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 mt-2" x-show="tags.length > 0">
+                            <template x-for="(tag, i) in tags" :key="i">
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium
+                                             bg-blue-50 text-blue-700 border border-blue-200
+                                             dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700">
+                                    <span x-text="tag"></span>
+                                    <button type="button" @click="remove(i)"
+                                            class="ml-0.5 text-blue-400 hover:text-blue-600 dark:hover:text-blue-200 leading-none">&times;</button>
+                                </span>
+                            </template>
+                        </div>
+                        <input type="hidden" name="tech_stack" :value="JSON.stringify(tags)">
                         @error('tech_stack')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                     </div>
                     <div>

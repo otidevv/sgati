@@ -36,10 +36,18 @@
                 </div>
             </div>
             <div class="space-y-3">
-                @if($system->tech_stack)
+                @if(!empty($system->tech_stack))
                 <div class="flex gap-3">
-                    <span class="text-xs font-medium text-gray-500 dark:text-gray-400 w-28 flex-shrink-0 pt-0.5">Stack</span>
-                    <span class="text-sm text-gray-800 dark:text-gray-200">{{ $system->tech_stack }}</span>
+                    <span class="text-xs font-medium text-gray-500 dark:text-gray-400 w-28 flex-shrink-0 pt-1">Stack</span>
+                    <div class="flex flex-wrap gap-1.5">
+                        @foreach($system->tech_stack as $tag)
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                     bg-blue-50 text-blue-700 border border-blue-200
+                                     dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700">
+                            {{ $tag }}
+                        </span>
+                        @endforeach
+                    </div>
                 </div>
                 @endif
                 @if($system->repo_url)

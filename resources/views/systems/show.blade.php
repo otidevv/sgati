@@ -70,10 +70,12 @@
                             <span class="truncate max-w-xs">{{ $system->infrastructure->system_url }}</span>
                         </a>
                         @endif
-                        @if($system->tech_stack)
-                        <span class="flex items-center gap-1.5">
+                        @if(!empty($system->tech_stack))
+                        <span class="flex items-center gap-1.5 flex-wrap">
                             <svg class="w-4 h-4 text-white/70 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                            {{ $system->tech_stack }}
+                            @foreach($system->tech_stack as $tag)
+                            <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-white/20 text-white">{{ $tag }}</span>
+                            @endforeach
                         </span>
                         @endif
                     </div>

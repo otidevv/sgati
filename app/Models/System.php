@@ -16,7 +16,8 @@ class System extends Model
     protected function casts(): array
     {
         return [
-            'status' => SystemStatus::class,
+            'status'     => SystemStatus::class,
+            'tech_stack' => 'array',
         ];
     }
 

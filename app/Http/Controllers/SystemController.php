@@ -47,10 +47,14 @@ class SystemController extends Controller
             'status'         => 'required|in:active,inactive,development,maintenance',
             'area_id'        => 'nullable|exists:areas,id',
             'responsible_id' => 'nullable|exists:users,id',
-            'tech_stack'     => 'nullable|string|max:255',
+            'tech_stack'     => 'nullable|string',
             'repo_url'       => 'nullable|url|max:255',
             'observations'   => 'nullable|string',
         ]);
+
+        $data['tech_stack'] = $data['tech_stack']
+            ? (json_decode($data['tech_stack'], true) ?: null)
+            : null;
 
         $data['slug'] = Str::slug($data['name']);
 
@@ -98,11 +102,15 @@ class SystemController extends Controller
             'status'         => 'required|in:active,inactive,development,maintenance',
             'area_id'        => 'nullable|exists:areas,id',
             'responsible_id' => 'nullable|exists:users,id',
-            'tech_stack'     => 'nullable|string|max:255',
+            'tech_stack'     => 'nullable|string',
             'repo_url'       => 'nullable|url|max:255',
             'observations'   => 'nullable|string',
             'status_reason'  => 'nullable|string',
         ]);
+
+        $data['tech_stack'] = $data['tech_stack']
+            ? (json_decode($data['tech_stack'], true) ?: null)
+            : null;
 
         $oldStatus = $system->status->value;
         $system->update($data);
