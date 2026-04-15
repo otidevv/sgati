@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -62,6 +63,13 @@ class AuthenticatedSessionController extends Controller
         }
 
         $request->session()->regenerate();
+
+        // Sesión única: generar token y registrarlo en el usuario y en la sesión actual
+        if ((bool) Setting::get('single_session_enabled', false)) {
+            $token = Str::random(40);
+            $user->update(['session_token' => $token]);
+            $request->session()->put('session_token', $token);
+        }
 
         return redirect()->intended(route('dashboard', absolute: false));
     }
