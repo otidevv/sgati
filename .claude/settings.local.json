@@ -3,7 +3,8 @@
     "allow": [
       "Bash(php artisan:*)",
       "Bash(sed -i 's/@click.prevent=\"if\\(confirm\\('\\\\''¿Eliminar el documento?'\\\\''\\)\\) $el.closest\\('\\\\''form'\\\\''\\).submit\\(\\)\"/@click.prevent=\"sgDeleteForm\\($el.closest\\('\\\\''form'\\\\''\\), '\\\\''¿Eliminar este documento?'\\\\''\\)\"/' c:/xampp/htdocs/laravel/SGATI/sgati/resources/views/systems/tabs/documents.blade.php)",
-      "Bash(sed -i 's/@click.prevent=\"if\\(confirm\\('\\\\''¿Eliminar esta integración?'\\\\''\\)\\) $el.closest\\('\\\\''form'\\\\''\\).submit\\(\\)\"/@click.prevent=\"sgDeleteForm\\($el.closest\\('\\\\''form'\\\\''\\), '\\\\''¿Eliminar esta integración?'\\\\''\\)\"/' c:/xampp/htdocs/laravel/SGATI/sgati/resources/views/systems/tabs/integrations.blade.php)"
+      "Bash(sed -i 's/@click.prevent=\"if\\(confirm\\('\\\\''¿Eliminar esta integración?'\\\\''\\)\\) $el.closest\\('\\\\''form'\\\\''\\).submit\\(\\)\"/@click.prevent=\"sgDeleteForm\\($el.closest\\('\\\\''form'\\\\''\\), '\\\\''¿Eliminar esta integración?'\\\\''\\)\"/' c:/xampp/htdocs/laravel/SGATI/sgati/resources/views/systems/tabs/integrations.blade.php)",
+      "Bash(npm install:*)"
     ]
   }
 }

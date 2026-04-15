@@ -413,6 +413,7 @@
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">BDs</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Repos</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">PDF</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -457,10 +458,21 @@
                                 {{ $sys->status->label() }}
                             </span>
                         </td>
+                        <td class="px-6 py-4 text-center">
+                            <button type="button"
+                                    onclick="downloadSystemPdf({{ $sys->id }}, this)"
+                                    title="Descargar ficha PDF del sistema"
+                                    class="inline-flex items-center justify-center w-7 h-7 rounded bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-800/50 transition-colors disabled:opacity-50">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6M9 17h4"/>
+                                </svg>
+                            </button>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="px-5 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
+                        <td colspan="9" class="px-5 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
                             No hay sistemas registrados.
                         </td>
                     </tr>
