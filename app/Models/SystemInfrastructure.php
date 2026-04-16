@@ -10,7 +10,7 @@ class SystemInfrastructure extends Model
     protected $table = 'system_infrastructure';
 
     protected $fillable = [
-        'system_id', 'server_id',
+        'system_id', 'server_id', 'server_ip_id',
         'public_ip', 'system_url', 'port', 'web_server',
         'ssl_enabled', 'ssl_expiry', 'ssl_certificate_id', 'ssl_custom_expiry',
         'environment', 'notes',
@@ -34,6 +34,17 @@ class SystemInfrastructure extends Model
     public function server()
     {
         return $this->belongsTo(Server::class);
+    }
+
+    public function serverIp()
+    {
+        return $this->belongsTo(\App\Models\ServerIp::class, 'server_ip_id');
+    }
+
+    /** Devuelve la IP efectiva: del registro vinculado o del campo manual */
+    public function effectiveIp(): ?string
+    {
+        return $this->serverIp?->ip_address ?? $this->public_ip;
     }
 
     public function sslCertificate()

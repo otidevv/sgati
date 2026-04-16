@@ -170,11 +170,13 @@ class ReportController extends Controller
 
             'infrastructure' => $infra ? [
                 'system_url'  => $infra->system_url,
+                'port'        => $infra->port,
+                'public_ip'   => $infra->public_ip,
                 'web_server'  => $infra->web_server,
                 'environment' => $infra->environment,
                 'ssl_enabled' => $infra->ssl_enabled,
                 'server_name' => $server?->name,
-                'server_ip'   => $server?->publicIps->first()?->ip_address,
+                'server_ip'   => $infra->public_ip ?? $server?->ips->where('type', 'public')->first()?->ip_address,
                 'ssl_cert'    => $infra->sslCertificate?->name,
                 'notes'       => $infra->notes,
             ] : null,

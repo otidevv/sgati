@@ -12,17 +12,30 @@ class SystemInfrastructureController extends Controller
     public function edit(System $system)
     {
         $infra        = $system->infrastructure ?? $system->infrastructure()->create([]);
-        $servers      = Server::orderBy('name')->get(['id', 'name', 'operating_system', 'function']);
+        $servers      = Server::with('ips')->orderBy('name')->get(['id', 'name', 'operating_system', 'function']);
         $sslCerts     = SslCertificate::orderBy('name')->get(['id', 'name', 'common_name', 'valid_until']);
 
-        return view('systems.tabs.infrastructure_edit', compact('system', 'infra', 'servers', 'sslCerts'));
+        // Mapa server_id → lista de IPs para el select del formulario
+        $serverIpsMap = $servers->mapWithKeys(fn($s) => [
+            $s->id => $s->ips->map(fn($ip) => [
+                'id'         => $ip->id,
+                'ip_address' => $ip->ip_address,
+                'type'       => $ip->type,
+                'is_primary' => (bool) $ip->is_primary,
+            ])->values(),
+        ]);
+
+        return view('systems.tabs.infrastructure_edit', compact('system', 'infra', 'servers', 'sslCerts', 'serverIpsMap'));
     }
 
     public function update(Request $request, System $system)
     {
         $data = $request->validate([
             'server_id'          => 'nullable|exists:servers,id',
-            'system_url'         => 'nullable|url|max:255',
+            'server_ip_id'       => 'nullable|exists:server_ips,id',
+            'public_ip'          => 'nullable|ip|max:45',
+            'port'               => 'nullable|integer|min:1|max:65535',
+            'system_url'         => ['nullable', 'string', 'max:255', 'regex:/^(https?:\/\/)?[\w\-\.]+(\:\d+)?(\/\S*)?$/i'],
             'web_server'         => 'nullable|string|max:50',
             'ssl_enabled'        => 'boolean',
             'ssl_type'           => 'nullable|in:institutional,custom',

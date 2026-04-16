@@ -22,13 +22,29 @@
         @csrf @method('PUT')
 
         {{-- Servidor --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
+             x-data="{
+                 serverIpsMap: {{ $serverIpsMap->toJson() }},
+                 serverIpId: '{{ old('server_ip_id', $infra->server_ip_id) }}',
+                 ips: [],
+                 init() {
+                     const serverId = document.getElementById('server_id').value;
+                     if (serverId) this.loadIps(serverId);
+                 },
+                 loadIps(serverId) {
+                     this.ips = serverId ? (this.serverIpsMap[serverId] ?? []) : [];
+                     const primary = this.ips.find(ip => ip.is_primary) ?? this.ips[0];
+                     if (!this.serverIpId && primary) this.serverIpId = primary.id;
+                     if (!serverId) this.serverIpId = '';
+                 }
+             }">
             <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">
                 <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Servidor</h2>
             </div>
             <div class="p-6">
                 <label for="server_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Servidor asignado</label>
                 <select id="server_id" name="server_id"
+                        @change="loadIps($event.target.value)"
                         class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                     <option value="">— Sin servidor —</option>
                     @foreach($servers as $srv)
@@ -44,6 +60,50 @@
                     <a href="{{ route('admin.servers.create') }}" class="underline hover:no-underline">Registrar uno aquí</a>.
                 </p>
                 @endif
+
+                {{-- IP del servidor (select) + Puerto --}}
+                <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            IP expuesta
+                            <span class="ml-1 text-xs font-normal text-gray-400 dark:text-gray-500">(IPs del servidor)</span>
+                        </label>
+                        {{-- Select de IPs del servidor seleccionado --}}
+                        <template x-if="ips.length > 0">
+                            <select name="server_ip_id" x-model="serverIpId"
+                                    class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono">
+                                <option value="">— Sin IP específica —</option>
+                                <template x-for="ip in ips" :key="ip.id">
+                                    <option :value="ip.id" x-text="ip.ip_address + (ip.is_primary ? ' (principal)' : '') + (ip.type ? ' · ' + ip.type : '')"></option>
+                                </template>
+                            </select>
+                        </template>
+                        {{-- Sin IPs registradas: campo manual --}}
+                        <template x-if="ips.length === 0">
+                            <div>
+                                <input type="hidden" name="server_ip_id" value="">
+                                <input type="text" name="public_ip"
+                                       value="{{ old('public_ip', $infra->public_ip) }}"
+                                       class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
+                                       placeholder="192.168.1.10">
+                                <p class="mt-1 text-xs text-amber-600 dark:text-amber-400">El servidor no tiene IPs registradas.</p>
+                            </div>
+                        </template>
+                        @error('server_ip_id')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label for="port" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Puerto de exposición
+                            <span class="ml-1 text-xs font-normal text-gray-400 dark:text-gray-500">(opcional)</span>
+                        </label>
+                        <input type="number" id="port" name="port"
+                               value="{{ old('port', $infra->port) }}"
+                               min="1" max="65535"
+                               class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
+                               placeholder="80, 443, 8080…">
+                        @error('port')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -64,10 +124,11 @@
             <div class="p-6 space-y-4">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="sm:col-span-2">
-                        <label for="system_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL del Sistema</label>
-                        <input type="url" id="system_url" name="system_url" value="{{ old('system_url', $infra->system_url) }}"
+                        <label for="system_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL / Dirección del Sistema</label>
+                        <input type="text" id="system_url" name="system_url" value="{{ old('system_url', $infra->system_url) }}"
                                class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                               placeholder="https://sistema.unamad.edu.pe">
+                               placeholder="https://sistema.unamad.edu.pe  o  192.168.1.10:8585">
+                        <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Acepta dominio, IP o IP:puerto (con o sin <code class="font-mono">http://</code>).</p>
                         @error('system_url')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                     </div>
                     <div>

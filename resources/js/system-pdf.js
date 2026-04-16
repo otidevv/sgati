@@ -251,21 +251,27 @@ function buildDoc(d) {
     if (d.infrastructure) {
         content.push(sectionHeader('Infraestructura'));
         const infra = d.infrastructure;
+        const portLabel = infra.port ? `Puerto :${infra.port}` : null;
+        const accessStr = infra.public_ip && infra.port
+            ? `${infra.public_ip}:${infra.port}`
+            : (infra.public_ip || portLabel || '—');
         content.push({
             columns: [
                 {
                     stack: [
-                        kv('Servidor',   infra.server_name),
-                        kv('IP Pública', infra.server_ip),
-                        kv('URL',        infra.system_url),
+                        kv('Servidor',    infra.server_name),
+                        kv('IP expuesta', infra.public_ip ?? infra.server_ip),
+                        kv('Puerto',      infra.port ? `:${infra.port}` : null),
+                        kv('URL',         infra.system_url),
                     ],
                     width: '50%',
                 },
                 {
                     stack: [
-                        kv('SSL',         infra.ssl_enabled ? 'Habilitado' : 'No'),
-                        kv('Certificado', infra.ssl_cert),
-                        kv('Notas',       infra.notes, true),
+                        kv('Acceso directo', accessStr !== '—' ? accessStr : null),
+                        kv('SSL',            infra.ssl_enabled ? 'Habilitado' : 'No'),
+                        kv('Certificado',    infra.ssl_cert),
+                        kv('Notas',          infra.notes, true),
                     ],
                     width: '50%',
                 },
