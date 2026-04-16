@@ -224,7 +224,9 @@ class ReportController extends Controller
                 'name'        => $r->persona
                     ? trim(($r->persona->nombres ?? '') . ' ' . ($r->persona->apellido_paterno ?? '') . ' ' . ($r->persona->apellido_materno ?? ''))
                     : '—',
-                'level'       => \App\Models\SystemResponsible::levelLabel($r->level),
+                'level'       => is_array($r->level)
+                    ? implode(', ', array_map(fn($l) => \App\Models\SystemResponsible::levelLabel($l), $r->level))
+                    : \App\Models\SystemResponsible::levelLabel((string) $r->level),
                 'assigned_at' => $r->assigned_at?->format('d/m/Y'),
                 'active'      => $r->is_active,
             ]),

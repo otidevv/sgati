@@ -4,57 +4,48 @@ import pdfFonts from 'pdfmake/build/vfs_fonts';
 if (pdfFonts?.vfs)           pdfMake.vfs = pdfFonts.vfs;
 else if (pdfFonts?.pdfMake)  pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
-// ── Paleta ───────────────────────────────────────────────────────────
+// ── Paleta: base gris + acento azul marino ───────────────────────────
 const C = {
-    navy:       '#0f2d5e',   // header principal
-    navyDark:   '#091e42',   // header más oscuro
-    blue:       '#1d4ed8',   // acento secciones
-    blueMid:    '#3b82f6',   // acento medio
-    blueLight:  '#dbeafe',   // fondo etiquetas tech
-    blueUltra:  '#eff6ff',   // fondo filas alternas
-    infoBar:    '#f0f7ff',   // barra de métricas
-    teal:       '#0d9488',   // acento secundario
-    text:       '#111827',
-    textSoft:   '#374151',
-    muted:      '#6b7280',
-    mutedLight: '#9ca3af',
-    border:     '#e5e7eb',
-    borderDark: '#d1d5db',
+    navy:       '#1b3a5c',   // acento principal — títulos, líneas, headers
+    navyLight:  '#e8f0f7',   // fondo muy sutil azulado para th
+    black:      '#0d0d0d',
+    dark:       '#2a2a2a',
+    medium:     '#4a4a4a',
+    muted:      '#6e6e6e',
+    light:      '#9a9a9a',
+    border:     '#aaaaaa',
+    borderSoft: '#d4d4d4',
+    rowAlt:     '#f6f6f6',
     white:      '#ffffff',
-    green:      '#166534',
-    greenBg:    '#dcfce7',
-    red:        '#991b1b',
-    redBg:      '#fee2e2',
-    amber:      '#92400e',
-    amberBg:    '#fef3c7',
-    rowAlt:     '#f8fafc',
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────
 const th = (text, w) => ({
     text,
-    fontSize: 7.5,
+    fontSize: 7,
     bold: true,
-    color: C.white,
-    fillColor: C.blue,
+    color: C.navy,
+    fillColor: C.navyLight,
     margin: [5, 4, 5, 4],
-    border: [false, false, false, false],
+    border: [false, false, false, true],
+    borderColor: [null, null, null, C.navy],
     ...(w ? { width: w } : {}),
 });
 
 const td = (text, opts = {}) => ({
     text: text ?? '—',
-    fontSize: 8,
-    color: C.textSoft,
+    fontSize: 7.5,
+    color: C.dark,
     margin: [5, 3, 5, 3],
-    border: [false, false, false, false],
+    border: [false, false, false, true],
+    borderColor: [null, null, null, C.borderSoft],
     ...opts,
 });
 
 const tableLayout = {
     hLineWidth: (i, node) => (i === 0 || i === node.table.body.length) ? 0 : 0.5,
     vLineWidth: () => 0,
-    hLineColor: () => C.border,
+    hLineColor: () => C.borderSoft,
     fillColor:  (row) => row === 0 ? null : row % 2 === 0 ? C.rowAlt : null,
     paddingLeft:   () => 0,
     paddingRight:  () => 0,
@@ -62,34 +53,50 @@ const tableLayout = {
     paddingBottom: () => 0,
 };
 
+const rule = (style = 'soft') => {
+    if (style === 'thick')  return { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 2,   lineColor: C.navy }] };
+    if (style === 'navy')   return { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.6, lineColor: C.navy }] };
+    return                         { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.4, lineColor: C.borderSoft }] };
+};
 
 const sectionHeader = (title) => ({
-    columns: [
-        {
-            canvas: [{ type: 'rect', x: 0, y: 0, w: 4, h: 13, r: 2, color: C.blueMid }],
-            width: 10,
-            margin: [0, 1, 0, 0],
-        },
+    stack: [
+        { ...rule('navy') },
         {
             text: title.toUpperCase(),
-            fontSize: 8.5,
+            fontSize: 7.5,
             bold: true,
             color: C.navy,
-            letterSpacing: 0.8,
-            margin: [2, 1, 0, 0],
+            letterSpacing: 1.2,
+            margin: [0, 4, 0, 0],
         },
     ],
-    margin: [0, 14, 0, 6],
+    margin: [0, 14, 0, 8],
 });
 
 const kv = (label, value, muted = false) => ({
     columns: [
-        { text: label, fontSize: 7.5, bold: true, color: C.muted,    width: 110 },
-        { text: value ?? '—', fontSize: 7.5,       color: muted ? C.muted : C.textSoft },
+        { text: label,        fontSize: 7, bold: true, color: C.muted, width: 105 },
+        { text: value ?? '—', fontSize: 7,             color: muted ? C.light : C.dark },
     ],
-    margin: [0, 2.5, 0, 2.5],
+    margin: [0, 2, 0, 2],
 });
 
+const badge = (text) => ({
+    table: {
+        widths: ['auto'],
+        body: [[{
+            text,
+            fontSize: 6.5,
+            bold: true,
+            color: C.navy,
+            border: [true, true, true, true],
+            borderColor: [C.navy, C.navy, C.navy, C.navy],
+            margin: [5, 2, 5, 2],
+        }]],
+    },
+    layout: 'noBorders',
+});
 
 // ── Función expuesta ─────────────────────────────────────────────────
 window.downloadSystemPdf = async function (systemId, btnEl) {
@@ -121,137 +128,28 @@ function buildDoc(d) {
     const content = [];
 
     // ════════════════════════════════════════════════════════════════
-    // HEADER PRINCIPAL  (fondo azul marino, texto blanco)
+    // TÍTULO DEL SISTEMA  (página 1)
     // ════════════════════════════════════════════════════════════════
-    content.push({
-        table: {
-            widths: ['*', 'auto'],
-            body: [[
-                // — columna izquierda —
-                {
-                    stack: [
-                        {
-                            text: 'FICHA TÉCNICA DE SISTEMA',
-                            fontSize: 7,
-                            bold: true,
-                            color: '#93c5fd',
-                            letterSpacing: 1.5,
-                            margin: [0, 0, 0, 4],
-                        },
-                        {
-                            text: d.name,
-                            fontSize: 20,
-                            bold: true,
-                            color: C.white,
-                            margin: [0, 0, 0, 4],
-                        },
-                        ...(d.acronym ? [{
-                            table: {
-                                widths: ['auto'],
-                                body: [[{
-                                    text: d.acronym,
-                                    fontSize: 8,
-                                    bold: true,
-                                    color: C.navy,
-                                    fillColor: '#93c5fd',
-                                    margin: [6, 2, 6, 2],
-                                    border: [false, false, false, false],
-                                }]],
-                            },
-                            layout: 'noBorders',
-                            margin: [0, 0, 0, 0],
-                        }] : []),
-                    ],
-                    fillColor: C.navy,
-                    border: [false, false, false, false],
-                    margin: [20, 18, 10, 18],
-                },
-                // — columna derecha —
-                {
-                    stack: [
-                        {
-                            text: 'SGATI',
-                            fontSize: 14,
-                            bold: true,
-                            color: '#93c5fd',
-                            alignment: 'right',
-                            margin: [0, 0, 0, 2],
-                        },
-                        {
-                            text: 'OTI — UNAMAD',
-                            fontSize: 7,
-                            color: '#bfdbfe',
-                            alignment: 'right',
-                            margin: [0, 0, 0, 10],
-                        },
-                        {
-                            table: {
-                                widths: ['auto'],
-                                body: [[{
-                                    text: d.status,
-                                    fontSize: 8,
-                                    bold: true,
-                                    color: C.navy,
-                                    fillColor: '#6ee7b7',
-                                    margin: [8, 3, 8, 3],
-                                    alignment: 'center',
-                                    border: [false, false, false, false],
-                                }]],
-                            },
-                            layout: 'noBorders',
-                        },
-                    ],
-                    fillColor: C.navy,
-                    border: [false, false, false, false],
-                    margin: [0, 18, 20, 18],
-                },
-            ]],
-        },
-        layout: 'noBorders',
-        margin: [0, 0, 0, 0],
-    });
-
-    // ════════════════════════════════════════════════════════════════
-    // BARRA DE MÉTRICAS CLAVE  (4 columnas)
-    // ════════════════════════════════════════════════════════════════
-    const metrics = [
-        { label: 'ÁREA',       value: d.area        ?? '—' },
-        { label: 'RESPONSABLE', value: d.responsible ?? '—' },
-        { label: 'ENTORNO',    value: d.infrastructure?.environment ?? '—' },
-        { label: 'TECNOLOGÍAS', value: d.tech_stack?.length ? `${d.tech_stack.length} registradas` : '—' },
-    ];
 
     content.push({
-        table: {
-            widths: ['25%', '25%', '25%', '25%'],
-            body: [[
-                ...metrics.map((m, i) => ({
-                    stack: [
-                        { text: m.label, fontSize: 6.5, bold: true, color: C.muted, letterSpacing: 0.5, margin: [0, 0, 0, 2] },
-                        { text: m.value, fontSize: 8.5, bold: true, color: C.navy },
-                    ],
-                    fillColor: C.infoBar,
-                    border: [
-                        i > 0, false, false, false,  // línea izq excepto primera
-                    ],
-                    borderColor: [C.borderDark, null, null, null],
-                    margin: [12, 8, 12, 8],
-                })),
-            ]],
-        },
-        layout: {
-            hLineWidth: () => 0,
-            vLineWidth: (i) => i > 0 && i < 4 ? 0.5 : 0,
-            vLineColor: () => C.borderDark,
-        },
-        margin: [0, 0, 0, 0],
+        text: d.name,
+        fontSize: 16,
+        bold: true,
+        color: C.navy,
+        alignment: 'center',
+        margin: [0, 0, 0, 4],
     });
 
-    // Separador accent
-    content.push({
-        canvas: [{ type: 'rect', x: 0, y: 0, w: 515, h: 2.5, color: C.blueMid }],
-        margin: [0, 0, 0, 0],
-    });
+    if (d.acronym) {
+        content.push({
+            text: `[ ${d.acronym} ]`,
+            fontSize: 8.5,
+            color: C.muted,
+            alignment: 'center',
+            margin: [0, 0, 0, 5],
+        });
+    }
+
 
     // ════════════════════════════════════════════════════════════════
     // INFORMACIÓN GENERAL
@@ -261,11 +159,11 @@ function buildDoc(d) {
         columns: [
             {
                 stack: [
-                    kv('Sistema',      d.name),
-                    kv('Acrónimo',     d.acronym),
-                    kv('Área',         d.area),
-                    kv('Responsable',  d.responsible),
-                    kv('Estado',       d.status),
+                    kv('Sistema',     d.name),
+                    kv('Acrónimo',    d.acronym),
+                    kv('Área',        d.area),
+                    kv('Responsable', d.responsible),
+                    kv('Estado',      d.status),
                 ],
                 width: '50%',
             },
@@ -283,24 +181,25 @@ function buildDoc(d) {
     });
 
     if (d.description) {
-        content.push({ text: 'Descripción', fontSize: 7.5, bold: true, color: C.muted, margin: [0, 8, 0, 2] });
+        content.push({ text: 'Descripción', fontSize: 7, bold: true, color: C.navy, margin: [0, 8, 0, 3] });
         content.push({
             table: {
                 widths: ['*'],
                 body: [[{
                     text: d.description,
-                    fontSize: 8,
-                    color: C.textSoft,
-                    margin: [8, 6, 8, 6],
-                    border: [false, false, false, false],
+                    fontSize: 7.5,
+                    color: C.medium,
+                    italics: true,
+                    margin: [10, 6, 10, 6],
+                    border: [true, false, false, false],
+                    borderColor: [C.navy, null, null, null],
                 }]],
             },
             layout: {
                 hLineWidth: () => 0,
                 vLineWidth: (i) => i === 0 ? 2 : 0,
-                vLineColor: () => C.blueMid,
+                vLineColor: () => C.navy,
             },
-            margin: [0, 0, 0, 0],
         });
     }
 
@@ -309,10 +208,9 @@ function buildDoc(d) {
     // ════════════════════════════════════════════════════════════════
     if (d.tech_stack?.length > 0) {
         content.push(sectionHeader('Stack Tecnológico'));
-        // Chips en filas de hasta 8 por fila
-        const chunkSize = 8;
+        const chunkSize = 9;
         for (let i = 0; i < d.tech_stack.length; i += chunkSize) {
-            const row = d.tech_stack.slice(i, i + chunkSize);
+            const row    = d.tech_stack.slice(i, i + chunkSize);
             const padded = [...row, ...Array(chunkSize - row.length).fill(null)];
             content.push({
                 table: {
@@ -321,21 +219,22 @@ function buildDoc(d) {
                         ...padded.map(tag => tag
                             ? {
                                 text: tag,
-                                fontSize: 7.5,
-                                bold: true,
-                                color: C.blue,
-                                fillColor: C.blueLight,
+                                fontSize: 6.5,
+                                color: C.navy,
                                 alignment: 'center',
-                                margin: [4, 3, 4, 3],
-                                border: [false, false, false, false],
+                                margin: [3, 3, 3, 3],
+                                border: [true, true, true, true],
+                                borderColor: [C.navy, C.navy, C.navy, C.navy],
                               }
                             : { text: '', border: [false, false, false, false] }
                         ),
                     ]],
                 },
                 layout: {
-                    hLineWidth: () => 0,
-                    vLineWidth: () => 0,
+                    hLineWidth: () => 0.5,
+                    vLineWidth: () => 0.5,
+                    hLineColor: () => C.navy,
+                    vLineColor: () => C.navy,
                     paddingLeft:   () => 2,
                     paddingRight:  () => 2,
                     paddingTop:    () => 2,
@@ -386,19 +285,15 @@ function buildDoc(d) {
                 body: [
                     [ th('Nombre'), th('Rol / Nivel'), th('Desde'), th('Estado') ],
                     ...d.responsibles.map((r) => [
-                        td(r.name, { bold: true }),
+                        td(r.name, { bold: true, color: C.dark }),
                         td(r.level),
                         td(r.assigned_at),
-                        {
-                            text: r.active ? 'Activo' : 'Inactivo',
-                            fontSize: 7,
-                            bold: true,
-                            color:     r.active ? C.green : C.red,
-                            fillColor: r.active ? C.greenBg : C.redBg,
+                        td(r.active ? 'Activo' : 'Inactivo', {
                             alignment: 'center',
-                            margin: [4, 3, 4, 3],
-                            border: [false, false, false, false],
-                        },
+                            bold: r.active,
+                            color: r.active ? C.navy : C.light,
+                            italics: !r.active,
+                        }),
                     ]),
                 ],
             },
@@ -420,7 +315,7 @@ function buildDoc(d) {
                     ...d.databases.map(db => [
                         td(db.name, { bold: true }),
                         td(db.engine),
-                        td(db.host, { fontSize: 7.5 }),
+                        td(db.host, { fontSize: 7 }),
                         td(db.port?.toString(), { alignment: 'center' }),
                     ]),
                 ],
@@ -436,7 +331,7 @@ function buildDoc(d) {
         content.push(sectionHeader('Servicios y APIs'));
         content.push({
             table: {
-                widths: ['*', 55, 60, '*', 48, 32],
+                widths: ['*', 50, 55, '*', 44, 30],
                 headerRows: 1,
                 body: [
                     [ th('Nombre'), th('Tipo'), th('Dirección'), th('Endpoint'), th('Auth'), th('Activo') ],
@@ -444,18 +339,9 @@ function buildDoc(d) {
                         td(s.name, { bold: true }),
                         td(s.type),
                         td(s.direction),
-                        td(s.endpoint, { fontSize: 7 }),
+                        td(s.endpoint, { fontSize: 6.5 }),
                         td(s.auth),
-                        {
-                            text: s.active ? 'Sí' : 'No',
-                            fontSize: 7,
-                            bold: true,
-                            color:     s.active ? C.green : C.muted,
-                            fillColor: s.active ? C.greenBg : '#f3f4f6',
-                            alignment: 'center',
-                            margin: [4, 3, 4, 3],
-                            border: [false, false, false, false],
-                        },
+                        td(s.active ? 'Sí' : 'No', { alignment: 'center', bold: s.active, color: s.active ? C.navy : C.light }),
                     ]),
                 ],
             },
@@ -477,7 +363,7 @@ function buildDoc(d) {
                     ...d.repositories.map(r => [
                         td(r.name, { bold: true }),
                         td(r.provider),
-                        td(r.url, { fontSize: 7 }),
+                        td(r.url, { fontSize: 6.5 }),
                         td(r.branch),
                     ]),
                 ],
@@ -497,11 +383,11 @@ function buildDoc(d) {
             columns: [
                 hasFrom ? {
                     stack: [
-                        { text: 'Consume servicios de:', fontSize: 7.5, bold: true, color: C.muted, margin: [0, 0, 0, 4] },
+                        { text: 'Recibe servicios de:', fontSize: 7, bold: true, color: C.navy, margin: [0, 0, 0, 4] },
                         ...d.integrations_from.map(i => ({
                             columns: [
-                                { canvas: [{ type: 'ellipse', x: 3, y: 4, r1: 2.5, r2: 2.5, color: C.blueMid }], width: 10 },
-                                { text: i.target + (i.protocol ? ` — ${i.protocol}` : ''), fontSize: 8, color: C.textSoft },
+                                { canvas: [{ type: 'ellipse', x: 3, y: 4, r1: 2, r2: 2, color: C.navy }], width: 10 },
+                                { text: i.target + (i.protocol ? ` — ${i.protocol}` : ''), fontSize: 7.5, color: C.dark },
                             ],
                             margin: [0, 1.5, 0, 1.5],
                         })),
@@ -510,11 +396,11 @@ function buildDoc(d) {
                 } : { text: '', width: '50%' },
                 hasTo ? {
                     stack: [
-                        { text: 'Expone servicios a:', fontSize: 7.5, bold: true, color: C.muted, margin: [0, 0, 0, 4] },
+                        { text: 'Expone servicios a:', fontSize: 7, bold: true, color: C.navy, margin: [0, 0, 0, 4] },
                         ...d.integrations_to.map(i => ({
                             columns: [
-                                { canvas: [{ type: 'ellipse', x: 3, y: 4, r1: 2.5, r2: 2.5, color: C.teal }], width: 10 },
-                                { text: i.source + (i.protocol ? ` — ${i.protocol}` : ''), fontSize: 8, color: C.textSoft },
+                                { canvas: [{ type: 'ellipse', x: 3, y: 4, r1: 2, r2: 2, color: C.medium }], width: 10 },
+                                { text: i.source + (i.protocol ? ` — ${i.protocol}` : ''), fontSize: 7.5, color: C.dark },
                             ],
                             margin: [0, 1.5, 0, 1.5],
                         })),
@@ -532,12 +418,12 @@ function buildDoc(d) {
         content.push(sectionHeader('Historial de Versiones'));
         content.push({
             table: {
-                widths: [80, 80, '*'],
+                widths: [75, 75, '*'],
                 headerRows: 1,
                 body: [
                     [ th('Versión'), th('Fecha'), th('Notas') ],
                     ...d.versions.map(v => [
-                        td(v.version, { bold: true, color: C.blue }),
+                        td(v.version, { bold: true, color: C.navy }),
                         td(v.release_date),
                         td(v.notes, { color: C.muted }),
                     ]),
@@ -554,7 +440,7 @@ function buildDoc(d) {
         content.push(sectionHeader('Historial de Estado'));
         content.push({
             table: {
-                widths: [120, 80, '*'],
+                widths: [110, 75, '*'],
                 headerRows: 1,
                 body: [
                     [ th('Estado'), th('Fecha'), th('Motivo') ],
@@ -579,18 +465,18 @@ function buildDoc(d) {
                 widths: ['*'],
                 body: [[{
                     text: d.observations,
-                    fontSize: 8,
-                    color: C.textSoft,
+                    fontSize: 7.5,
+                    color: C.medium,
                     italics: true,
-                    margin: [8, 6, 8, 6],
-                    border: [false, false, false, false],
-                    fillColor: '#fffbeb',
+                    margin: [10, 6, 10, 6],
+                    border: [true, false, false, false],
+                    borderColor: [C.navy, null, null, null],
                 }]],
             },
             layout: {
                 hLineWidth: () => 0,
-                vLineWidth: (i) => i === 0 ? 2.5 : 0,
-                vLineColor: () => '#f59e0b',
+                vLineWidth: (i) => i === 0 ? 2 : 0,
+                vLineColor: () => C.navy,
             },
         });
     }
@@ -600,87 +486,115 @@ function buildDoc(d) {
     // ════════════════════════════════════════════════════════════════
     return {
         pageSize: 'A4',
-        pageMargins: [30, 18, 30, 50],
+        pageMargins: [40, 68, 40, 54],
 
         content,
 
-        // ── HEADER  (solo pág > 1 para no pisar el hero) ────────────
-        header: (currentPage) => {
-            if (currentPage === 1) return null;
-            return {
-                columns: [
-                    {
-                        stack: [
-                            { text: 'FICHA TÉCNICA — ' + d.name.toUpperCase(), fontSize: 7, bold: true, color: C.white },
-                            ...(d.acronym ? [{ text: d.acronym, fontSize: 6, color: '#93c5fd' }] : []),
-                        ],
-                        margin: [30, 10, 0, 0],
-                    },
-                    {
-                        text: 'SGATI · OTI UNAMAD',
-                        fontSize: 7,
-                        color: '#93c5fd',
-                        alignment: 'right',
-                        margin: [0, 10, 30, 0],
-                    },
-                ],
-                background: C.navy,
-            };
-        },
-
-        // ── FOOTER  (todas las páginas) ──────────────────────────────
-        footer: (currentPage, pageCount) => ({
+        // ── HEADER (todas las páginas) ───────────────────────────────
+        header: (currentPage) => ({
             stack: [
-                // Línea accent
                 {
-                    canvas: [{ type: 'rect', x: 30, y: 0, w: 535, h: 1.5, color: C.blue }],
-                    margin: [0, 0, 0, 4],
+                    canvas: [
+                        { type: 'line', x1: 40, y1: 0,   x2: 555, y2: 0,   lineWidth: 2.2, lineColor: C.navy },
+                        { type: 'line', x1: 40, y1: 4,   x2: 555, y2: 4,   lineWidth: 0.4, lineColor: C.borderSoft },
+                    ],
+                    margin: [0, 10, 0, 6],
                 },
-                // Tres columnas
                 {
                     columns: [
-                        // Izquierda: fecha y hora
                         {
                             stack: [
-                                { text: 'Elaborado el', fontSize: 6, color: C.mutedLight, bold: true, letterSpacing: 0.4 },
-                                { text: generatedAt, fontSize: 7.5, color: C.textSoft, bold: true },
+                                { text: 'UNIVERSIDAD NACIONAL MADRE DE DIOS', fontSize: 8, bold: true, color: C.navy },
+                                { text: 'Oficina de Tecnologías de la Información — OTI', fontSize: 6.5, color: C.muted, margin: [0, 1, 0, 0] },
                             ],
-                            width: '33%',
-                            margin: [30, 0, 0, 0],
+                            margin: [40, 0, 0, 0],
                         },
-                        // Centro: quien generó
                         {
                             stack: [
-                                { text: 'Generado por', fontSize: 6, color: C.mutedLight, bold: true, letterSpacing: 0.4, alignment: 'center' },
-                                { text: generatedBy, fontSize: 7.5, color: C.navy, bold: true, alignment: 'center' },
-                            ],
-                            width: '34%',
-                        },
-                        // Derecha: número de página
-                        {
-                            stack: [
-                                { text: 'PÁGINA', fontSize: 6, color: C.mutedLight, bold: true, letterSpacing: 0.4, alignment: 'right' },
+                                { text: 'FICHA TÉCNICA DE SISTEMA', fontSize: 7, bold: true, color: C.navy, alignment: 'right', letterSpacing: 0.5 },
                                 {
-                                    columns: [
-                                        { text: `${currentPage}`, fontSize: 14, bold: true, color: C.blue, alignment: 'right', width: 'auto' },
-                                        { text: ` / ${pageCount}`, fontSize: 8, color: C.muted, margin: [1, 6, 0, 0], width: 'auto' },
-                                    ],
+                                    text: currentPage > 1
+                                        ? d.name.toUpperCase() + (d.acronym ? `  [${d.acronym}]` : '')
+                                        : `SGATI  ·  Código: ${d.acronym ?? d.id}`,
+                                    fontSize: 6.5,
+                                    color: C.muted,
                                     alignment: 'right',
+                                    margin: [0, 1, 0, 0],
                                 },
                             ],
-                            width: '33%',
-                            margin: [0, 0, 30, 0],
+                            margin: [0, 0, 40, 0],
+                        },
+                    ],
+                },
+                {
+                    canvas: [{ type: 'line', x1: 40, y1: 0, x2: 555, y2: 0, lineWidth: 0.4, lineColor: C.borderSoft }],
+                    margin: [0, 5, 0, 0],
+                },
+            ],
+        }),
+
+        // ── FOOTER (todas las páginas) ───────────────────────────────
+        footer: (currentPage, pageCount) => ({
+            stack: [
+                {
+                    canvas: [
+                        { type: 'line', x1: 40, y1: 0, x2: 555, y2: 0, lineWidth: 1.2, lineColor: C.navy },
+                        { type: 'line', x1: 40, y1: 3, x2: 555, y2: 3, lineWidth: 0.3, lineColor: C.borderSoft },
+                    ],
+                    margin: [0, 0, 0, 6],
+                },
+                {
+                    columns: [
+                        {
+                            stack: [
+                                {
+                                    text: [
+                                        { text: 'Elaborado el  ', fontSize: 6, color: C.light },
+                                        { text: generatedAt, fontSize: 6, color: C.medium, bold: true },
+                                    ],
+                                },
+                                {
+                                    text: [
+                                        { text: 'Generado por  ', fontSize: 6, color: C.light },
+                                        { text: generatedBy, fontSize: 6, color: C.navy, bold: true },
+                                    ],
+                                    margin: [0, 2, 0, 0],
+                                },
+                            ],
+                            width: '60%',
+                            margin: [40, 0, 0, 0],
+                        },
+                        {
+                            stack: [
+                                {
+                                    text: 'SGATI — Oficina de Tecnologías de la Información · UNAMAD',
+                                    fontSize: 5.5,
+                                    color: C.light,
+                                    alignment: 'right',
+                                    italics: true,
+                                },
+                                {
+                                    text: `Página ${currentPage} de ${pageCount}`,
+                                    fontSize: 7,
+                                    color: C.navy,
+                                    bold: true,
+                                    alignment: 'right',
+                                    margin: [0, 2, 0, 0],
+                                },
+                            ],
+                            width: '40%',
+                            margin: [0, 0, 40, 0],
                         },
                     ],
                 },
             ],
-            margin: [0, 6, 0, 0],
+            margin: [0, 10, 0, 0],
         }),
 
         defaultStyle: {
             font: 'Roboto',
-            fontSize: 9,
-            color: C.text,
+            fontSize: 8,
+            color: C.dark,
         },
     };
 }

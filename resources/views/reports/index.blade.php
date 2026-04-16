@@ -202,8 +202,9 @@
             <div class="divide-y divide-gray-100 dark:divide-gray-700">
                 @foreach($reposByProvider as $row)
                 @php
-                    $color = $provColors[$row->provider] ?? 'gray';
-                    $label = $provLabels[$row->provider] ?? ucfirst($row->provider);
+                    $provKey = $row->provider instanceof \BackedEnum ? $row->provider->value : (string) $row->provider;
+                    $color = $provColors[$provKey] ?? 'gray';
+                    $label = $provLabels[$provKey] ?? ucfirst($provKey);
                     $pct   = $repoTotal > 0 ? round($row->total / $repoTotal * 100) : 0;
                 @endphp
                 <div class="px-6 py-4 flex items-center gap-3">
