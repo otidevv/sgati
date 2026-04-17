@@ -21,11 +21,18 @@ class SystemInfrastructureController extends Controller
                 'id'         => $ip->id,
                 'ip_address' => $ip->ip_address,
                 'type'       => $ip->type,
+                'interface'  => $ip->interface,
                 'is_primary' => (bool) $ip->is_primary,
             ])->values(),
         ]);
 
-        return view('systems.tabs.infrastructure_edit', compact('system', 'infra', 'servers', 'sslCerts', 'serverIpsMap'));
+        $exposedIpIds = $infra->exposedIps->pluck('id')->toArray();
+
+        $serverEditUrls = $servers->mapWithKeys(fn($s) => [
+            $s->id => route('admin.servers.edit', $s),
+        ]);
+
+        return view('systems.tabs.infrastructure_edit', compact('system', 'infra', 'servers', 'sslCerts', 'serverIpsMap', 'exposedIpIds', 'serverEditUrls'));
     }
 
     public function update(Request $request, System $system)
@@ -33,6 +40,8 @@ class SystemInfrastructureController extends Controller
         $data = $request->validate([
             'server_id'          => 'nullable|exists:servers,id',
             'server_ip_id'       => 'nullable|exists:server_ips,id',
+            'exposed_ip_ids'     => 'nullable|array',
+            'exposed_ip_ids.*'   => 'integer|exists:server_ips,id',
             'public_ip'          => 'nullable|ip|max:45',
             'port'               => 'nullable|integer|min:1|max:65535',
             'system_url'         => ['nullable', 'string', 'max:255', 'regex:/^(https?:\/\/)?[\w\-\.]+(\:\d+)?(\/\S*)?$/i'],
@@ -58,10 +67,15 @@ class SystemInfrastructureController extends Controller
         }
         unset($data['ssl_type']);
 
-        $system->infrastructure()->updateOrCreate(
+        $exposedIpIds = array_map('intval', $data['exposed_ip_ids'] ?? []);
+        unset($data['exposed_ip_ids']);
+
+        $infra = $system->infrastructure()->updateOrCreate(
             ['system_id' => $system->id],
             $data
         );
+
+        $infra->exposedIps()->sync($exposedIpIds);
 
         return redirect(route('systems.show', $system) . '#infrastructure')
             ->with('success', 'Infraestructura actualizada correctamente.');

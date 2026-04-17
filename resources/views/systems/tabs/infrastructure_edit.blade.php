@@ -26,17 +26,30 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
              x-data="{
                  serverIpsMap: {{ $serverIpsMap->toJson() }},
+                 serverEditUrls: {{ $serverEditUrls->toJson() }},
+                 serverId: '{{ old('server_id', $infra->server_id) }}',
                  serverIpId: '{{ old('server_ip_id', $infra->server_ip_id) }}',
+                 exposedIpIds: @json(old('exposed_ip_ids') !== null ? array_map('intval', old('exposed_ip_ids', [])) : $exposedIpIds),
                  ips: [],
+                 get publicIps()  { return this.ips.filter(ip => ip.type === 'public'); },
+                 get privateIps() { return this.ips.filter(ip => ip.type === 'private'); },
+                 get selectedIp() { return this.ips.find(ip => ip.id == this.serverIpId) ?? null; },
+                 get serverEditUrl() { return this.serverId ? (this.serverEditUrls[this.serverId] ?? null) : null; },
                  init() {
-                     const serverId = document.getElementById('server_id').value;
-                     if (serverId) this.loadIps(serverId);
+                     const sid = document.getElementById('server_id').value;
+                     if (sid) this.loadIps(sid, false);
                  },
-                 loadIps(serverId) {
+                 loadIps(serverId, resetExposed = true) {
+                     this.serverId = serverId;
                      this.ips = serverId ? (this.serverIpsMap[serverId] ?? []) : [];
-                     const primary = this.ips.find(ip => ip.is_primary) ?? this.ips[0];
-                     if (!this.serverIpId && primary) this.serverIpId = primary.id;
-                     if (!serverId) this.serverIpId = '';
+                     if (resetExposed) this.exposedIpIds = [];
+                     if (!this.serverIpId) {
+                         const primary = this.ips.find(ip => ip.is_primary)
+                             ?? this.ips.find(ip => ip.type === 'public')
+                             ?? this.ips[0];
+                         if (primary) this.serverIpId = primary.id;
+                     }
+                     if (!serverId) { this.serverIpId = ''; this.exposedIpIds = []; }
                  }
              }">
             <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">
@@ -62,23 +75,56 @@
                 </p>
                 @endif
 
-                {{-- IP del servidor (select) + Puerto --}}
+                {{-- IP + Puerto --}}
                 <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            IP expuesta
-                            <span class="ml-1 text-xs font-normal text-gray-400 dark:text-gray-500">(IPs del servidor)</span>
+                            IP del servidor
+                            <span class="ml-1 text-xs font-normal text-gray-400 dark:text-gray-500">(pública o privada)</span>
                         </label>
-                        {{-- Select de IPs del servidor seleccionado --}}
+
+                        {{-- Select agrupado por tipo --}}
                         <template x-if="ips.length > 0">
-                            <select name="server_ip_id" x-model="serverIpId"
-                                    class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono">
-                                <option value="">— Sin IP específica —</option>
-                                <template x-for="ip in ips" :key="ip.id">
-                                    <option :value="ip.id" x-text="ip.ip_address + (ip.is_primary ? ' (principal)' : '') + (ip.type ? ' · ' + ip.type : '')"></option>
-                                </template>
-                            </select>
+                            <div>
+                                <select name="server_ip_id" x-model="serverIpId"
+                                        class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono">
+                                    <option value="">— Sin IP específica —</option>
+                                    {{-- Públicas primero --}}
+                                    <template x-if="publicIps.length > 0">
+                                        <option disabled>── Públicas ──────────────</option>
+                                    </template>
+                                    <template x-for="ip in publicIps" :key="ip.id">
+                                        <option :value="ip.id"
+                                                x-text="ip.ip_address + (ip.is_primary ? ' · principal' : '') + (ip.interface ? ' (' + ip.interface + ')' : '')">
+                                        </option>
+                                    </template>
+                                    {{-- Privadas --}}
+                                    <template x-if="privateIps.length > 0">
+                                        <option disabled>── Privadas ──────────────</option>
+                                    </template>
+                                    <template x-for="ip in privateIps" :key="ip.id">
+                                        <option :value="ip.id"
+                                                x-text="ip.ip_address + (ip.is_primary ? ' · principal' : '') + (ip.interface ? ' (' + ip.interface + ')' : '')">
+                                        </option>
+                                    </template>
+                                </select>
+
+                                {{-- Badge del tipo de IP seleccionada --}}
+                                <div x-show="selectedIp" class="mt-1.5 flex items-center gap-1.5">
+                                    <span x-show="selectedIp?.type === 'public'"
+                                          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-700">
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg>
+                                        IP Pública — accesible desde internet
+                                    </span>
+                                    <span x-show="selectedIp?.type === 'private'"
+                                          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600">
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                        IP Privada — solo red local
+                                    </span>
+                                </div>
+                            </div>
                         </template>
+
                         {{-- Sin IPs registradas: campo manual --}}
                         <template x-if="ips.length === 0">
                             <div>
@@ -86,11 +132,14 @@
                                 <input type="text" name="public_ip"
                                        value="{{ old('public_ip', $infra->public_ip) }}"
                                        class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
-                                       placeholder="192.168.1.10"
+                                       placeholder="Ej: 200.10.20.30 (pública) o 192.168.1.10 (privada)"
                                        maxlength="45"
                                        onblur="validatePublicIp(this)">
                                 <p id="public_ip-error" class="hidden mt-1 text-xs text-red-600 dark:text-red-400">Ingresa una dirección IP válida (IPv4 o IPv6).</p>
-                                <p class="mt-1 text-xs text-amber-600 dark:text-amber-400">El servidor no tiene IPs registradas.</p>
+                                <p class="mt-1 text-xs text-amber-600 dark:text-amber-400">
+                                    El servidor no tiene IPs registradas.
+                                    <a href="{{ route('admin.servers.index') }}" class="underline hover:no-underline">Registra IPs en el servidor</a> para poder seleccionarlas aquí.
+                                </p>
                             </div>
                         </template>
                         @error('server_ip_id')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
@@ -107,6 +156,58 @@
                                placeholder="80, 443, 8080…">
                         @error('port')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                     </div>
+                </div>
+
+                {{-- Aviso: servidor seleccionado pero sin IPs públicas --}}
+                <div class="mt-5" x-show="serverId && publicIps.length === 0" x-transition>
+                    <div class="flex items-start gap-3 px-4 py-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40">
+                        <svg class="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div class="text-xs text-amber-700 dark:text-amber-400">
+                            <p class="font-medium">Este servidor no tiene IPs públicas registradas.</p>
+                            <p class="mt-0.5">Para exponer el sistema por una IP pública, primero agrégala en el servidor.</p>
+                            <a x-show="serverEditUrl" :href="serverEditUrl + '#step4'"
+                               class="inline-flex items-center gap-1 mt-1.5 font-medium underline hover:no-underline">
+                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                Editar servidor → agregar IP pública
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- IPs Públicas de Exposición --}}
+                <div class="mt-5" x-show="publicIps.length > 0" x-transition>
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/>
+                        </svg>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            IPs Públicas por las que se expone el sistema
+                        </label>
+                        <span class="text-xs font-normal text-gray-400 dark:text-gray-500">(puede ser más de una)</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <template x-for="ip in publicIps" :key="ip.id">
+                            <label class="flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-colors select-none"
+                                   :class="exposedIpIds.map(Number).includes(Number(ip.id))
+                                       ? 'bg-emerald-50 border-emerald-300 dark:bg-emerald-900/20 dark:border-emerald-700'
+                                       : 'bg-white border-gray-200 dark:bg-gray-700/50 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'">
+                                <input type="checkbox" name="exposed_ip_ids[]"
+                                       :value="ip.id"
+                                       x-model="exposedIpIds"
+                                       class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                                <div class="min-w-0">
+                                    <span class="font-mono text-sm text-gray-900 dark:text-gray-100" x-text="ip.ip_address"></span>
+                                    <span x-show="ip.interface" class="ml-1 text-xs text-gray-400 dark:text-gray-500" x-text="'(' + ip.interface + ')'"></span>
+                                    <span x-show="ip.is_primary" class="ml-1 text-xs text-emerald-600 dark:text-emerald-400">· principal</span>
+                                </div>
+                            </label>
+                        </template>
+                    </div>
+                    <p class="mt-1.5 text-xs text-gray-400 dark:text-gray-500">
+                        Varios sistemas pueden compartir una misma IP pública (ej. detrás de un proxy o balanceador).
+                    </p>
                 </div>
             </div>
         </div>
@@ -133,8 +234,12 @@
                                class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                placeholder="https://sistema.unamad.edu.pe  o  192.168.1.10:8585"
                                maxlength="255"
-                               onblur="validateSystemUrl(this)">
+                               oninput="checkDomainHint(this)" onblur="validateSystemUrl(this)">
                         <p id="system_url-error" class="hidden mt-1 text-sm text-red-600 dark:text-red-400">URL inválida. Acepta: dominio, IP o IP:puerto (ej. <code class="font-mono">https://app.unamad.edu.pe</code> o <code class="font-mono">192.168.1.10:8080</code>).</p>
+                        <p id="system_url-domain-hint" class="hidden mt-1.5 items-start gap-1.5 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-lg px-3 py-2">
+                            <svg class="w-3.5 h-3.5 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Estás usando un dominio — asegúrate de que el servidor tenga una <strong>IP Pública</strong> seleccionada en la sección de arriba.
+                        </p>
                         <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Acepta dominio, IP o IP:puerto (con o sin <code class="font-mono">http://</code>).</p>
                         @error('system_url')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                     </div>
@@ -299,6 +404,14 @@ function validatePublicIp(input) {
     const valid = ipv4.test(val) || ipv6.test(val);
     err.classList.toggle('hidden', valid);
     input.classList.toggle('border-red-400', !valid);
+}
+
+function checkDomainHint(input) {
+    const val = input.value.trim().replace(/^https?:\/\//i, '').split('/')[0].split(':')[0];
+    const hint = document.getElementById('system_url-domain-hint');
+    const isDomain = val.length > 0 && /[a-zA-Z]/.test(val) && !/^(\d{1,3}\.){3}\d{1,3}$/.test(val);
+    hint.classList.toggle('hidden', !isDomain);
+    hint.style.display = isDomain ? 'flex' : '';
 }
 
 function validateSystemUrl(input) {

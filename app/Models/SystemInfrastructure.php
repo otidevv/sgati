@@ -47,6 +47,16 @@ class SystemInfrastructure extends Model
         return $this->serverIp?->ip_address ?? $this->public_ip;
     }
 
+    public function exposedIps()
+    {
+        return $this->belongsToMany(
+            ServerIp::class,
+            'system_infrastructure_server_ips',
+            'system_infrastructure_id',
+            'server_ip_id'
+        )->withTimestamps();
+    }
+
     public function sslCertificate()
     {
         return $this->belongsTo(SslCertificate::class, 'ssl_certificate_id');
