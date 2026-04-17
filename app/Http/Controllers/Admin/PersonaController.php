@@ -127,6 +127,23 @@ class PersonaController extends Controller
         }
     }
 
+    public function checkEmail(Request $request)
+    {
+        $email    = $request->query('email');
+        $excludeId = $request->query('exclude');
+
+        if (!$email) {
+            return response()->json(['available' => true]);
+        }
+
+        $query = Persona::where('email_personal', $email);
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        return response()->json(['available' => !$query->exists()]);
+    }
+
     public function destroy(Persona $persona)
     {
         abort_if($persona->user()->exists(), 403, 'No se puede eliminar una persona vinculada a un usuario.');

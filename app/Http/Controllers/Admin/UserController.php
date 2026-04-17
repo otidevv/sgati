@@ -52,9 +52,8 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        $personas = \App\Models\Persona::where(function ($q) use ($user) {
-            $q->whereDoesntHave('user')->orWhere('id', $user->persona_id);
-        })->orderBy('apellido_paterno')->get();
+        $user->load('persona');
+        $personas = collect();
         $areas = Area::orderBy('name')->get();
         $roles = Role::orderBy('label')->get();
 
@@ -85,6 +84,23 @@ class UserController extends Controller
 
         return redirect()->route('admin.users.index')
             ->with('success', 'Usuario actualizado correctamente.');
+    }
+
+    public function checkEmail(Request $request)
+    {
+        $email     = $request->query('email');
+        $excludeId = $request->query('exclude');
+
+        if (!$email) {
+            return response()->json(['available' => true]);
+        }
+
+        $query = User::where('email', $email);
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        return response()->json(['available' => !$query->exists()]);
     }
 
     public function destroy(User $user)

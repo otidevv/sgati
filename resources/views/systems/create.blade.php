@@ -18,7 +18,8 @@
         </div>
     </div>
 
-    <form action="{{ route('systems.store') }}" method="POST" class="space-y-5">
+    <form action="{{ route('systems.store') }}" method="POST" class="space-y-5"
+          x-data="{ submitting: false }" @submit="submitting = true">
         @csrf
 
         {{-- Información General --}}
@@ -34,7 +35,8 @@
                         </label>
                         <input type="text" id="name" name="name" value="{{ old('name') }}"
                                class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                               placeholder="Sistema de Gestión Académica" required>
+                               placeholder="Sistema de Gestión Académica"
+                               maxlength="100" required>
                         @error('name')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                     </div>
                     <div>
@@ -49,7 +51,8 @@
                     <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descripción</label>
                     <textarea id="description" name="description" rows="3"
                               class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                              placeholder="Breve descripción del propósito del sistema…">{{ old('description') }}</textarea>
+                              placeholder="Breve descripción del propósito del sistema…"
+                              maxlength="1000">{{ old('description') }}</textarea>
                     @error('description')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                 </div>
             </div>
@@ -134,9 +137,8 @@
                         input: '',
                         add() {
                             const val = this.input.trim();
-                            if (val && !this.tags.includes(val)) {
-                                this.tags.push(val);
-                            }
+                            if (!val || val.length > 50) return;
+                            if (!this.tags.includes(val)) this.tags.push(val);
                             this.input = '';
                         },
                         remove(i) { this.tags.splice(i, 1); }
@@ -145,6 +147,7 @@
                         <div class="flex gap-2">
                             <input type="text" x-model="input"
                                    @keydown.enter.prevent="add()"
+                                   maxlength="50"
                                    class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                    placeholder="Laravel, PHP, Vue.js…">
                             <button type="button" @click="add()"
@@ -170,7 +173,10 @@
                         <label for="repo_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL del Repositorio</label>
                         <input type="url" id="repo_url" name="repo_url" value="{{ old('repo_url') }}"
                                class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                               placeholder="https://github.com/org/repo">
+                               placeholder="https://github.com/org/repo"
+                               maxlength="255"
+                               onblur="validateRepoUrl(this)">
+                        <p id="repo_url-error" class="hidden mt-1 text-sm text-red-600 dark:text-red-400">Ingresa una URL válida (debe comenzar con http:// o https://).</p>
                         @error('repo_url')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                     </div>
                 </div>
@@ -178,7 +184,8 @@
                     <label for="observations" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observaciones</label>
                     <textarea id="observations" name="observations" rows="3"
                               class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                              placeholder="Notas adicionales sobre el sistema…">{{ old('observations') }}</textarea>
+                              placeholder="Notas adicionales sobre el sistema…"
+                              maxlength="2000">{{ old('observations') }}</textarea>
                     @error('observations')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                 </div>
             </div>
@@ -191,13 +198,30 @@
                 Cancelar
             </a>
             <button type="submit"
-                    class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    :disabled="submitting"
+                    class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
+                <svg x-show="!submitting" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
-                Registrar Sistema
+                <svg x-show="submitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+                <span x-text="submitting ? 'Registrando…' : 'Registrar Sistema'"></span>
             </button>
         </div>
     </form>
 </div>
+@push('scripts')
+<script>
+function validateRepoUrl(input) {
+    const val = input.value.trim();
+    const err = document.getElementById('repo_url-error');
+    if (!val) { err.classList.add('hidden'); return; }
+    const valid = /^https?:\/\/.+/.test(val);
+    err.classList.toggle('hidden', valid);
+    input.classList.toggle('border-red-400', !valid);
+}
+</script>
+@endpush
 @endsection

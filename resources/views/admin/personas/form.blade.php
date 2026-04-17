@@ -25,7 +25,8 @@
     </div>
 
     <form action="{{ isset($persona->id) ? route('admin.personas.update', $persona) : route('admin.personas.store') }}"
-          method="POST" class="space-y-4">
+          method="POST" class="space-y-4"
+          @submit.prevent="if(emailStatus === 'taken') return; submitting = true; $el.submit()">
         @csrf
         @if(isset($persona->id)) @method('PUT') @endif
 
@@ -53,8 +54,10 @@
                                    x-model="dni"
                                    @keydown.enter.prevent="buscar"
                                    @input="resetStatus"
+                                   @keypress="if(!/[0-9]/.test($event.key)) $event.preventDefault()"
                                    placeholder="Ej: 12345678"
                                    inputmode="numeric"
+                                   pattern="[0-9]{8}"
                                    class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm px-3 py-2 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                                    :class="status === 'found' ? 'border-emerald-400 dark:border-emerald-500 focus:ring-emerald-500' : status === 'error' ? 'border-red-400 dark:border-red-500 focus:ring-red-500' : ''"
                                    required>
@@ -107,6 +110,7 @@
                         <input type="date" id="fecha_nacimiento" name="fecha_nacimiento"
                                x-model="form.fecha_nacimiento"
                                value="{{ old('fecha_nacimiento', isset($persona->fecha_nacimiento) ? $persona->fecha_nacimiento->format('Y-m-d') : '') }}"
+                               min="1900-01-01"
                                max="{{ now()->subDay()->format('Y-m-d') }}"
                                class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
                     </div>
@@ -133,6 +137,7 @@
                            x-model="form.nombres"
                            value="{{ old('nombres', $persona->nombres ?? '') }}"
                            placeholder="Ej: Juan Carlos"
+                           maxlength="100"
                            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm px-3 py-2 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                            required>
                     @error('nombres')<p class="mt-1.5 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
@@ -146,6 +151,7 @@
                                x-model="form.apellido_paterno"
                                value="{{ old('apellido_paterno', $persona->apellido_paterno ?? '') }}"
                                placeholder="Ej: García"
+                               maxlength="80"
                                class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm px-3 py-2 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                                required>
                         @error('apellido_paterno')<p class="mt-1.5 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
@@ -158,6 +164,7 @@
                                x-model="form.apellido_materno"
                                value="{{ old('apellido_materno', $persona->apellido_materno ?? '') }}"
                                placeholder="Ej: López"
+                               maxlength="80"
                                class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm px-3 py-2 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                                required>
                         @error('apellido_materno')<p class="mt-1.5 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
@@ -195,14 +202,35 @@
                                value="{{ old('telefono', $persona->telefono ?? '') }}"
                                placeholder="Ej: 987654321"
                                inputmode="numeric"
+                               maxlength="9"
+                               pattern="[0-9]{7,9}"
+                               onkeypress="if(!/[0-9]/.test(event.key)) event.preventDefault()"
                                class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm px-3 py-2 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
                     </div>
                     <div>
                         <label for="email_personal" class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Email Personal</label>
-                        <input type="email" id="email_personal" name="email_personal"
-                               value="{{ old('email_personal', $persona->email_personal ?? '') }}"
-                               placeholder="Ej: juan@gmail.com"
-                               class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm px-3 py-2 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+                        <div class="relative">
+                            <input type="email" id="email_personal" name="email_personal"
+                                   value="{{ old('email_personal', $persona->email_personal ?? '') }}"
+                                   placeholder="Ej: juan@gmail.com"
+                                   x-on:blur="checkEmail($event.target.value)"
+                                   :class="emailStatus === 'taken' ? 'border-red-400 focus:ring-red-500' : emailStatus === 'ok' ? 'border-emerald-400 focus:ring-emerald-500' : ''"
+                                   class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm px-3 py-2 pr-8 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:border-transparent transition-colors">
+                            <div class="absolute inset-y-0 right-2 flex items-center pointer-events-none">
+                                <svg x-show="emailStatus === 'ok'" class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                <svg x-show="emailStatus === 'taken'" class="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                                <svg x-show="emailStatus === 'checking'" class="w-4 h-4 text-gray-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <p x-show="emailStatus === 'taken'" class="mt-1.5 text-xs text-red-600 dark:text-red-400">Este email ya está registrado en otra persona.</p>
+                        <p x-show="emailStatus === 'ok'" class="mt-1.5 text-xs text-emerald-600 dark:text-emerald-400">Email disponible.</p>
                         @error('email_personal')<p class="mt-1.5 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                     </div>
                 </div>
@@ -216,11 +244,16 @@
                 Cancelar
             </a>
             <button type="submit"
-                    class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-gray-900">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    :disabled="submitting"
+                    class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-gray-900 disabled:opacity-60 disabled:cursor-not-allowed">
+                <svg x-show="!submitting" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
-                {{ isset($persona->id) ? 'Actualizar' : 'Registrar' }}
+                <svg x-show="submitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+                <span x-text="submitting ? 'Guardando…' : '{{ isset($persona->id) ? 'Actualizar' : 'Registrar' }}'"></span>
             </button>
         </div>
     </form>
@@ -232,8 +265,12 @@ function dniForm(lookupUrl) {
     return {
         dni: '{{ old('dni', $persona->dni ?? '') }}',
         loading: false,
+        submitting: false,
         status: null,   // null | 'found' | 'error'
         errorMsg: '',
+        emailStatus: null,  // null | 'checking' | 'ok' | 'taken'
+        emailCheckUrl: "{{ route('admin.personas.check-email') }}",
+        personaId: {{ $persona->id ?? 'null' }},
         form: {
             nombres:          '{{ old('nombres', $persona->nombres ?? '') }}',
             apellido_paterno: '{{ old('apellido_paterno', $persona->apellido_paterno ?? '') }}',
@@ -253,6 +290,21 @@ function dniForm(lookupUrl) {
         resetStatus() {
             this.status = null;
             this.errorMsg = '';
+        },
+
+        async checkEmail(value) {
+            const email = value.trim();
+            if (!email) { this.emailStatus = null; return; }
+            this.emailStatus = 'checking';
+            try {
+                const url = this.emailCheckUrl + '?email=' + encodeURIComponent(email)
+                    + (this.personaId ? '&exclude=' + this.personaId : '');
+                const res  = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                const data = await res.json();
+                this.emailStatus = data.available ? 'ok' : 'taken';
+            } catch {
+                this.emailStatus = null;
+            }
         },
 
         async buscar() {

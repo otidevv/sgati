@@ -35,7 +35,8 @@
 
     {{-- Formulario --}}
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        <form action="{{ route('systems.databases.store', $system) }}" method="POST">
+        <form action="{{ route('systems.databases.store', $system) }}" method="POST"
+              x-data="{ submitting: false }" @submit="submitting = true">
             @csrf
 
             {{-- Sección: Identificación --}}
@@ -50,7 +51,7 @@
                         Nombre de la BD <span class="text-red-500">*</span>
                     </label>
                     <input type="text" id="db_name" name="db_name" value="{{ old('db_name') }}" required
-                           placeholder="db_sgati_prod"
+                           placeholder="db_sgati_prod" maxlength="100"
                            class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
                                   dark:text-white font-mono shadow-sm
                                   focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
@@ -80,7 +81,7 @@
                 <div>
                     <label for="schema_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Schema</label>
                     <input type="text" id="schema_name" name="schema_name" value="{{ old('schema_name') }}"
-                           placeholder="public"
+                           placeholder="public" maxlength="100"
                            class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
                                   dark:text-white font-mono shadow-sm
                                   focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
@@ -160,7 +161,7 @@
                 <div>
                     <label for="db_user" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Usuario BD</label>
                     <input type="text" id="db_user" name="db_user" value="{{ old('db_user') }}"
-                           placeholder="usuario_bd"
+                           placeholder="usuario_bd" maxlength="100"
                            class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
                                   dark:text-white font-mono shadow-sm
                                   focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
@@ -178,7 +179,7 @@
             <div class="px-6 pb-6 border-t border-gray-100 dark:border-gray-700 pt-5">
                 <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Notas</label>
                 <textarea id="notes" name="notes" rows="2"
-                          placeholder="Observaciones adicionales..."
+                          placeholder="Observaciones adicionales..." maxlength="2000"
                           class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
                                  dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm resize-none">{{ old('notes') }}</textarea>
             </div>
@@ -191,12 +192,18 @@
                     Cancelar
                 </a>
                 <button type="submit"
+                        :disabled="submitting"
                         class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white
-                               bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                               bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm
+                               disabled:opacity-60 disabled:cursor-not-allowed">
+                    <svg x-show="!submitting" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
-                    Registrar BD
+                    <svg x-show="submitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                    </svg>
+                    <span x-text="submitting ? 'Registrando…' : 'Registrar BD'"></span>
                 </button>
             </div>
         </form>

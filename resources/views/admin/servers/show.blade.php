@@ -784,7 +784,8 @@
 
         <form id="resp-form"
               action="{{ route('admin.servers.responsibles.store', $server) }}"
-              method="POST">
+              method="POST"
+              onsubmit="return respFormSubmit(this)">
             @csrf
             <span id="resp-method"></span>
 
@@ -1183,7 +1184,8 @@
         </div>
         <form id="cnt-form"
               action="{{ route('admin.servers.containers.store', $server) }}"
-              method="POST">
+              method="POST"
+              onsubmit="return cntFormSubmit(this)">
             @csrf
             <span id="cnt-method"></span>
             <div class="p-6 space-y-4">
@@ -1301,7 +1303,8 @@
         </div>
         <form id="db-form"
               action="{{ route('admin.servers.database-servers.store', $server) }}"
-              method="POST">
+              method="POST"
+              onsubmit="return validateDbForm(event)">
             @csrf
             <span id="db-method"></span>
             <div class="p-6 space-y-4">
@@ -1310,6 +1313,7 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nombre / Alias</label>
                         <input type="text" name="name" id="db-name"
                                placeholder="PostgreSQL Producción"
+                               maxlength="100"
                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
                                       dark:text-white focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                     </div>
@@ -1318,6 +1322,7 @@
                             Motor <span class="text-red-500">*</span>
                         </label>
                         <select name="engine" id="db-engine" required
+                                onchange="dbEngineChanged(this.value)"
                                 class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
                                        dark:text-white focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                             @foreach(['postgresql'=>'PostgreSQL','mysql'=>'MySQL','mariadb'=>'MariaDB','oracle'=>'Oracle','sqlserver'=>'SQL Server','sqlite'=>'SQLite','mongodb'=>'MongoDB','other'=>'Otro'] as $v => $l)
@@ -1329,27 +1334,37 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Versión</label>
                         <input type="text" name="version" id="db-version"
                                placeholder="16.2"
+                               maxlength="50"
                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
-                                      dark:text-white font-mono focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                      dark:text-white font-mono focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               onblur="validateDbVersion(this)">
+                        <p id="db-version-error" class="hidden mt-1 text-xs text-red-500"></p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Host</label>
                         <input type="text" name="host" id="db-host"
                                placeholder="192.168.254.5 o localhost"
+                               maxlength="150"
                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
-                                      dark:text-white font-mono focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                      dark:text-white font-mono focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               onblur="validateDbHost(this)">
+                        <p id="db-host-error" class="hidden mt-1 text-xs text-red-500"></p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Puerto</label>
                         <input type="number" name="port" id="db-port" min="1" max="65535"
                                placeholder="5432"
                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
-                                      dark:text-white font-mono focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                      dark:text-white font-mono focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               onblur="validateDbPort(this)">
+                        <p id="db-port-hint" class="mt-1 text-xs text-gray-400 dark:text-gray-500"></p>
+                        <p id="db-port-error" class="hidden mt-1 text-xs text-red-500"></p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Usuario Admin</label>
                         <input type="text" name="admin_user" id="db-admin-user"
                                placeholder="postgres" autocomplete="off"
+                               maxlength="100"
                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
                                       dark:text-white font-mono focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                     </div>
@@ -1393,6 +1408,29 @@
 
 @push('scripts')
 <script>
+// ── Confirmación de eliminación ───────────────────────────────────────
+function dtConfirmDelete(formId, entityName) {
+    const t = document.documentElement.classList.contains('dark')
+        ? { background: '#1e293b', color: '#f1f5f9' }
+        : { background: '#ffffff', color: '#111827' };
+    Swal.fire({
+        title: 'Confirmar eliminación',
+        text: '¿Eliminar "' + entityName + '"? Esta acción no se puede deshacer.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        focusCancel: true,
+        reverseButtons: true,
+        background: t.background,
+        color: t.color,
+    }).then(r => {
+        if (r.isConfirmed) document.getElementById(formId).submit();
+    });
+}
+
 // ── Guacamole ─────────────────────────────────────────────────────────
 async function guacConnect(btn, url) {
     btn.disabled = true;
@@ -1583,6 +1621,8 @@ function editResponsible(id, data) {
     document.getElementById('resp-assigned_at').value    = data.assigned_at    ?? '';
     document.getElementById('resp-is_active').checked    = data.is_active      == 1;
 
+    resetRespModal();
+    document.getElementById('resp-submit-label').textContent = 'Guardar';
     openModal('modal-responsible');
 }
 
@@ -1590,14 +1630,29 @@ document.getElementById('modal-responsible').addEventListener('click', function(
     if (e.target === this) closeModal('modal-responsible');
 });
 
+function respFormSubmit(form) {
+    const btn = form.querySelector('button[type="submit"]');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg><span>Guardando…</span>';
+    }
+    return true;
+}
+
+function resetRespModal() {
+    const btn = document.querySelector('#resp-form button[type="submit"]');
+    if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span id="resp-submit-label">Asignar</span>'; }
+}
+
 // Reset modal al abrir para agregar
 document.querySelector('[onclick="openModal(\'modal-responsible\')"]')?.addEventListener('click', function() {
     document.getElementById('resp-modal-title').textContent  = 'Asignar Responsable';
-    document.getElementById('resp-submit-label').textContent = 'Asignar';
     document.getElementById('resp-form').action = respStoreUrl;
     document.getElementById('resp-method').innerHTML = '';
     document.getElementById('resp-form').reset();
     resetPersonaSearch('resp');
+    resetRespModal();
+    document.getElementById('resp-submit-label').textContent = 'Asignar';
     document.getElementById('resp-assigned_at').value = new Date().toISOString().slice(0, 10);
     document.getElementById('resp-is_active').checked = true;
 });
@@ -1654,6 +1709,20 @@ function updateFileName(name) {
 const cntStoreUrl  = "{{ route('admin.servers.containers.store', $server) }}";
 const cntUpdateBase = "{{ url('admin/servers/' . $server->id . '/containers') }}/";
 
+function cntFormSubmit(form) {
+    const btn = form.querySelector('button[type="submit"]');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<svg class="w-4 h-4 animate-spin inline-block mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>Guardando…';
+    }
+    return true;
+}
+
+function resetCntModal() {
+    const btn = document.querySelector('#cnt-form button[type="submit"]');
+    if (btn) { btn.disabled = false; btn.textContent = 'Guardar'; }
+}
+
 function editContainer(id, data) {
     document.getElementById('cnt-modal-title').textContent = 'Editar Contenedor';
     document.getElementById('cnt-form').action = cntUpdateBase + id;
@@ -1666,6 +1735,7 @@ function editContainer(id, data) {
     document.getElementById('cnt-int-port').value  = data.internal_port ?? '';
     document.getElementById('cnt-volumes').value   = (data.volumes ?? []).join('\n');
     document.getElementById('cnt-notes').value     = data.notes      ?? '';
+    resetCntModal();
     openModal('modal-container');
 }
 
@@ -1673,12 +1743,127 @@ document.getElementById('modal-container').querySelector('button[onclick="closeM
     ?.closest('.relative')
     ?.querySelector('.absolute')
     ?.addEventListener('click', () => {
-        // reset form on close
         document.getElementById('cnt-modal-title').textContent = 'Agregar Contenedor';
         document.getElementById('cnt-form').action = cntStoreUrl;
         document.getElementById('cnt-method').innerHTML = '';
         document.getElementById('cnt-form').reset();
+        resetCntModal();
     });
+
+// ── Motores de BD — validaciones ─────────────────────────────────────
+const DB_DEFAULT_PORTS = {
+    postgresql: 5432,
+    mysql:      3306,
+    mariadb:    3306,
+    oracle:     1521,
+    sqlserver:  1433,
+    sqlite:     null,
+    mongodb:    27017,
+    other:      null,
+};
+const DB_DEFAULT_USERS = {
+    postgresql: 'postgres',
+    mysql:      'root',
+    mariadb:    'root',
+    oracle:     'system',
+    sqlserver:  'sa',
+    sqlite:     null,
+    mongodb:    null,
+    other:      null,
+};
+
+function dbEngineChanged(engine) {
+    const portInput  = document.getElementById('db-port');
+    const portHint   = document.getElementById('db-port-hint');
+    const userInput  = document.getElementById('db-admin-user');
+    const defaultPort = DB_DEFAULT_PORTS[engine];
+    const defaultUser = DB_DEFAULT_USERS[engine];
+
+    // Solo auto-completar si el campo está vacío
+    if (!portInput.value && defaultPort) {
+        portInput.value = defaultPort;
+    }
+    portHint.textContent = defaultPort
+        ? 'Puerto por defecto: ' + defaultPort
+        : 'Este motor no usa puerto TCP.';
+
+    if (!userInput.value && defaultUser) {
+        userInput.value = defaultUser;
+    }
+    clearDbFieldError('db-port');
+}
+
+function validateDbHost(input) {
+    const val = input.value.trim();
+    if (!val) return true; // opcional
+    // IPv4
+    const ipv4 = /^(\d{1,3}\.){3}\d{1,3}$/;
+    // IPv6 simplificado
+    const ipv6 = /^[0-9a-fA-F:]+$/;
+    // hostname / dominio
+    const hostname = /^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$/;
+    const valid = val === 'localhost' || ipv4.test(val) || ipv6.test(val) || hostname.test(val);
+    setDbFieldError('db-host', input, valid ? null : 'Ingresa una IP válida (ej. 192.168.1.1) o un hostname (ej. db.unamad.edu.pe).');
+    return valid;
+}
+
+function validateDbVersion(input) {
+    const val = input.value.trim();
+    if (!val) return true; // opcional
+    const valid = /^\d+(\.\d+){0,3}([a-zA-Z0-9\-_\.]*)?$/.test(val);
+    setDbFieldError('db-version', input, valid ? null : 'Formato inválido. Usa p.ej. 16, 16.2 o 8.0.32.');
+    return valid;
+}
+
+function validateDbPort(input) {
+    const val = parseInt(input.value, 10);
+    if (!input.value) return true; // opcional
+    const valid = !isNaN(val) && val >= 1 && val <= 65535;
+    setDbFieldError('db-port', input, valid ? null : 'El puerto debe estar entre 1 y 65535.');
+    return valid;
+}
+
+function setDbFieldError(errorId, input, message) {
+    const el = document.getElementById(errorId + '-error');
+    if (!el) return;
+    if (message) {
+        el.textContent = message;
+        el.classList.remove('hidden');
+        input.classList.add('border-red-400');
+        input.classList.remove('border-gray-300', 'dark:border-gray-600');
+    } else {
+        el.classList.add('hidden');
+        input.classList.remove('border-red-400');
+        input.classList.add('border-gray-300', 'dark:border-gray-600');
+    }
+}
+
+function clearDbFieldError(field) {
+    const input = document.getElementById(field);
+    const el    = document.getElementById(field + '-error');
+    if (input) { input.classList.remove('border-red-400'); input.classList.add('border-gray-300', 'dark:border-gray-600'); }
+    if (el)    { el.classList.add('hidden'); }
+}
+
+function validateDbForm(e) {
+    const hostOk    = validateDbHost(document.getElementById('db-host'));
+    const versionOk = validateDbVersion(document.getElementById('db-version'));
+    const portOk    = validateDbPort(document.getElementById('db-port'));
+    if (!hostOk || !versionOk || !portOk) {
+        e.preventDefault();
+        return false;
+    }
+    // Protección contra doble clic
+    const btn = e.target.querySelector('button[type="submit"]');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<svg class="w-4 h-4 animate-spin inline-block mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>Guardando…';
+    }
+    return true;
+}
+
+// Inicializar hint al cargar (motor por defecto = postgresql)
+document.addEventListener('DOMContentLoaded', () => dbEngineChanged('postgresql'));
 
 // ── Motores de BD ────────────────────────────────────────────────────
 const dbStoreUrl   = "{{ route('admin.servers.database-servers.store', $server) }}";
@@ -1696,6 +1881,12 @@ function editDbServer(id, data) {
     document.getElementById('db-admin-user').value = data.admin_user  ?? '';
     document.getElementById('db-admin-pass').placeholder = '••••••••  (dejar vacío para no cambiar)';
     document.getElementById('db-notes').value      = data.notes       ?? '';
+    // Actualizar hint de puerto y limpiar errores previos
+    const defaultPort = DB_DEFAULT_PORTS[data.engine] ?? null;
+    document.getElementById('db-port-hint').textContent = defaultPort
+        ? 'Puerto por defecto: ' + defaultPort
+        : 'Este motor no usa puerto TCP.';
+    ['db-host', 'db-version', 'db-port'].forEach(clearDbFieldError);
     openModal('modal-dbserver');
 }
 
@@ -1706,6 +1897,11 @@ function resetDbModal() {
     document.getElementById('db-method').innerHTML = '';
     document.getElementById('db-admin-pass').placeholder = '••••••••';
     document.getElementById('db-form').reset();
+    // Restaurar botón submit por si quedó bloqueado
+    const btn = document.querySelector('#db-form button[type="submit"]');
+    if (btn) { btn.disabled = false; btn.textContent = 'Guardar'; }
+    ['db-host', 'db-version', 'db-port'].forEach(clearDbFieldError);
+    dbEngineChanged('postgresql');
 }
 </script>
 @endpush

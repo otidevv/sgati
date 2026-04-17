@@ -18,7 +18,8 @@
         </div>
     </div>
 
-    <form action="{{ route('systems.infrastructure.update', $system) }}" method="POST" class="space-y-5">
+    <form action="{{ route('systems.infrastructure.update', $system) }}" method="POST" class="space-y-5"
+          x-data="{ submitting: false }" @submit="submitting = true">
         @csrf @method('PUT')
 
         {{-- Servidor --}}
@@ -85,7 +86,10 @@
                                 <input type="text" name="public_ip"
                                        value="{{ old('public_ip', $infra->public_ip) }}"
                                        class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
-                                       placeholder="192.168.1.10">
+                                       placeholder="192.168.1.10"
+                                       maxlength="45"
+                                       onblur="validatePublicIp(this)">
+                                <p id="public_ip-error" class="hidden mt-1 text-xs text-red-600 dark:text-red-400">Ingresa una dirección IP válida (IPv4 o IPv6).</p>
                                 <p class="mt-1 text-xs text-amber-600 dark:text-amber-400">El servidor no tiene IPs registradas.</p>
                             </div>
                         </template>
@@ -127,7 +131,10 @@
                         <label for="system_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL / Dirección del Sistema</label>
                         <input type="text" id="system_url" name="system_url" value="{{ old('system_url', $infra->system_url) }}"
                                class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                               placeholder="https://sistema.unamad.edu.pe  o  192.168.1.10:8585">
+                               placeholder="https://sistema.unamad.edu.pe  o  192.168.1.10:8585"
+                               maxlength="255"
+                               onblur="validateSystemUrl(this)">
+                        <p id="system_url-error" class="hidden mt-1 text-sm text-red-600 dark:text-red-400">URL inválida. Acepta: dominio, IP o IP:puerto (ej. <code class="font-mono">https://app.unamad.edu.pe</code> o <code class="font-mono">192.168.1.10:8080</code>).</p>
                         <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Acepta dominio, IP o IP:puerto (con o sin <code class="font-mono">http://</code>).</p>
                         @error('system_url')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                     </div>
@@ -135,7 +142,8 @@
                         <label for="web_server" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Servidor Web</label>
                         <input type="text" id="web_server" name="web_server" value="{{ old('web_server', $infra->web_server) }}"
                                class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                               placeholder="Nginx / Apache">
+                               placeholder="Nginx / Apache"
+                               maxlength="50">
                         @error('web_server')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                     </div>
                     <div>
@@ -236,6 +244,7 @@
                         </label>
                         <input type="date" id="ssl_custom_expiry" name="ssl_custom_expiry"
                                value="{{ old('ssl_custom_expiry', $infra->ssl_custom_expiry?->format('Y-m-d') ?? $infra->ssl_expiry?->format('Y-m-d')) }}"
+                               min="{{ now()->format('Y-m-d') }}"
                                class="block w-full sm:w-48 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
                                       dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                         @error('ssl_custom_expiry')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
@@ -253,7 +262,8 @@
             <div class="p-6">
                 <textarea id="notes" name="notes" rows="3"
                           class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          placeholder="Observaciones sobre la infraestructura…">{{ old('notes', $infra->notes) }}</textarea>
+                          placeholder="Observaciones sobre la infraestructura…"
+                          maxlength="2000">{{ old('notes', $infra->notes) }}</textarea>
             </div>
         </div>
 
@@ -264,13 +274,41 @@
                 Cancelar
             </a>
             <button type="submit"
-                    class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    :disabled="submitting"
+                    class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
+                <svg x-show="!submitting" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
-                Guardar Infraestructura
+                <svg x-show="submitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+                <span x-text="submitting ? 'Guardando…' : 'Guardar Infraestructura'"></span>
             </button>
         </div>
     </form>
 </div>
+@push('scripts')
+<script>
+function validatePublicIp(input) {
+    const val = input.value.trim();
+    const err = document.getElementById('public_ip-error');
+    if (!val) { err.classList.add('hidden'); input.classList.remove('border-red-400'); return; }
+    const ipv4 = /^(\d{1,3}\.){3}\d{1,3}$/;
+    const ipv6 = /^[0-9a-fA-F:]{2,39}$/;
+    const valid = ipv4.test(val) || ipv6.test(val);
+    err.classList.toggle('hidden', valid);
+    input.classList.toggle('border-red-400', !valid);
+}
+
+function validateSystemUrl(input) {
+    const val = input.value.trim();
+    const err = document.getElementById('system_url-error');
+    if (!val) { err.classList.add('hidden'); input.classList.remove('border-red-400'); return; }
+    const valid = /^(https?:\/\/)?[\w\-\.]+(\:\d+)?(\/\S*)?$/i.test(val);
+    err.classList.toggle('hidden', valid);
+    input.classList.toggle('border-red-400', !valid);
+}
+</script>
+@endpush
 @endsection

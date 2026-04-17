@@ -159,8 +159,11 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('personas/search',            [PersonaController::class, 'search'])->name('personas.search');
         Route::get('personas/dni-lookup/{dni}', [PersonaController::class, 'dniLookup'])->name('personas.dni-lookup');
+        Route::get('personas/check-email',       [PersonaController::class, 'checkEmail'])->name('personas.check-email');
         Route::resource('personas', PersonaController::class);
+        Route::get('users/check-email', [UserController::class, 'checkEmail'])->name('users.check-email');
         Route::resource('users', UserController::class);
+        Route::get('areas/check-name', [AreaController::class, 'checkName'])->name('areas.check-name');
         Route::resource('areas', AreaController::class);
         Route::get('roles',                              [RoleController::class, 'index'])->name('roles.index');
         Route::put('roles/{role}/permissions',           [RoleController::class, 'updatePermissions'])->name('roles.permissions');

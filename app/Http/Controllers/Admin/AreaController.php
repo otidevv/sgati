@@ -63,6 +63,23 @@ class AreaController extends Controller
             ->with('success', 'Área actualizada correctamente.');
     }
 
+    public function checkName(Request $request)
+    {
+        $name      = $request->query('name');
+        $excludeId = $request->query('exclude');
+
+        if (!$name) {
+            return response()->json(['available' => true]);
+        }
+
+        $query = Area::whereRaw('LOWER(name) = ?', [mb_strtolower($name)]);
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        return response()->json(['available' => !$query->exists()]);
+    }
+
     public function destroy(Area $area)
     {
         $this->authorize('areas.delete');
