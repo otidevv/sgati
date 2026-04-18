@@ -1,4 +1,4 @@
-@php $infra = $system->infrastructure?->load('serverIp'); @endphp
+@php $infra = $system->infrastructure?->load('serverIp', 'exposedIps'); @endphp
 
 <div class="space-y-6">
     {{-- Header --}}
@@ -154,7 +154,11 @@
         {{-- Web, SSL & Environment --}}
         <div class="space-y-6">
             {{-- Web Access --}}
-            @if($infra->system_url || $infra->public_ip || $infra->port)
+            @php
+                $exposedIps = $infra->exposedIps ?? collect();
+                $hasWebInfo = $infra->system_url || $infra->public_ip || $infra->port || $exposedIps->count();
+            @endphp
+            @if($hasWebInfo)
             <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
                 <div class="px-5 py-4 bg-gradient-to-r from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-800 border-b border-gray-200 dark:border-gray-700">
                     <div class="flex items-center gap-2">
@@ -164,7 +168,8 @@
                         <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Acceso Web</h4>
                     </div>
                 </div>
-                <div class="p-5 space-y-3">
+                <div class="p-5 space-y-4">
+
                     {{-- URL --}}
                     @if($infra->system_url)
                     @php
@@ -178,9 +183,9 @@
                             </svg>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">URL / Dirección</p>
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">URL / Dirección</p>
                             <a href="{{ $hrefUrl }}" target="_blank"
-                               class="inline-flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:underline break-all mt-0.5">
+                               class="inline-flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:underline break-all">
                                 {{ $displayUrl }}
                                 <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
@@ -190,28 +195,63 @@
                     </div>
                     @endif
 
-                    {{-- IP expuesta --}}
-                    @php $effectiveIp = $infra->effectiveIp(); @endphp
-                    @if($effectiveIp)
+                    {{-- IPs Públicas de Exposición --}}
+                    @if($exposedIps->count())
                     <div class="flex items-start gap-3">
                         <div class="flex-shrink-0 mt-0.5">
-                            <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg class="w-4 h-4 text-emerald-500 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/>
                             </svg>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">IP expuesta</p>
-                            <span class="inline-flex items-center mt-0.5 px-2 py-0.5 rounded text-xs font-mono bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                                {{ $effectiveIp }}
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
+                                {{ $exposedIps->count() === 1 ? 'IP Pública' : 'IPs Públicas' }}
+                            </p>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach($exposedIps as $pip)
+                                @php
+                                    $ipDisplay = $pip->ip_address . ($pip->port ? ':' . $pip->port : '') . ($infra->port && !$pip->port ? ':' . $infra->port : '');
+                                    $href = 'http://' . $pip->ip_address . ($pip->port ? ':' . $pip->port : ($infra->port ? ':' . $infra->port : ''));
+                                @endphp
+                                <a href="{{ $href }}" target="_blank"
+                                   class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono font-medium
+                                          bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300
+                                          border border-emerald-200 dark:border-emerald-700
+                                          hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                    {{ $ipDisplay }}
+                                    @if($pip->is_primary)
+                                    <span class="text-[10px] font-semibold text-emerald-500 dark:text-emerald-400">· principal</span>
+                                    @endif
+                                    <svg class="w-3 h-3 opacity-60 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                    </svg>
+                                </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                    @elseif($infra->public_ip)
+                    {{-- Fallback: IP pública manual (sin exposedIps) --}}
+                    <div class="flex items-start gap-3">
+                        <div class="flex-shrink-0 mt-0.5">
+                            <svg class="w-4 h-4 text-emerald-500 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">IP Pública</p>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono font-medium
+                                         bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300
+                                         border border-emerald-200 dark:border-emerald-700">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                {{ $infra->public_ip }}{{ $infra->port ? ':' . $infra->port : '' }}
                             </span>
-                            @if($infra->serverIp?->is_primary)
-                            <span class="ml-1 text-xs text-gray-400 dark:text-gray-500">(principal del servidor)</span>
-                            @endif
                         </div>
                     </div>
                     @endif
 
-                    {{-- Puerto --}}
+                    {{-- Puerto de la aplicación --}}
                     @if($infra->port)
                     <div class="flex items-start gap-3">
                         <div class="flex-shrink-0 mt-0.5">
@@ -220,20 +260,14 @@
                             </svg>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Puerto</p>
-                            <div class="flex items-center gap-2 mt-0.5">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-semibold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300">
-                                    :{{ $infra->port }}
-                                </span>
-                                @if($infra->public_ip)
-                                <span class="text-xs text-gray-400 dark:text-gray-500 font-mono">
-                                    → {{ $infra->public_ip }}:{{ $infra->port }}
-                                </span>
-                                @endif
-                            </div>
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Puerto de la Aplicación</p>
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-semibold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700">
+                                :{{ $infra->port }}
+                            </span>
                         </div>
                     </div>
                     @endif
+
                 </div>
             </div>
             @endif

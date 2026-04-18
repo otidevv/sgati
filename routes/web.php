@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\AreaController;
 use App\Http\Controllers\Admin\PersonaController;
 use App\Http\Controllers\Admin\ServerController;
 use App\Http\Controllers\Admin\ServerContainerController;
+use App\Http\Controllers\Admin\ServerIpController;
 use App\Http\Controllers\Admin\ServerResponsibleController;
 use App\Http\Controllers\Admin\ServerResponsibleDocumentController;
 use App\Http\Controllers\Admin\DatabaseServerController;
@@ -203,6 +204,9 @@ Route::middleware(['auth'])->group(function () {
             Route::get('responsibles/{responsible}/documents/{document}/download',               [ServerResponsibleDocumentController::class, 'download'])->name('responsibles.documents.download');
             Route::get('responsibles/{responsible}/documents/{document}/preview',               [ServerResponsibleDocumentController::class, 'preview'])->name('responsibles.documents.preview');
             Route::delete('responsibles/{responsible}/documents/{document}',                     [ServerResponsibleDocumentController::class, 'destroy'])->name('responsibles.documents.destroy');
+
+            Route::post('ips',                           [ServerIpController::class, 'store'])->name('ips.store');
+            Route::delete('ips/{ip}',                    [ServerIpController::class, 'destroy'])->name('ips.destroy');
 
             Route::post('containers',                    [ServerContainerController::class, 'store'])->name('containers.store');
             Route::put('containers/{container}',         [ServerContainerController::class, 'update'])->name('containers.update');

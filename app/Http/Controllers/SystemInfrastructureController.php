@@ -20,6 +20,7 @@ class SystemInfrastructureController extends Controller
             $s->id => $s->ips->map(fn($ip) => [
                 'id'         => $ip->id,
                 'ip_address' => $ip->ip_address,
+                'port'       => $ip->port,
                 'type'       => $ip->type,
                 'interface'  => $ip->interface,
                 'is_primary' => (bool) $ip->is_primary,
