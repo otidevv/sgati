@@ -8,20 +8,21 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('server_ips', function (Blueprint $table) {
-            $table->dropUnique(['server_id', 'ip_address']);
-            $table->unsignedSmallInteger('port')->nullable()->after('ip_address');
-            // La unicidad ahora es (server_id, ip_address, port): misma IP con distinto puerto es válida
-            $table->unique(['server_id', 'ip_address', 'port']);
+        Schema::create('server_ip_ports', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('server_ip_id')->constrained('server_ips')->cascadeOnDelete();
+            $table->unsignedSmallInteger('port');
+            $table->enum('protocol', ['tcp', 'udp', 'both'])->default('tcp');
+            $table->string('description', 200)->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+
+            $table->unique(['server_ip_id', 'port']);
         });
     }
 
     public function down(): void
     {
-        Schema::table('server_ips', function (Blueprint $table) {
-            $table->dropUnique(['server_id', 'ip_address', 'port']);
-            $table->dropColumn('port');
-            $table->unique(['server_id', 'ip_address']);
-        });
+        Schema::dropIfExists('server_ip_ports');
     }
 };

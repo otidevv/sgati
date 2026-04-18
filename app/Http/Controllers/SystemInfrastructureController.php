@@ -12,18 +12,23 @@ class SystemInfrastructureController extends Controller
     public function edit(System $system)
     {
         $infra        = $system->infrastructure ?? $system->infrastructure()->create([]);
-        $servers      = Server::with('ips')->orderBy('name')->get(['id', 'name', 'operating_system', 'function']);
+        $servers      = Server::with('ips.ports')->orderBy('name')->get(['id', 'name', 'operating_system', 'function']);
         $sslCerts     = SslCertificate::orderBy('name')->get(['id', 'name', 'common_name', 'valid_until']);
 
-        // Mapa server_id → lista de IPs para el select del formulario
+        // Mapa server_id → lista de IPs con sus puertos para el formulario
         $serverIpsMap = $servers->mapWithKeys(fn($s) => [
             $s->id => $s->ips->map(fn($ip) => [
                 'id'         => $ip->id,
                 'ip_address' => $ip->ip_address,
-                'port'       => $ip->port,
                 'type'       => $ip->type,
                 'interface'  => $ip->interface,
                 'is_primary' => (bool) $ip->is_primary,
+                'ports'      => $ip->ports->map(fn($p) => [
+                    'id'          => $p->id,
+                    'port'        => $p->port,
+                    'protocol'    => $p->protocol,
+                    'description' => $p->description,
+                ])->values(),
             ])->values(),
         ]);
 

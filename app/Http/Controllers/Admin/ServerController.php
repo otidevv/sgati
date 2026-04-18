@@ -58,7 +58,6 @@ class ServerController extends Controller
             if (empty($ip['ip_address'])) continue;
             $server->ips()->create([
                 'ip_address' => $ip['ip_address'],
-                'port'       => isset($ip['port']) && $ip['port'] !== '' ? (int) $ip['port'] : null,
                 'type'       => $ip['type'],
                 'interface'  => $ip['interface'] ?? null,
                 'is_primary' => isset($ip['is_primary']) || $i === 0,
@@ -74,7 +73,7 @@ class ServerController extends Controller
         $this->authorize('servers.view');
 
         $server->load([
-            'ips',
+            'ips.ports',
             'activeContainers.system',
             'databaseServers.databases.system',
             'deployments.system',
@@ -124,7 +123,6 @@ class ServerController extends Controller
             if (empty($ip['ip_address'])) continue;
             $server->ips()->create([
                 'ip_address' => $ip['ip_address'],
-                'port'       => isset($ip['port']) && $ip['port'] !== '' ? (int) $ip['port'] : null,
                 'type'       => $ip['type'],
                 'interface'  => $ip['interface'] ?? null,
                 'is_primary' => isset($ip['is_primary']) || $i === 0,

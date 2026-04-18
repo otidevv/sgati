@@ -9,7 +9,7 @@ class ServerIp extends Model
     protected $table = 'server_ips';
 
     protected $fillable = [
-        'server_id', 'ip_address', 'port', 'type', 'interface', 'is_primary', 'notes',
+        'server_id', 'ip_address', 'type', 'interface', 'is_primary', 'notes',
     ];
 
     protected function casts(): array
@@ -22,6 +22,11 @@ class ServerIp extends Model
     public function server()
     {
         return $this->belongsTo(Server::class);
+    }
+
+    public function ports()
+    {
+        return $this->hasMany(ServerIpPort::class)->orderBy('port');
     }
 
     // ── Scopes ────────────────────────────────────────────────────────

@@ -207,6 +207,8 @@ Route::middleware(['auth'])->group(function () {
 
             Route::post('ips',                           [ServerIpController::class, 'store'])->name('ips.store');
             Route::delete('ips/{ip}',                    [ServerIpController::class, 'destroy'])->name('ips.destroy');
+            Route::post('ips/{ip}/ports',                [ServerIpController::class, 'storePort'])->name('ips.ports.store');
+            Route::delete('ips/{ip}/ports/{port}',       [ServerIpController::class, 'destroyPort'])->name('ips.ports.destroy');
 
             Route::post('containers',                    [ServerContainerController::class, 'store'])->name('containers.store');
             Route::put('containers/{container}',         [ServerContainerController::class, 'update'])->name('containers.update');

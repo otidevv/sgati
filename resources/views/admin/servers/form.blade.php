@@ -747,9 +747,6 @@ document.addEventListener('alpine:init', () => {
                             <input type="text" name="ips[{{ $i }}][ip_address]"
                                    value="{{ $ip['ip_address'] ?? '' }}" placeholder="192.168.x.x"
                                    class="flex-1 min-w-0 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white font-mono focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                            <input type="number" name="ips[{{ $i }}][port]"
-                                   value="{{ $ip['port'] ?? '' }}" placeholder="puerto" min="1" max="65535"
-                                   class="w-24 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white font-mono focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                             <select name="ips[{{ $i }}][type]"
                                     class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                                 <option value="private" {{ ($ip['type'] ?? 'private') === 'private' ? 'selected' : '' }}>Privada</option>
@@ -887,9 +884,6 @@ function addIpRow() {
     div.innerHTML = `
         <input type="text" name="ips[${ipIndex}][ip_address]" placeholder="192.168.x.x"
                class="flex-1 min-w-0 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
-                      dark:text-white font-mono focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-        <input type="number" name="ips[${ipIndex}][port]" placeholder="puerto" min="1" max="65535"
-               class="w-24 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
                       dark:text-white font-mono focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
         <select name="ips[${ipIndex}][type]"
                 class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700

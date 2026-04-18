@@ -31,33 +31,23 @@
                  serverIpId: '{{ old('server_ip_id', $infra->server_ip_id) }}',
                  exposedIpIds: @json(old('exposed_ip_ids') !== null ? array_map('intval', old('exposed_ip_ids', [])) : $exposedIpIds),
                  ips: [],
-                 get publicIps()  { return this.ips.filter(ip => ip.type === 'public'); },
-                 get privateIps() { return this.ips.filter(ip => ip.type === 'private'); },
-                 get selectedIp() { return this.ips.find(ip => ip.id == this.serverIpId) ?? null; },
-                 get serverEditUrl() { return this.serverId ? (this.serverEditUrls[this.serverId] ?? null) : null; },
+                 get publicIps()       { return this.ips.filter(ip => ip.type === 'public'); },
+                 get privateIps()      { return this.ips.filter(ip => ip.type === 'private'); },
+                 get selectedIp()      { return this.ips.find(ip => ip.id == this.serverIpId) ?? null; },
+                 get selectedIpPorts() { return this.selectedIp?.ports ?? []; },
+                 get serverEditUrl()   { return this.serverId ? (this.serverEditUrls[this.serverId] ?? null) : null; },
                  init() {
                      const sid = document.getElementById('server_id').value;
                      if (sid) this.loadIps(sid, false);
-                     this.$watch('serverIpId', () => this.syncPortFromIp());
-                 },
-                 syncPortFromIp() {
-                     const ip = this.selectedIp;
-                     if (ip && ip.port) {
-                         this.appPort     = ip.port;
-                         this.portFromIp  = true;
-                     } else if (this.portFromIp) {
-                         this.appPort    = '';
-                         this.portFromIp = false;
-                     }
                  },
                  loadIps(serverId, resetExposed = true) {
                      this.serverId = serverId;
                      this.ips = serverId ? (this.serverIpsMap[serverId] ?? []) : [];
-                     if (!serverId) { this.serverIpId = ''; this.exposedIpIds = []; return; }
+                     if (!serverId) { this.serverIpId = ''; this.exposedIpIds = []; this.appPort = ''; return; }
 
                      if (resetExposed) { this.serverIpId = ''; this.exposedIpIds = []; }
 
-                     // Auto-seleccionar IP del servidor: preferir privada principal → cualquier privada → pública principal → cualquiera
+                     // Auto-seleccionar IP: privada principal → cualquier privada → pública principal → cualquiera
                      if (!this.serverIpId) {
                          const selected =
                              this.ips.find(ip => ip.type === 'private' && ip.is_primary) ??
@@ -122,7 +112,7 @@
                                     </template>
                                     <template x-for="ip in privateIps" :key="ip.id">
                                         <option :value="ip.id"
-                                                x-text="ip.ip_address + (ip.port ? ':' + ip.port : '') + (ip.is_primary ? ' · principal' : '') + (ip.interface ? ' (' + ip.interface + ')' : '')">
+                                                x-text="ip.ip_address + (ip.is_primary ? ' · principal' : '') + (ip.interface ? ' (' + ip.interface + ')' : '') + (ip.ports.length ? ' [' + ip.ports.length + ' puerto' + (ip.ports.length > 1 ? 's' : '') + ']' : '')">
                                         </option>
                                     </template>
                                     {{-- Públicas --}}
@@ -131,7 +121,7 @@
                                     </template>
                                     <template x-for="ip in publicIps" :key="ip.id">
                                         <option :value="ip.id"
-                                                x-text="ip.ip_address + (ip.port ? ':' + ip.port : '') + (ip.is_primary ? ' · principal' : '') + (ip.interface ? ' (' + ip.interface + ')' : '')">
+                                                x-text="ip.ip_address + (ip.is_primary ? ' · principal' : '') + (ip.interface ? ' (' + ip.interface + ')' : '') + (ip.ports.length ? ' [' + ip.ports.length + ' puerto' + (ip.ports.length > 1 ? 's' : '') + ']' : '')">
                                         </option>
                                     </template>
                                 </select>
@@ -171,42 +161,45 @@
                         </template>
                         @error('server_ip_id')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                     </div>
-                    <div>
-                        <label for="port" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Puerto de la aplicación
+
+                    {{-- Puerto de la IP seleccionada --}}
+                    <div x-show="serverIpId" x-transition>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Puerto
                             <span class="ml-1 text-xs font-normal text-gray-400 dark:text-gray-500">(opcional)</span>
                         </label>
-                        <div class="relative">
-                            <input type="number" id="port" name="port"
-                                   x-model="appPort"
-                                   @input="portFromIp = false"
-                                   min="1" max="65535"
-                                   :readonly="portFromIp"
-                                   :class="portFromIp
-                                       ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 cursor-default'
-                                       : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100'"
-                                   class="block w-full rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
-                                   placeholder="80, 443, 8080…">
-                            <button x-show="portFromIp" type="button"
-                                    @click="appPort = ''; portFromIp = false"
-                                    title="Editar manualmente"
-                                    class="absolute right-2 top-1/2 -translate-y-1/2 text-blue-400 hover:text-gray-500 transition-colors">
-                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                </svg>
-                            </button>
-                        </div>
-                        <p x-show="portFromIp" class="mt-1 text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                            <svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            Tomado del registro de IP seleccionada. Haz clic en
-                            <svg class="w-3 h-3 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                            para editar.
-                        </p>
-                        <p x-show="!portFromIp" class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                            Puerto donde la aplicación es accesible (ej: 8080, 443).
-                        </p>
+
+                        {{-- Con puertos registrados --}}
+                        <template x-if="selectedIpPorts.length > 0">
+                            <div>
+                                <select name="port"
+                                        class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm font-mono">
+                                    <option value="">— Sin puerto —</option>
+                                    <template x-for="p in selectedIpPorts" :key="p.id">
+                                        <option :value="p.port"
+                                                :selected="p.port == {{ old('port', $infra->port ?? 'null') }}"
+                                                x-text="':' + p.port + ' ' + p.protocol.toUpperCase() + (p.description ? ' · ' + p.description : '')">
+                                        </option>
+                                    </template>
+                                </select>
+                                <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Puertos registrados en esta IP.</p>
+                            </div>
+                        </template>
+
+                        {{-- Sin puertos registrados --}}
+                        <template x-if="selectedIpPorts.length === 0">
+                            <div>
+                                <select disabled
+                                        class="block w-full rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 text-gray-400 dark:text-gray-500 shadow-sm sm:text-sm cursor-not-allowed">
+                                    <option>Sin puertos registrados</option>
+                                </select>
+                                <p class="mt-1 text-xs text-amber-600 dark:text-amber-400">
+                                    Esta IP no tiene puertos. Agrégalos desde la
+                                    <a x-show="serverEditUrl" :href="serverEditUrl" target="_blank" class="underline hover:no-underline">ficha del servidor</a>.
+                                </p>
+                            </div>
+                        </template>
+
                         @error('port')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                     </div>
                 </div>

@@ -210,8 +210,8 @@
                             <div class="flex flex-wrap gap-2">
                                 @foreach($exposedIps as $pip)
                                 @php
-                                    $ipDisplay = $pip->ip_address . ($pip->port ? ':' . $pip->port : '') . ($infra->port && !$pip->port ? ':' . $infra->port : '');
-                                    $href = 'http://' . $pip->ip_address . ($pip->port ? ':' . $pip->port : ($infra->port ? ':' . $infra->port : ''));
+                                    $ipDisplay = $pip->ip_address . ($infra->port ? ':' . $infra->port : '');
+                                    $href = 'http://' . $pip->ip_address . ($infra->port ? ':' . $infra->port : '');
                                 @endphp
                                 <a href="{{ $href }}" target="_blank"
                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono font-medium
