@@ -156,7 +156,8 @@
             {{-- Web Access --}}
             @php
                 $exposedIps = $infra->exposedIps ?? collect();
-                $hasWebInfo = $infra->system_url || $infra->public_ip || $infra->port || $exposedIps->count();
+                $serverIp   = $infra->serverIp ?? null;
+                $hasWebInfo = $infra->system_url || $infra->public_ip || $infra->port || $exposedIps->count() || $serverIp;
             @endphp
             @if($hasWebInfo)
             <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
@@ -195,6 +196,44 @@
                     </div>
                     @endif
 
+                    {{-- IP de Conexión al Servidor --}}
+                    @if($serverIp)
+                    <div class="flex items-start gap-3">
+                        <div class="flex-shrink-0 mt-0.5">
+                            <svg class="w-4 h-4 {{ $serverIp->type === 'public' ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
+                                IP de Conexión
+                                <span class="ml-1.5 normal-case font-normal px-1.5 py-0.5 rounded text-[10px]
+                                    {{ $serverIp->type === 'public'
+                                        ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
+                                        : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400' }}">
+                                    {{ $serverIp->type === 'public' ? 'pública' : 'privada' }}
+                                </span>
+                            </p>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono font-medium
+                                {{ $serverIp->type === 'public'
+                                    ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700'
+                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600' }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $serverIp->type === 'public' ? 'bg-emerald-500' : 'bg-slate-400' }} shrink-0"></span>
+                                {{ $serverIp->ip_address }}
+                                @if($infra->port)
+                                <span class="opacity-60">:{{ $infra->port }}</span>
+                                @endif
+                                @if($serverIp->is_primary)
+                                <span class="text-[10px] font-semibold opacity-60">· principal</span>
+                                @endif
+                            </span>
+                            @if($serverIp->type === 'private')
+                            <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">Solo accesible desde la red local</p>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
+
                     {{-- IPs Públicas de Exposición --}}
                     @if($exposedIps->count())
                     <div class="flex items-start gap-3">
@@ -210,8 +249,9 @@
                             <div class="flex flex-wrap gap-2">
                                 @foreach($exposedIps as $pip)
                                 @php
-                                    $ipDisplay = $pip->ip_address . ($infra->port ? ':' . $infra->port : '');
-                                    $href = 'http://' . $pip->ip_address . ($infra->port ? ':' . $infra->port : '');
+                                    $pivotPort = $pip->pivot->port ?? null;
+                                    $ipDisplay = $pip->ip_address . ($pivotPort ? ':' . $pivotPort : '');
+                                    $href = 'http://' . $pip->ip_address . ($pivotPort ? ':' . $pivotPort : '');
                                 @endphp
                                 <a href="{{ $href }}" target="_blank"
                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono font-medium

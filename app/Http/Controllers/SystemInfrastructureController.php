@@ -32,13 +32,16 @@ class SystemInfrastructureController extends Controller
             ])->values(),
         ]);
 
-        $exposedIpIds = $infra->exposedIps->pluck('id')->toArray();
+        $exposedRows = $infra->exposedIps->map(fn($ip) => [
+            'ip_id' => $ip->id,
+            'port'  => $ip->pivot->port,
+        ])->values();
 
         $serverEditUrls = $servers->mapWithKeys(fn($s) => [
             $s->id => route('admin.servers.edit', $s),
         ]);
 
-        return view('systems.tabs.infrastructure_edit', compact('system', 'infra', 'servers', 'sslCerts', 'serverIpsMap', 'exposedIpIds', 'serverEditUrls'));
+        return view('systems.tabs.infrastructure_edit', compact('system', 'infra', 'servers', 'sslCerts', 'serverIpsMap', 'exposedRows', 'serverEditUrls'));
     }
 
     public function update(Request $request, System $system)
@@ -46,8 +49,9 @@ class SystemInfrastructureController extends Controller
         $data = $request->validate([
             'server_id'          => 'nullable|exists:servers,id',
             'server_ip_id'       => 'nullable|exists:server_ips,id',
-            'exposed_ip_ids'     => 'nullable|array',
-            'exposed_ip_ids.*'   => 'integer|exists:server_ips,id',
+            'exposed_rows'           => 'nullable|array',
+            'exposed_rows.*.ip_id'   => 'nullable|integer|exists:server_ips,id',
+            'exposed_rows.*.port'    => 'nullable|integer|min:1|max:65535',
             'public_ip'          => 'nullable|ip|max:45',
             'port'               => 'nullable|integer|min:1|max:65535',
             'system_url'         => ['nullable', 'string', 'max:255', 'regex:/^(https?:\/\/)?[\w\-\.]+(\:\d+)?(\/\S*)?$/i'],
@@ -73,15 +77,22 @@ class SystemInfrastructureController extends Controller
         }
         unset($data['ssl_type']);
 
-        $exposedIpIds = array_map('intval', $data['exposed_ip_ids'] ?? []);
-        unset($data['exposed_ip_ids']);
+        $rawRows = $data['exposed_rows'] ?? [];
+        unset($data['exposed_rows']);
 
         $infra = $system->infrastructure()->updateOrCreate(
             ['system_id' => $system->id],
             $data
         );
 
-        $infra->exposedIps()->sync($exposedIpIds);
+        $syncData = [];
+        foreach ($rawRows as $row) {
+            $ipId = isset($row['ip_id']) ? (int) $row['ip_id'] : null;
+            if ($ipId) {
+                $syncData[$ipId] = ['port' => isset($row['port']) && $row['port'] !== '' ? (int) $row['port'] : null];
+            }
+        }
+        $infra->exposedIps()->sync($syncData);
 
         return redirect(route('systems.show', $system) . '#infrastructure')
             ->with('success', 'Infraestructura actualizada correctamente.');

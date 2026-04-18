@@ -54,7 +54,7 @@ class SystemInfrastructure extends Model
             'system_infrastructure_server_ips',
             'system_infrastructure_id',
             'server_ip_id'
-        )->withTimestamps();
+        )->withPivot('port')->withTimestamps();
     }
 
     public function sslCertificate()
