@@ -56,13 +56,14 @@
                             <span class="ml-1 text-xs font-normal text-gray-400 dark:text-gray-500">(conexión)</span>
                         </label>
 
-                        {{-- Select IPs privadas --}}
+                        {{-- Select IPs --}}
                         <div x-show="ips.length > 0">
                             <select name="server_ip_id" x-model="serverIpId"
                                     class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono">
                                 <option value="">— Sin IP específica —</option>
-                                <template x-for="ip in privateIps" :key="ip.id">
+                                <template x-for="ip in ips" :key="ip.id">
                                     <option :value="String(ip.id)"
+                                            :selected="String(serverIpId) === String(ip.id)"
                                             x-text="ip.ip_address + (ip.is_primary ? ' · principal' : '') + (ip.interface ? ' (' + ip.interface + ')' : '') + (ip.ports.length ? ' [' + ip.ports.length + ' puerto' + (ip.ports.length > 1 ? 's' : '') + ']' : '')">
                                     </option>
                                 </template>
