@@ -86,7 +86,7 @@
 
                         {{-- Sin IPs registradas: campo manual --}}
                         <div x-show="ips.length === 0">
-                            <input type="hidden" name="server_ip_id" value="">
+                            <input type="hidden" name="server_ip_id" value="" :disabled="ips.length > 0">
                             <input type="text" name="public_ip"
                                    value="{{ old('public_ip', $infra->public_ip) }}"
                                    class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
