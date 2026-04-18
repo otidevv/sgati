@@ -43,6 +43,8 @@ document.addEventListener('alpine:init', () => {
         osFullValue: @json($osVal),
         proto:       @json($proto),
         portTouched: false,
+        submitting:  false,
+        osError:     false,
 
         updateOsValue() {
             const v = (this.osVersion || '').trim();
@@ -55,6 +57,7 @@ document.addEventListener('alpine:init', () => {
             if (this.osSelected !== key) this.osVersion = '';
             this.osSelected = key;
             this.osName     = name;
+            this.osError    = false;
             this.updateOsValue();
         },
 
@@ -70,6 +73,11 @@ document.addEventListener('alpine:init', () => {
 
         goNext() {
             if (this.step === 1) {
+                if (!this.osSelected) {
+                    this.osError = true;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    return;
+                }
                 const el = document.getElementById('name');
                 if (el && !el.value.trim()) {
                     el.focus();
@@ -87,17 +95,34 @@ document.addEventListener('alpine:init', () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         },
 
+        submitForm() {
+            if (this.submitting) return;
+            this.submitting = true;
+            this.$el.closest('form').submit();
+        },
+
         init() {
             this.$watch('osVersion', () => this.updateOsValue());
             this.$watch('osName',    () => this.updateOsValue());
 
-            // Auto-sugerir protocolo cuando cambia el OS (sin sobreescribir si el usuario ya eligió)
             this.$watch('osFullValue', val => {
                 if (!this.portTouched) {
                     this.proto = /windows/i.test(val) ? 'rdp' : 'ssh';
                     this._setDefaultPort();
                 }
             });
+
+            // Auto-navegar al paso con errores de validación de Laravel
+            @if($errors->any())
+            const errorFields = @json($errors->keys());
+            const step1Fields = ['name', 'function', 'operating_system'];
+            const step2Fields = ['host_type', 'cpu_cores', 'ram_gb', 'storage_gb', 'installed_services', 'web_root', 'cloud_provider', 'cloud_region', 'cloud_instance'];
+            const step3Fields = ['ssh_user', 'ssh_password', 'rdp_port'];
+            if (errorFields.some(f => step1Fields.includes(f))) { this.step = 1; }
+            else if (errorFields.some(f => step2Fields.includes(f))) { this.step = 2; }
+            else if (errorFields.some(f => step3Fields.includes(f))) { this.step = 3; }
+            else { this.step = 4; }
+            @endif
         }
     }));
 });
@@ -192,6 +217,23 @@ document.addEventListener('alpine:init', () => {
 
         </div>
     </div>
+
+    {{-- ── Errores de validación ── --}}
+    @if($errors->any())
+    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-4 flex gap-3">
+        <svg class="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <div>
+            <p class="text-sm font-semibold text-red-700 dark:text-red-400">Corrige los siguientes errores antes de guardar:</p>
+            <ul class="mt-1 text-sm text-red-600 dark:text-red-400 list-disc list-inside space-y-0.5">
+                @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    </div>
+    @endif
 
     {{-- ── Formulario ── --}}
     <form action="{{ isset($server->id) ? route('admin.servers.update', $server) : route('admin.servers.store') }}"
@@ -340,11 +382,17 @@ document.addEventListener('alpine:init', () => {
                         </p>
                     </div>
 
-                    <p x-show="osSelected === ''" class="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                    <p x-show="osSelected === '' && !osError" class="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
                         <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         Selecciona un sistema operativo para continuar
+                    </p>
+                    <p x-show="osError" x-transition class="text-xs text-red-600 dark:text-red-400 flex items-center gap-1.5 font-medium">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Debes seleccionar un sistema operativo antes de continuar
                     </p>
 
                 </div>
@@ -795,13 +843,23 @@ document.addEventListener('alpine:init', () => {
                     </svg>
                 </button>
 
-                <button type="submit" x-show="step === 4"
+                <button type="button" x-show="step === 4" @click="submitForm()"
+                        :disabled="submitting"
+                        :class="submitting ? 'opacity-70 cursor-not-allowed' : 'hover:bg-blue-700'"
                         class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium
-                               text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                    </svg>
-                    {{ isset($server->id) ? 'Actualizar' : 'Registrar Servidor' }}
+                               text-white bg-blue-600 rounded-lg transition-colors shadow-sm">
+                    <template x-if="submitting">
+                        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 14 6.477 14 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </template>
+                    <template x-if="!submitting">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </template>
+                    <span x-text="submitting ? 'Guardando...' : '{{ isset($server->id) ? 'Actualizar' : 'Registrar Servidor' }}'"></span>
                 </button>
             </div>
 

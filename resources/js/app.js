@@ -1,5 +1,6 @@
 import './bootstrap';
-import './system-pdf';
+import './pdf/system-detail';
+import './pdf/reports/index';
 
 import Alpine from 'alpinejs';
 import Swal from 'sweetalert2';

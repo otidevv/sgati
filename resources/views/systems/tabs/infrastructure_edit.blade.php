@@ -42,14 +42,30 @@
                  loadIps(serverId, resetExposed = true) {
                      this.serverId = serverId;
                      this.ips = serverId ? (this.serverIpsMap[serverId] ?? []) : [];
-                     if (resetExposed) this.exposedIpIds = [];
+                     if (!serverId) { this.serverIpId = ''; this.exposedIpIds = []; return; }
+
+                     if (resetExposed) { this.serverIpId = ''; this.exposedIpIds = []; }
+
+                     // Auto-seleccionar IP del servidor: preferir privada principal → cualquier privada → pública principal → cualquiera
                      if (!this.serverIpId) {
-                         const primary = this.ips.find(ip => ip.is_primary)
-                             ?? this.ips.find(ip => ip.type === 'public')
-                             ?? this.ips[0];
-                         if (primary) this.serverIpId = primary.id;
+                         const selected =
+                             this.ips.find(ip => ip.type === 'private' && ip.is_primary) ??
+                             this.ips.find(ip => ip.type === 'private') ??
+                             this.ips.find(ip => ip.type === 'public' && ip.is_primary) ??
+                             this.ips[0];
+                         if (selected) this.serverIpId = selected.id;
                      }
-                     if (!serverId) { this.serverIpId = ''; this.exposedIpIds = []; }
+
+                     // Auto-seleccionar IPs públicas de exposición al cambiar de servidor
+                     if (resetExposed) {
+                         const publicPrimaries = this.ips.filter(ip => ip.type === 'public' && ip.is_primary);
+                         if (publicPrimaries.length > 0) {
+                             this.exposedIpIds = publicPrimaries.map(ip => ip.id);
+                         } else {
+                             const firstPublic = this.ips.find(ip => ip.type === 'public');
+                             if (firstPublic) this.exposedIpIds = [firstPublic.id];
+                         }
+                     }
                  }
              }">
             <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">
@@ -80,7 +96,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             IP del servidor
-                            <span class="ml-1 text-xs font-normal text-gray-400 dark:text-gray-500">(pública o privada)</span>
+                            <span class="ml-1 text-xs font-normal text-gray-400 dark:text-gray-500">(conexión interna — preferir privada)</span>
                         </label>
 
                         {{-- Select agrupado por tipo --}}

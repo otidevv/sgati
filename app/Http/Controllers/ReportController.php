@@ -6,6 +6,7 @@ use App\Models\Server;
 use App\Models\System;
 use App\Models\SystemDatabase;
 use App\Models\Repository;
+use Illuminate\Http\JsonResponse;
 use App\Enums\SystemStatus;
 use App\Exports\SystemsExport;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -129,6 +130,105 @@ class ReportController extends Controller
         $filename = 'sistema_' . ($system->acronym ?? $system->id) . '_' . now()->format('Ymd') . '.pdf';
 
         return $pdf->download($filename);
+    }
+
+    public function systemsListPdfData(): JsonResponse
+    {
+        $systems = System::with(['area', 'responsible'])
+            ->orderBy('name')
+            ->get();
+
+        return response()->json([
+            'generated_at' => now()->format('d/m/Y H:i:s'),
+            'generated_by' => auth()->user()?->name ?? 'Sistema',
+            'systems' => $systems->map(fn($s) => [
+                'name'        => $s->name,
+                'acronym'     => $s->acronym,
+                'area'        => $s->area?->name,
+                'responsible' => $s->responsible?->name,
+                'status'      => $s->status->label(),
+            ]),
+        ]);
+    }
+
+    public function systemsDetailedPdfData(): JsonResponse
+    {
+        $systems = System::with([
+            'area',
+            'infrastructure.server.ips',
+            'databases',
+            'repositories',
+            'responsibles.persona',
+        ])->orderBy('name')->get();
+
+        return response()->json([
+            'generated_at' => now()->format('d/m/Y H:i:s'),
+            'generated_by' => auth()->user()?->name ?? 'Sistema',
+            'systems' => $systems->map(function ($s) {
+                $infra      = $s->infrastructure;
+                $server     = $infra?->server;
+                $publicIp   = $infra?->public_ip ?? $server?->publicIps->first()?->ip_address;
+                $sslExpiry  = $infra?->ssl_expiry;
+                $activeResp = $s->responsibles->where('is_active', true)->first();
+                $respName   = $activeResp
+                    ? trim(($activeResp->persona->apellido_paterno ?? '') . ' ' . ($activeResp->persona->nombres ?? ''))
+                    : null;
+                $respRole   = $activeResp
+                    ? \App\Models\SystemResponsible::levelLabel(
+                        is_array($activeResp->level) ? ($activeResp->level[0] ?? '') : (string) $activeResp->level
+                      )
+                    : null;
+                $ipPort = $publicIp && $infra?->port
+                    ? "{$publicIp}:{$infra->port}"
+                    : ($publicIp ?? ($infra?->port ? ":{$infra->port}" : null));
+
+                return [
+                    'name'        => $s->name,
+                    'acronym'     => $s->acronym,
+                    'area'        => $s->area?->name,
+                    'status'      => $s->status->label(),
+                    'environment' => $infra?->environment?->label() ?? null,
+                    'server'      => $server?->name,
+                    'ip_port'     => $ipPort,
+                    'url'         => $infra?->system_url,
+                    'web_server'  => $infra?->web_server,
+                    'ssl_enabled' => $infra?->ssl_enabled ?? false,
+                    'ssl_expiry'  => $sslExpiry?->format('d/m/Y'),
+                    'db_count'    => $s->databases->count(),
+                    'repo_count'  => $s->repositories->count(),
+                    'responsible' => $respName,
+                    'resp_role'   => $respRole,
+                ];
+            }),
+        ]);
+    }
+
+    public function serversPdfData(): JsonResponse
+    {
+        $servers = Server::with(['ips', 'systems', 'activeContainers'])
+            ->orderBy('name')
+            ->get();
+
+        return response()->json([
+            'generated_at' => now()->format('d/m/Y H:i:s'),
+            'generated_by' => auth()->user()?->name ?? 'Sistema',
+            'servers' => $servers->map(fn($srv) => [
+                'name'          => $srv->name,
+                'is_active'     => $srv->is_active,
+                'os'            => $srv->operating_system,
+                'function'      => $srv->function?->label(),
+                'host_type'     => $srv->host_type,
+                'cloud'         => collect([$srv->cloud_provider, $srv->cloud_region])->filter()->join(' / '),
+                'public_ips'    => $srv->publicIps->pluck('ip_address')->join("\n"),
+                'private_ips'   => $srv->privateIps->pluck('ip_address')->join("\n"),
+                'cpu'           => $srv->cpu_cores,
+                'ram'           => $srv->ram_gb,
+                'storage'       => $srv->storage_gb,
+                'containers'    => $srv->activeContainers->count(),
+                'systems_count' => $srv->systems->count(),
+                'systems'       => $srv->systems->map(fn($s) => $s->acronym ?: $s->name)->join(', '),
+            ]),
+        ]);
     }
 
     public function systemPdfData(System $system)
