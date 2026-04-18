@@ -104,15 +104,36 @@
                             class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
                                    dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                         <option value="">— Sin gestor asignado —</option>
-                        @foreach($databaseServers as $ds)
-                        <option value="{{ $ds->id }}"
-                                data-engine="{{ $ds->engine }}"
-                                data-label="{{ $ds->name ?: strtoupper($ds->engine) }}{{ $ds->version ? ' ' . $ds->version : '' }}"
-                                data-host="{{ $ds->host ?? '' }}"
-                                {{ old('database_server_id') == $ds->id ? 'selected' : '' }}>
-                            {{ $ds->name ?: strtoupper($ds->engine) }}{{ $ds->version ? ' ' . $ds->version : '' }}{{ $ds->host ? ' — ' . $ds->host : '' }}
-                        </option>
-                        @endforeach
+                        @if($infraServerId && $systemDbServers->isNotEmpty())
+                        <optgroup label="Gestores del servidor del sistema">
+                            @foreach($systemDbServers as $ds)
+                            <option value="{{ $ds->id }}"
+                                    data-engine="{{ $ds->engine }}"
+                                    data-label="{{ $ds->name ?: strtoupper($ds->engine) }}{{ $ds->version ? ' ' . $ds->version : '' }}"
+                                    data-host="{{ $ds->host ?? '' }}"
+                                    data-other="0"
+                                    {{ old('database_server_id') == $ds->id ? 'selected' : '' }}>
+                                {{ $ds->name ?: strtoupper($ds->engine) }}{{ $ds->version ? ' ' . $ds->version : '' }}{{ $ds->host ? ' — ' . $ds->host : '' }}
+                            </option>
+                            @endforeach
+                        </optgroup>
+                        @endif
+                        @if($infraServerId)
+                        <optgroup id="other-servers-group" label="Otros servidores" style="{{ old('database_server_id') && $otherDbServers->contains('id', old('database_server_id')) ? '' : 'display:none' }}">
+                        @endif
+                            @foreach($otherDbServers as $ds)
+                            <option value="{{ $ds->id }}"
+                                    data-engine="{{ $ds->engine }}"
+                                    data-label="{{ $ds->name ?: strtoupper($ds->engine) }}{{ $ds->version ? ' ' . $ds->version : '' }}"
+                                    data-host="{{ $ds->host ?? '' }}"
+                                    data-other="1"
+                                    {{ old('database_server_id') == $ds->id ? 'selected' : '' }}>
+                                {{ $ds->name ?: strtoupper($ds->engine) }}{{ $ds->version ? ' ' . $ds->version : '' }}{{ $ds->host ? ' — ' . $ds->host : '' }}
+                            </option>
+                            @endforeach
+                        @if($infraServerId)
+                        </optgroup>
+                        @endif
                     </select>
                     @error('database_server_id')
                     <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -126,6 +147,18 @@
                         </svg>
                         <span id="server-hint-text" class="text-blue-700 dark:text-blue-300"></span>
                     </div>
+
+                    {{-- Toggle: BD en otro servidor --}}
+                    @if($infraServerId && $otherDbServers->isNotEmpty())
+                    <div class="mt-2">
+                        <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" id="toggle-other-servers"
+                                   class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                                   {{ old('database_server_id') && $otherDbServers->contains('id', old('database_server_id')) ? 'checked' : '' }}>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">¿Tu BD está en otro servidor?</span>
+                        </label>
+                    </div>
+                    @endif
                 </div>
 
                 {{-- Motor (se bloquea si se elige gestor) --}}
@@ -244,9 +277,24 @@
     }
 
     serverSelect.addEventListener('change', syncEngine);
-
-    // Ejecutar al cargar si ya hay un valor pre-seleccionado (old() / error de validación)
     syncEngine();
+
+    // Toggle "BD en otro servidor"
+    const toggleOther = document.getElementById('toggle-other-servers');
+    const otherGroup  = document.getElementById('other-servers-group');
+    if (toggleOther && otherGroup) {
+        toggleOther.addEventListener('change', function () {
+            otherGroup.style.display = this.checked ? '' : 'none';
+            // Si se oculta y había algo seleccionado del grupo "otros", limpiar
+            if (!this.checked) {
+                const selected = serverSelect.options[serverSelect.selectedIndex];
+                if (selected?.dataset?.other === '1') {
+                    serverSelect.value = '';
+                    syncEngine();
+                }
+            }
+        });
+    }
 })();
 </script>
 @endpush

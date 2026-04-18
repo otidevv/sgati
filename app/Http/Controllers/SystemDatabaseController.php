@@ -17,8 +17,23 @@ class SystemDatabaseController extends Controller
 
     public function create(System $system)
     {
-        $databaseServers = DatabaseServer::orderBy('name')->orderBy('engine')->get(['id', 'name', 'engine', 'version', 'host']);
-        return view('systems.databases.create', compact('system', 'databaseServers'));
+        $infraServerId = $system->infrastructure?->server_id;
+
+        if ($infraServerId) {
+            $systemDbServers = DatabaseServer::where('server_id', $infraServerId)
+                ->orderBy('name')->orderBy('engine')
+                ->get(['id', 'name', 'engine', 'version', 'host', 'server_id']);
+            $otherDbServers = DatabaseServer::where(function ($q) use ($infraServerId) {
+                $q->where('server_id', '!=', $infraServerId)->orWhereNull('server_id');
+            })->orderBy('name')->orderBy('engine')
+                ->get(['id', 'name', 'engine', 'version', 'host', 'server_id']);
+        } else {
+            $systemDbServers = collect();
+            $otherDbServers  = DatabaseServer::orderBy('name')->orderBy('engine')
+                ->get(['id', 'name', 'engine', 'version', 'host', 'server_id']);
+        }
+
+        return view('systems.databases.create', compact('system', 'systemDbServers', 'otherDbServers', 'infraServerId'));
     }
 
     public function store(Request $request, System $system)
