@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Mail\TwoFactorCode;
 use App\Models\Setting;
+use App\Models\UserLoginLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -71,6 +72,8 @@ class AuthenticatedSessionController extends Controller
             $request->session()->put('session_token', $token);
         }
 
+        UserLoginLog::record($request, $user->id);
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
@@ -79,6 +82,8 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        UserLoginLog::closeSession($request->session()->getId());
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

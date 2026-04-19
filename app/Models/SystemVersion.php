@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\Environment;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SystemVersion extends Model
 {
@@ -28,5 +29,10 @@ class SystemVersion extends Model
     public function deployedBy()
     {
         return $this->belongsTo(User::class, 'deployed_by');
+    }
+
+    public function responsibles(): HasMany
+    {
+        return $this->hasMany(SystemVersionResponsible::class)->orderBy('assigned_at');
     }
 }

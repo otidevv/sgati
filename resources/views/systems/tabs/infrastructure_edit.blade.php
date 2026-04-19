@@ -23,23 +23,57 @@
         @csrf @method('PUT')
 
         {{-- Servidor --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm"
              x-data="infraServerData()">
             <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">
                 <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Servidor</h2>
             </div>
             <div class="p-6">
-                <label for="server_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Servidor asignado</label>
-                <select id="server_id" name="server_id"
-                        @change="loadIps($event.target.value)"
-                        class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    <option value="">— Sin servidor —</option>
-                    @foreach($servers as $srv)
-                    <option value="{{ $srv->id }}" {{ old('server_id', $infra->server_id) == $srv->id ? 'selected' : '' }}>
-                        {{ $srv->name }}{{ $srv->operating_system ? ' (' . $srv->operating_system . ')' : '' }}
-                    </option>
-                    @endforeach
-                </select>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Servidor asignado</label>
+                {{-- Searchable server dropdown --}}
+                <div class="relative" @click.outside="serverOpen = false" @keydown.escape="serverOpen = false">
+                    <button type="button" @click="toggleServer()"
+                            class="flex items-center justify-between w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 px-3 py-2 text-sm text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span :class="serverId ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400 dark:text-gray-500'"
+                              x-text="serverId ? selectedServerLabel : '— Sin servidor —'"></span>
+                        <svg class="w-4 h-4 text-gray-400 shrink-0 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <input type="hidden" name="server_id" :value="serverId || ''">
+
+                    <div x-show="serverOpen" x-transition
+                         class="absolute z-20 mt-1 w-full bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-lg overflow-hidden">
+                        <div class="p-2 border-b border-gray-100 dark:border-gray-700">
+                            <input x-ref="serverSearch" x-model="serverQuery" type="text"
+                                   placeholder="Buscar por nombre o IP..."
+                                   class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <ul class="max-h-52 overflow-y-auto divide-y divide-gray-50 dark:divide-gray-700/50">
+                            <li @click="selectServer('')"
+                                class="px-3 py-2 text-sm text-gray-400 dark:text-gray-500 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                — Sin servidor —
+                            </li>
+                            <template x-for="srv in filteredServers" :key="srv.id">
+                                <li @click="selectServer(srv.id)"
+                                    :class="String(serverId) === String(srv.id) ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'"
+                                    class="flex items-center justify-between px-3 py-2.5 cursor-pointer">
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate" x-text="srv.name"></p>
+                                        <p x-show="srv.os" class="text-xs text-gray-400 dark:text-gray-500 truncate" x-text="srv.os"></p>
+                                    </div>
+                                    <span x-show="srv.primaryIp"
+                                          class="ml-3 shrink-0 text-xs font-mono text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-1.5 py-0.5 rounded"
+                                          x-text="srv.primaryIp"></span>
+                                </li>
+                            </template>
+                            <li x-show="filteredServers.length === 0"
+                                class="px-3 py-4 text-sm text-center text-gray-400 dark:text-gray-500">
+                                Sin resultados
+                            </li>
+                        </ul>
+                    </div>
+                </div>
                 @error('server_id')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                 @if($servers->isEmpty())
                 <p class="mt-2 text-xs text-amber-600 dark:text-amber-400">
@@ -56,36 +90,22 @@
                             <span class="ml-1 text-xs font-normal text-gray-400 dark:text-gray-500">(conexión)</span>
                         </label>
 
-                        {{-- Select IPs --}}
-                        <div x-show="ips.length > 0">
+                        {{-- Select IPs privadas --}}
+                        <div x-show="privateIps.length > 0">
                             <select name="server_ip_id" x-model="serverIpId"
                                     class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono">
                                 <option value="">— Sin IP específica —</option>
-                                <template x-for="ip in ips" :key="ip.id">
+                                <template x-for="ip in privateIps" :key="ip.id">
                                     <option :value="String(ip.id)"
                                             :selected="String(serverIpId) === String(ip.id)"
                                             x-text="ip.ip_address + (ip.is_primary ? ' · principal' : '') + (ip.interface ? ' (' + ip.interface + ')' : '') + (ip.ports.length ? ' [' + ip.ports.length + ' puerto' + (ip.ports.length > 1 ? 's' : '') + ']' : '')">
                                     </option>
                                 </template>
                             </select>
-
-                            {{-- Badge tipo IP --}}
-                            <div x-show="selectedIp" class="mt-1.5 flex items-center gap-1.5">
-                                <span x-show="selectedIp?.type === 'public'"
-                                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-700">
-                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg>
-                                    IP Pública — accesible desde internet
-                                </span>
-                                <span x-show="selectedIp?.type === 'private'"
-                                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600">
-                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                                    IP Privada — solo red local
-                                </span>
-                            </div>
                         </div>
 
-                        {{-- Sin IPs registradas: campo manual --}}
-                        <div x-show="ips.length === 0">
+                        {{-- Sin IPs privadas registradas: campo manual --}}
+                        <div x-show="privateIps.length === 0">
                             <input type="hidden" name="server_ip_id" value="" :disabled="ips.length > 0">
                             <input type="text" name="public_ip"
                                    value="{{ old('public_ip', $infra->public_ip) }}"
@@ -436,26 +456,67 @@
     </form>
 </div>
 @push('scripts')
+@php
+$serversData = $servers->map(function($s) {
+    $primaryIp = $s->ips->first(function($ip) { return $ip->type === 'private' && $ip->is_primary; });
+    if (!$primaryIp) $primaryIp = $s->ips->first(function($ip) { return $ip->type === 'private'; });
+    return [
+        'id'        => $s->id,
+        'name'      => $s->name,
+        'os'        => $s->operating_system,
+        'primaryIp' => $primaryIp?->ip_address,
+    ];
+})->values();
+@endphp
 <script>
 function infraServerData() {
     return {
-        serverIpsMap:  @json($serverIpsMap),
+        serverIpsMap:   @json($serverIpsMap),
         serverEditUrls: @json($serverEditUrls),
+        serversData:    @json($serversData),
         serverId:   '{{ old('server_id',    $infra->server_id    ?? '') }}',
         serverIpId: '{{ old('server_ip_id', $infra->server_ip_id ?? '') }}',
         exposedRows: @json(old('exposed_rows') ?? ($exposedRows->isNotEmpty() ? $exposedRows : [['ip_id' => null, 'port' => null]])),
         ips: [],
+        serverOpen: false,
+        serverQuery: '',
 
         get publicIps()       { return this.ips.filter(function(ip){ return ip.type === 'public'; }); },
         get privateIps()      { return this.ips.filter(function(ip){ return ip.type === 'private'; }); },
-        get selectedIp()      { return this.ips.find(function(ip){ return ip.id == this.serverIpId; }, this) ?? null; },
+        get selectedIp()      { return this.privateIps.find(function(ip){ return ip.id == this.serverIpId; }, this) ?? null; },
         get selectedIpPorts() { return this.selectedIp ? this.selectedIp.ports : []; },
         get serverEditUrl()   { return this.serverId ? (this.serverEditUrls[this.serverId] ?? null) : null; },
+        get filteredServers() {
+            var q = this.serverQuery.toLowerCase();
+            if (!q) return this.serversData;
+            return this.serversData.filter(function(s) {
+                return s.name.toLowerCase().indexOf(q) !== -1 ||
+                       (s.os && s.os.toLowerCase().indexOf(q) !== -1) ||
+                       (s.primaryIp && s.primaryIp.indexOf(q) !== -1);
+            });
+        },
+        get selectedServerLabel() {
+            var self = this;
+            var s = this.serversData.find(function(s) { return String(s.id) === String(self.serverId); });
+            return s ? s.name + (s.primaryIp ? ' · ' + s.primaryIp : '') : '';
+        },
 
         getPortsForIp(ipId) {
             if (!ipId) return [];
             var ip = this.publicIps.find(function(i){ return String(i.id) === String(ipId); });
             return ip ? ip.ports : [];
+        },
+        toggleServer() {
+            this.serverOpen = !this.serverOpen;
+            if (this.serverOpen) {
+                var self = this;
+                this.$nextTick(function() { self.$refs.serverSearch.focus(); });
+            }
+        },
+        selectServer(id) {
+            this.loadIps(id, true);
+            this.serverOpen = false;
+            this.serverQuery = '';
         },
         addExposedRow() {
             this.exposedRows.push({ ip_id: null, port: null });
@@ -466,9 +527,8 @@ function infraServerData() {
         init() {
             var self = this;
             var savedServerIpId = String(this.serverIpId || '');
-            var sid = document.getElementById('server_id').value;
-            if (sid) {
-                this.loadIps(sid, false);
+            if (this.serverId) {
+                this.loadIps(this.serverId, false);
                 this.$nextTick(function() {
                     self.serverIpId = savedServerIpId;
                 });

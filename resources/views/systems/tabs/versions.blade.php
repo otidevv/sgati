@@ -99,9 +99,10 @@
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm hover:shadow-md dark:hover:shadow-gray-700/50 transition-shadow">
             <div class="flex items-start justify-between gap-3">
                 <div class="flex items-center gap-2 flex-wrap">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-bold font-mono ring-1 ring-blue-200 dark:ring-blue-800">
+                    <a href="{{ route('systems.versions.show', [$system, $version]) }}"
+                       class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-bold font-mono ring-1 ring-blue-200 dark:ring-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors">
                         v{{ $version->version }}
-                    </span>
+                    </a>
                     @if($version->environment)
                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $envColors }}">
                         {{ $version->environment->label() }}
@@ -110,9 +111,29 @@
                     @if($version->release_date)
                     <span class="text-xs text-gray-400 dark:text-gray-500">{{ $version->release_date->format('d/m/Y') }}</span>
                     @endif
+                    @php $activeCount = $version->responsibles->where('is_active', true)->count(); @endphp
+                    @if($version->responsibles->count())
+                    <a href="{{ route('systems.versions.show', [$system, $version]) }}"
+                       class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium
+                              {{ $activeCount ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400' }}">
+                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        {{ $activeCount }}
+                    </a>
+                    @endif
                 </div>
                 @can('versions.create/edit/delete')
                 <div class="flex items-center gap-1 flex-shrink-0">
+                    <a href="{{ route('systems.versions.show', [$system, $version]) }}"
+                       class="inline-flex items-center justify-center w-7 h-7 rounded text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all"
+                       title="Ver / gestionar responsables">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </a>
                     <a href="{{ route('systems.versions.edit', [$system, $version]) }}"
                        class="inline-flex items-center justify-center w-7 h-7 rounded text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>

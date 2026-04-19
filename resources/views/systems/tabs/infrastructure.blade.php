@@ -15,6 +15,15 @@
             </div>
         </div>
         @can('infrastructure.edit')
+        @if(!$infra || (!$infra->server_id && !$infra->system_url))
+        <a href="{{ route('systems.infrastructure.create', $system) }}"
+           class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Agregar
+        </a>
+        @else
         <a href="{{ route('systems.infrastructure.edit', $system) }}"
            class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -22,6 +31,7 @@
             </svg>
             Editar
         </a>
+        @endif
         @endcan
     </div>
 
@@ -36,7 +46,7 @@
         <h4 class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-1">Sin información de infraestructura</h4>
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">No hay datos de infraestructura registrados para este sistema.</p>
         @can('infrastructure.edit')
-        <a href="{{ route('systems.infrastructure.edit', $system) }}"
+        <a href="{{ route('systems.infrastructure.create', $system) }}"
            class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg transition-colors">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>

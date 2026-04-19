@@ -70,7 +70,7 @@ class SystemController extends Controller
         $system->load([
             'area', 'responsible',
             'infrastructure.server.ips',
-            'versions',
+            'versions.responsibles',
             'databases.databaseServer', 'databases.responsibles',
             'services.fields', 'services.documents',
             'repositories',

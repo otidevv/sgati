@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\TwoFactorCode;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\UserLoginLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -69,6 +70,8 @@ class TwoFactorController extends Controller
             $user->update(['session_token' => $token]);
             $request->session()->put('session_token', $token);
         }
+
+        UserLoginLog::record($request, $user->id);
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

@@ -8,6 +8,12 @@ use Illuminate\Http\Request;
 
 class SystemVersionController extends Controller
 {
+    public function show(System $system, SystemVersion $version)
+    {
+        $version->load(['responsibles.persona', 'responsibles.documents']);
+        return view('systems.versions.show', compact('system', 'version'));
+    }
+
     public function create(System $system)
     {
         return view('systems.versions.create', compact('system'));

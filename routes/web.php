@@ -4,6 +4,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SystemController;
 use App\Http\Controllers\SystemVersionController;
+use App\Http\Controllers\SystemVersionResponsibleController;
+use App\Http\Controllers\SystemVersionResponsibleDocumentController;
 use App\Http\Controllers\SystemInfrastructureController;
 use App\Http\Controllers\SystemDatabaseController;
 use App\Http\Controllers\SystemDatabaseResponsibleController;
@@ -55,9 +57,26 @@ Route::middleware(['auth'])->group(function () {
 
         // Versiones
         Route::resource('versions', SystemVersionController::class)
-            ->except(['index', 'show']);
+            ->except(['index']);
+
+        Route::prefix('versions/{version}')->name('versions.')->group(function () {
+            Route::post('responsibles',                                                              [SystemVersionResponsibleController::class, 'store'])->name('responsibles.store');
+            Route::put('responsibles/{responsible}',                                                 [SystemVersionResponsibleController::class, 'update'])->name('responsibles.update');
+            Route::patch('responsibles/{responsible}/deactivate',                                    [SystemVersionResponsibleController::class, 'deactivate'])->name('responsibles.deactivate');
+            Route::patch('responsibles/{responsible}/reactivate',                                    [SystemVersionResponsibleController::class, 'reactivate'])->name('responsibles.reactivate');
+            Route::delete('responsibles/{responsible}',                                              [SystemVersionResponsibleController::class, 'destroy'])->name('responsibles.destroy');
+
+            Route::post('responsibles/{responsible}/documents',                                      [SystemVersionResponsibleDocumentController::class, 'store'])->name('responsibles.documents.store');
+            Route::get('responsibles/{responsible}/documents/{document}/download',                   [SystemVersionResponsibleDocumentController::class, 'download'])->name('responsibles.documents.download');
+            Route::get('responsibles/{responsible}/documents/{document}/preview',                    [SystemVersionResponsibleDocumentController::class, 'preview'])->name('responsibles.documents.preview');
+            Route::delete('responsibles/{responsible}/documents/{document}',                         [SystemVersionResponsibleDocumentController::class, 'destroy'])->name('responsibles.documents.destroy');
+        });
 
         // Infraestructura (única por sistema)
+        Route::get('infrastructure/create', [SystemInfrastructureController::class, 'create'])
+            ->name('infrastructure.create');
+        Route::post('infrastructure', [SystemInfrastructureController::class, 'store'])
+            ->name('infrastructure.store');
         Route::get('infrastructure/edit', [SystemInfrastructureController::class, 'edit'])
             ->name('infrastructure.edit');
         Route::put('infrastructure', [SystemInfrastructureController::class, 'update'])
