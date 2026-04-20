@@ -70,7 +70,7 @@
         @endcan
     </div>
 
-    @forelse($system->repositories as $repo)
+    @forelse($system->repositories->load('collaborators') as $repo)
     @php
     $providerColors = [
         'github'    => 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 ring-slate-300 dark:ring-slate-600',
@@ -84,10 +84,25 @@
     <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm hover:shadow-md dark:hover:shadow-gray-700/50 transition-shadow">
         <div class="flex items-start justify-between gap-3">
             <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ $repo->name }}</span>
+                <a href="{{ route('systems.repositories.show', [$system, $repo]) }}"
+                   class="text-sm font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:underline">
+                    {{ $repo->name }}
+                </a>
                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ring-1 {{ $providerColor }}">
                     {{ $repo->provider->label() }}
                 </span>
+                @php $activeCollabCount = $repo->collaborators->where('is_active', true)->count(); @endphp
+                @if($repo->collaborators->count())
+                <a href="{{ route('systems.repositories.show', [$system, $repo]) }}"
+                   class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium
+                          {{ $activeCollabCount ? 'bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400' : 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400' }}">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    {{ $activeCollabCount }}
+                </a>
+                @endif
                 @if($repo->is_private)
                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 ring-1 ring-gray-200 dark:ring-gray-600">
                     <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -104,6 +119,14 @@
             </div>
             @can('repositories.edit')
             <div class="flex items-center gap-1 flex-shrink-0">
+                <a href="{{ route('systems.repositories.show', [$system, $repo]) }}"
+                   class="inline-flex items-center justify-center w-7 h-7 rounded text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-all"
+                   title="Ver / gestionar colaboradores">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </a>
                 <a href="{{ route('systems.repositories.edit', [$system, $repo]) }}"
                    class="inline-flex items-center justify-center w-7 h-7 rounded text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>

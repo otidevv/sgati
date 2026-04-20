@@ -255,53 +255,6 @@
         </div>
     </div>
 
-    {{-- ── Sistemas por IP pública ──────────────────────────────────── --}}
-    @if($publicIpSystems->count())
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex items-center gap-2">
-            <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
-            </svg>
-            <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Sistemas por IP Pública</h2>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700 text-sm">
-                <thead class="bg-gray-50 dark:bg-gray-700/50">
-                    <tr>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">IP Pública</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Servidor</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sistemas alojados</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                    @foreach($publicIpSystems as $srv)
-                    @foreach($srv->publicIps as $ip)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                        <td class="px-6 py-4 font-mono text-blue-700 dark:text-blue-300">{{ $ip->ip_address }}</td>
-                        <td class="px-6 py-4">
-                            <a href="{{ route('admin.servers.show', $srv) }}"
-                               class="text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:underline font-medium">
-                                {{ $srv->name }}
-                            </a>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="flex flex-wrap gap-1">
-                                @foreach($srv->systems as $sys)
-                                <a href="{{ route('systems.show', $sys) }}"
-                                   class="inline-block px-2 py-0.5 text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors">
-                                    {{ $sys->acronym ?? $sys->name }}
-                                </a>
-                                @endforeach
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-    @endif
 
     {{-- ── Alertas SSL ──────────────────────────────────────────────── --}}
     @if($sslWarning->count())
@@ -331,111 +284,24 @@
                 <div class="text-right flex-shrink-0">
                     <p class="text-sm font-semibold {{ $isExpired ? 'text-red-600 dark:text-red-400' : 'text-yellow-600 dark:text-yellow-400' }}">
                         {{ $sys->infrastructure->ssl_expiry->format('d/m/Y') }}
-                    </p>
-                    <p class="text-xs {{ $isExpired ? 'text-red-500 dark:text-red-400' : 'text-yellow-500 dark:text-yellow-400' }}">
-                        {{ $isExpired ? 'Vencido hace ' . abs($daysLeft) . ' días' : 'Vence en ' . $daysLeft . ' días' }}
-                    </p>
+                        </p>
+                        <p class="text-xs {{ $isExpired ? 'text-red-500 dark:text-red-400' : 'text-yellow-500 dark:text-yellow-400' }}">
+                            {{ $isExpired ? 'Vencido hace ' . abs($daysLeft) . ' días' : 'Vence en ' . $daysLeft . ' días' }}
+                        </p>
+                    </div>
                 </div>
-            </div>
-            @endforeach
-        </div>
-    </div>
-    @endif
-
-    {{-- ── Sistemas sin información completa ───────────────────────── --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-
-        {{-- Sin servidor --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-            <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-slate-400"></span>
-                <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Sin servidor asignado ({{ $withoutServer->count() }})</h2>
-            </div>
-            @if($withoutServer->isEmpty())
-            <p class="px-6 py-5 text-sm text-green-600 dark:text-green-400 flex items-center gap-1.5">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                Todos los sistemas tienen servidor.
-            </p>
-            @else
-            <ul class="divide-y divide-gray-100 dark:divide-gray-700">
-                @foreach($withoutServer as $sys)
-                <li class="px-6 py-3.5">
-                    <a href="{{ route('systems.show', $sys) }}"
-                       class="text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:underline">
-                        {{ $sys->name }}
-                    </a>
-                    @if($sys->area)
-                    <span class="text-xs text-gray-400 dark:text-gray-500 ml-1">· {{ $sys->area->name }}</span>
-                    @endif
-                </li>
                 @endforeach
-            </ul>
-            @endif
-        </div>
-
-        {{-- Sin responsable --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-            <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-orange-400"></span>
-                <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Sin responsable ({{ $withoutResponsible->count() }})</h2>
             </div>
-            @if($withoutResponsible->isEmpty())
-            <p class="px-6 py-5 text-sm text-green-600 dark:text-green-400 flex items-center gap-1.5">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                Todos tienen responsable asignado.
-            </p>
-            @else
-            <ul class="divide-y divide-gray-100 dark:divide-gray-700">
-                @foreach($withoutResponsible as $sys)
-                <li class="px-6 py-3.5">
-                    <a href="{{ route('systems.show', $sys) }}"
-                       class="text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:underline">
-                        {{ $sys->name }}
-                    </a>
-                    @if($sys->area)
-                    <span class="text-xs text-gray-400 dark:text-gray-500 ml-1">· {{ $sys->area->name }}</span>
-                    @endif
-                </li>
-                @endforeach
-            </ul>
-            @endif
         </div>
+        @endif
 
-        {{-- Sin repositorio --}}
+
+        {{-- ── Tabla completa de sistemas ───────────────────────────────── --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-            <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-purple-400"></span>
-                <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Sin repositorio ({{ $withoutRepo->count() }})</h2>
+            <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+                <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Inventario Completo</h2>
+                <span class="text-xs text-gray-400 dark:text-gray-500">{{ $total }} sistemas</span>
             </div>
-            @if($withoutRepo->isEmpty())
-            <p class="px-6 py-5 text-sm text-green-600 dark:text-green-400 flex items-center gap-1.5">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                Todos tienen repositorio registrado.
-            </p>
-            @else
-            <ul class="divide-y divide-gray-100 dark:divide-gray-700">
-                @foreach($withoutRepo as $sys)
-                <li class="px-6 py-3.5">
-                    <a href="{{ route('systems.show', $sys) }}"
-                       class="text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:underline">
-                        {{ $sys->name }}
-                    </a>
-                    @if($sys->area)
-                    <span class="text-xs text-gray-400 dark:text-gray-500 ml-1">· {{ $sys->area->name }}</span>
-                    @endif
-                </li>
-                @endforeach
-            </ul>
-            @endif
-        </div>
-    </div>
-
-    {{-- ── Tabla completa de sistemas ───────────────────────────────── --}}
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-            <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Inventario Completo</h2>
-            <span class="text-xs text-gray-400 dark:text-gray-500">{{ $total }} sistemas</span>
-        </div>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700 text-sm">
                 <thead class="bg-gray-50 dark:bg-gray-700/50">

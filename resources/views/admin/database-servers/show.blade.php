@@ -1015,11 +1015,15 @@
                                border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
                         Cancelar
                     </button>
-                    <button type="submit"
+                    <button id="db-resp-submit-btn" type="submit"
                         class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white
                                bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors shadow-sm">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg id="db-resp-submit-icon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <svg id="db-resp-submit-spinner" class="hidden w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
                         </svg>
                         <span id="db-resp-submit-label">Asignar</span>
                     </button>
@@ -1400,9 +1404,34 @@
         const dbRespUpdateBase =
             "{{ url('admin/servers/' . $server->id . '/database-servers/' . $databaseServer->id . '/responsibles') }}/";
 
+        // Protección doble envío
+        let dbRespSubmitting = false;
+        const dbRespBtn     = document.getElementById('db-resp-submit-btn');
+        const dbRespIcon    = document.getElementById('db-resp-submit-icon');
+        const dbRespSpinner = document.getElementById('db-resp-submit-spinner');
+        const dbRespLabel   = document.getElementById('db-resp-submit-label');
+
+        document.getElementById('db-resp-form').addEventListener('submit', function (e) {
+            if (dbRespSubmitting) { e.preventDefault(); return; }
+            if (!this.checkValidity()) return;
+            dbRespSubmitting = true;
+            dbRespBtn.classList.add('pointer-events-none', 'opacity-75');
+            dbRespIcon.classList.add('hidden');
+            dbRespSpinner.classList.remove('hidden');
+            dbRespLabel.textContent = 'Guardando…';
+        });
+
+        function resetDbRespBtn() {
+            dbRespSubmitting = false;
+            dbRespBtn.classList.remove('pointer-events-none', 'opacity-75');
+            dbRespIcon.classList.remove('hidden');
+            dbRespSpinner.classList.add('hidden');
+        }
+
         function editDbResponsible(id, data) {
             document.getElementById('db-resp-modal-title').textContent = 'Editar Responsable';
-            document.getElementById('db-resp-submit-label').textContent = 'Guardar';
+            dbRespLabel.textContent = 'Guardar';
+            resetDbRespBtn();
             document.getElementById('db-resp-form').action = dbRespUpdateBase + id;
             document.getElementById('db-resp-method').innerHTML = '<input type="hidden" name="_method" value="PUT">';
             // Mostrar nombre del responsable en el buscador como seleccionado
@@ -1423,7 +1452,8 @@
 
         document.querySelector('[onclick="openModal(\'modal-db-responsible\')"]')?.addEventListener('click', function() {
             document.getElementById('db-resp-modal-title').textContent = 'Asignar Responsable';
-            document.getElementById('db-resp-submit-label').textContent = 'Asignar';
+            dbRespLabel.textContent = 'Asignar';
+            resetDbRespBtn();
             document.getElementById('db-resp-form').action = dbRespStoreUrl;
             document.getElementById('db-resp-method').innerHTML = '';
             document.getElementById('db-resp-form').reset();

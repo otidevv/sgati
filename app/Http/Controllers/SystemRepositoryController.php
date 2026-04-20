@@ -51,6 +51,18 @@ class SystemRepositoryController extends Controller
             ->with('success', 'Repositorio registrado correctamente.');
     }
 
+    public function show(System $system, Repository $repository)
+    {
+        $repository->load(['collaborators.persona']);
+
+        $activeCollaborators     = $repository->collaborators->where('is_active', true);
+        $historicalCollaborators = $repository->collaborators->where('is_active', false)->sortByDesc('unassigned_at');
+
+        return view('systems.repositories.show', compact(
+            'system', 'repository', 'activeCollaborators', 'historicalCollaborators'
+        ));
+    }
+
     public function edit(System $system, Repository $repository)
     {
         $providers = RepoProvider::cases();

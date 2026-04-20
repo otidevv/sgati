@@ -15,6 +15,7 @@ use App\Http\Controllers\SystemServiceFieldController;
 use App\Http\Controllers\SystemServiceController;
 use App\Http\Controllers\SystemIntegrationController;
 use App\Http\Controllers\SystemDocumentController;
+use App\Http\Controllers\SystemRepositoryCollaboratorController;
 use App\Http\Controllers\SystemRepositoryController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\Admin\UserController;
@@ -145,7 +146,15 @@ Route::middleware(['auth'])->group(function () {
 
         // Repositorios
         Route::resource('repositories', SystemRepositoryController::class)
-            ->except(['index', 'show']);
+            ->except(['index']);
+
+        Route::prefix('repositories/{repository}')->name('repositories.')->group(function () {
+            Route::post('collaborators',                                    [SystemRepositoryCollaboratorController::class, 'store'])->name('collaborators.store');
+            Route::put('collaborators/{collaborator}',                      [SystemRepositoryCollaboratorController::class, 'update'])->name('collaborators.update');
+            Route::patch('collaborators/{collaborator}/deactivate',         [SystemRepositoryCollaboratorController::class, 'deactivate'])->name('collaborators.deactivate');
+            Route::patch('collaborators/{collaborator}/reactivate',         [SystemRepositoryCollaboratorController::class, 'reactivate'])->name('collaborators.reactivate');
+            Route::delete('collaborators/{collaborator}',                   [SystemRepositoryCollaboratorController::class, 'destroy'])->name('collaborators.destroy');
+        });
 
         // Responsables del sistema
         Route::post('responsibles',                                                      [SystemResponsibleController::class, 'store'])->name('responsibles.store');

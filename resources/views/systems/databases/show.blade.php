@@ -438,11 +438,15 @@
                                border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
                     Cancelar
                 </button>
-                <button type="submit"
+                <button id="sysdb-resp-submit-btn" type="submit"
                         class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white
                                bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors shadow-sm">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg id="sysdb-resp-submit-icon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <svg id="sysdb-resp-submit-spinner" class="hidden w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
                     </svg>
                     <span id="resp-submit-label">Asignar</span>
                 </button>
@@ -778,21 +782,47 @@
         dropdown.innerHTML = '';
     }
 
+    // ── Protección doble envío ───────────────────────────────────────────────
+    let sysdbRespSubmitting = false;
+    const sysdbRespBtn     = document.getElementById('sysdb-resp-submit-btn');
+    const sysdbRespIcon    = document.getElementById('sysdb-resp-submit-icon');
+    const sysdbRespSpinner = document.getElementById('sysdb-resp-submit-spinner');
+    const sysdbRespLabel   = document.getElementById('resp-submit-label');
+
+    document.getElementById('resp-form').addEventListener('submit', function (e) {
+        if (sysdbRespSubmitting) { e.preventDefault(); return; }
+        if (!this.checkValidity()) return;
+        sysdbRespSubmitting = true;
+        sysdbRespBtn.classList.add('pointer-events-none', 'opacity-75');
+        sysdbRespIcon.classList.add('hidden');
+        sysdbRespSpinner.classList.remove('hidden');
+        sysdbRespLabel.textContent = 'Guardando…';
+    });
+
+    function resetSysdbRespBtn() {
+        sysdbRespSubmitting = false;
+        sysdbRespBtn.classList.remove('pointer-events-none', 'opacity-75');
+        sysdbRespIcon.classList.remove('hidden');
+        sysdbRespSpinner.classList.add('hidden');
+    }
+
     // ── Botón Agregar → reset modal ──────────────────────────────────────────
     document.querySelector('[onclick="openModal(\'modal-resp\')"]')?.addEventListener('click', function () {
         document.getElementById('resp-modal-title').textContent  = 'Asignar Responsable';
-        document.getElementById('resp-submit-label').textContent = 'Asignar';
+        sysdbRespLabel.textContent = 'Asignar';
         document.getElementById('resp-form').action = storeUrl;
         document.getElementById('resp-method').innerHTML = '';
         document.getElementById('resp-form').reset();
         resetPersonaSearch();
+        resetSysdbRespBtn();
         document.getElementById('resp-assigned_at').value = new Date().toISOString().slice(0, 10);
     });
 
     // ── Editar responsable ───────────────────────────────────────────────────
     window.editResponsible = function (id, data) {
         document.getElementById('resp-modal-title').textContent  = 'Editar Responsable';
-        document.getElementById('resp-submit-label').textContent = 'Guardar';
+        sysdbRespLabel.textContent = 'Guardar';
+        resetSysdbRespBtn();
         document.getElementById('resp-form').action = updateBase + id;
         document.getElementById('resp-method').innerHTML = '<input type="hidden" name="_method" value="PUT">';
 

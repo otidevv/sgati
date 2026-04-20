@@ -31,6 +31,11 @@ class Repository extends Model
         return $this->belongsTo(System::class);
     }
 
+    public function collaborators()
+    {
+        return $this->hasMany(RepositoryCollaborator::class)->orderBy('assigned_at');
+    }
+
     // ── Accessors ─────────────────────────────────────────────────────
 
     /**

@@ -439,11 +439,15 @@
                                border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
                     Cancelar
                 </button>
-                <button type="submit"
+                <button id="sys-resp-submit-btn" type="submit"
                         class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white
                                bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors shadow-sm">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg id="sys-resp-submit-icon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <svg id="sys-resp-submit-spinner" class="hidden w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
                     </svg>
                     <span id="sys-resp-submit-label">Asignar</span>
                 </button>
@@ -794,8 +798,9 @@ document.querySelectorAll('#sys-resp-levels-grid .sys-level-cb').forEach(cb => {
 });
 
 function sysRespOpenModal() {
-    document.getElementById('sys-resp-modal-title').textContent  = 'Asignar Responsable';
-    document.getElementById('sys-resp-submit-label').textContent = 'Asignar';
+    document.getElementById('sys-resp-modal-title').textContent = 'Asignar Responsable';
+    sysRespLabel.textContent = 'Asignar';
+    resetSysRespBtn();
     document.getElementById('sys-resp-form').action = sysRespStoreUrl;
     document.getElementById('sys-resp-method').innerHTML = '';
     document.getElementById('sys-resp-form').reset();
@@ -813,8 +818,9 @@ function sysRespOpenModal() {
 }
 
 function sysRespEdit(id, data) {
-    document.getElementById('sys-resp-modal-title').textContent  = 'Editar Responsable';
-    document.getElementById('sys-resp-submit-label').textContent = 'Guardar';
+    document.getElementById('sys-resp-modal-title').textContent = 'Editar Responsable';
+    sysRespLabel.textContent = 'Guardar';
+    resetSysRespBtn();
     document.getElementById('sys-resp-form').action = sysRespBase + id;
     document.getElementById('sys-resp-method').innerHTML = '<input type="hidden" name="_method" value="PUT">';
     document.getElementById('sys-resp-persona_id').value = data.persona_id ?? '';
@@ -853,6 +859,20 @@ function sysRespToggleHistory() {
     chevron.style.transform = hidden ? '' : 'rotate(180deg)';
 }
 
+// ── Protección doble envío ──────────────────────────────────────────────
+let sysRespSubmitting = false;
+const sysRespBtn     = document.getElementById('sys-resp-submit-btn');
+const sysRespIcon    = document.getElementById('sys-resp-submit-icon');
+const sysRespSpinner = document.getElementById('sys-resp-submit-spinner');
+const sysRespLabel   = document.getElementById('sys-resp-submit-label');
+
+function resetSysRespBtn() {
+    sysRespSubmitting = false;
+    sysRespBtn.classList.remove('pointer-events-none', 'opacity-75');
+    sysRespIcon.classList.remove('hidden');
+    sysRespSpinner.classList.add('hidden');
+}
+
 // Validar al menos un nivel seleccionado antes de enviar
 document.getElementById('sys-resp-form').addEventListener('submit', function (e) {
     const checked = document.querySelectorAll('#sys-resp-levels-grid .sys-level-cb:checked');
@@ -860,7 +880,14 @@ document.getElementById('sys-resp-form').addEventListener('submit', function (e)
         e.preventDefault();
         document.getElementById('sys-resp-levels-grid').classList.add('ring-2','ring-red-400','rounded-lg');
         setTimeout(() => document.getElementById('sys-resp-levels-grid').classList.remove('ring-2','ring-red-400','rounded-lg'), 2000);
+        return;
     }
+    if (sysRespSubmitting) { e.preventDefault(); return; }
+    sysRespSubmitting = true;
+    sysRespBtn.classList.add('pointer-events-none', 'opacity-75');
+    sysRespIcon.classList.add('hidden');
+    sysRespSpinner.classList.remove('hidden');
+    sysRespLabel.textContent = 'Guardando…';
 });
 
 // ── Documentos ────────────────────────────────────────────────────────
