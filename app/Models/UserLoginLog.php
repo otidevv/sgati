@@ -70,8 +70,20 @@ class UserLoginLog extends Model
         };
     }
 
+    public function getIsExpiredAttribute(): bool
+    {
+        if ($this->logged_out_at !== null) return false;
+        $lifetimeMinutes = config('session.lifetime', 120);
+        return $this->logged_in_at->diffInMinutes(now()) > $lifetimeMinutes;
+    }
+
     public static function record(\Illuminate\Http\Request $request, int $userId): self
     {
+        // Cerrar sesiones abiertas anteriores del usuario (expiraron o fueron abandonadas)
+        self::where('user_id', $userId)
+            ->whereNull('logged_out_at')
+            ->update(['logged_out_at' => now()]);
+
         return self::create([
             'user_id'      => $userId,
             'ip_address'   => self::resolveIp($request),

@@ -95,7 +95,7 @@
                     <p class="text-[11px] text-gray-400 dark:text-gray-500">Últimas 15 sesiones registradas</p>
                 </div>
             </div>
-            @if($loginLogs->where('logged_out_at', null)->count())
+            @if($loginLogs->filter(fn($l) => is_null($l->logged_out_at) && !$l->is_expired)->count())
             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
                          bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400">
                 <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
@@ -111,7 +111,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                     </svg>
                 </div>
-                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Sin registros de acceso</p>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Sin registros de acceso.</p>
                 <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Los accesos se registrarán a partir de ahora</p>
             </div>
         @else
@@ -128,7 +128,10 @@
 
             <div class="divide-y divide-gray-100 dark:divide-gray-700/50">
                 @foreach($loginLogs as $log)
-                @php $isActive = is_null($log->logged_out_at); @endphp
+                @php
+                    $isExpired = $log->is_expired;
+                    $isActive  = is_null($log->logged_out_at) && !$isExpired;
+                @endphp
                 <div class="grid grid-cols-1 sm:grid-cols-[90px_1fr_80px_110px_120px_110px] gap-2 sm:gap-4 items-center
                             px-6 py-3.5 transition-colors
                             {{ $isActive ? 'bg-green-50/40 dark:bg-green-900/5' : 'hover:bg-gray-50/60 dark:hover:bg-gray-700/20' }}">
@@ -140,6 +143,11 @@
                                          bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400">
                                 <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
                                 Activa
+                            </span>
+                        @elseif($isExpired)
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium
+                                         bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+                                Expirada
                             </span>
                         @else
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium
@@ -163,6 +171,8 @@
                     <div>
                         @if($isActive)
                             <p class="text-xs font-semibold text-green-600 dark:text-green-400">En curso</p>
+                        @elseif($isExpired)
+                            <p class="text-xs text-amber-500 dark:text-amber-400">—</p>
                         @else
                             <p class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{ $log->duration }}</p>
                         @endif
