@@ -15,19 +15,46 @@
     </div>
 
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        <form action="{{ route('systems.repositories.update', [$system, $repository]) }}" method="POST" class="p-6 space-y-5">
+        <form id="repo-edit-form" action="{{ route('systems.repositories.update', [$system, $repository]) }}" method="POST" class="p-6 space-y-5">
             @csrf @method('PUT')
             @include('systems.repositories._form', ['repository' => $repository])
             <div class="flex items-center justify-end gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
                 <a href="{{ route('systems.show', $system) }}"
                    class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">Cancelar</a>
-                <button type="submit"
+                <button id="repo-edit-btn" type="submit"
                         class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                    Guardar Cambios
+                    <svg id="repo-edit-icon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <svg id="repo-edit-spinner" class="hidden w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+                    </svg>
+                    <span id="repo-edit-label">Guardar Cambios</span>
                 </button>
             </div>
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script>
+(function () {
+    const form    = document.getElementById('repo-edit-form');
+    const btn     = document.getElementById('repo-edit-btn');
+    const icon    = document.getElementById('repo-edit-icon');
+    const spinner = document.getElementById('repo-edit-spinner');
+    const label   = document.getElementById('repo-edit-label');
+    let submitted = false;
+
+    form.addEventListener('submit', function (e) {
+        if (submitted) { e.preventDefault(); return; }
+        if (!form.checkValidity()) return;
+        submitted = true;
+        btn.classList.add('pointer-events-none', 'opacity-75');
+        icon.classList.add('hidden');
+        spinner.classList.remove('hidden');
+        label.textContent = 'Guardando…';
+    });
+})();
+</script>
+@endpush
 @endsection

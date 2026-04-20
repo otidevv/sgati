@@ -90,9 +90,8 @@ function buildDoc(d, logoBase64 = null) {
                     stack: [
                         kvMono('Servidor',    infra.server_name),
                         kv('Sistema op.',     infra.operating_system),
-                        kvMono('IP pública',  infra.server_ip),
-                        kvMono('IP interna',  infra.internal_ip),
-                        kvMono('Puerto',      infra.port ? `:${infra.port}` : null),
+                        kvMono('IP pública',  infra.server_ip   ? (infra.port ? `${infra.server_ip}:${infra.port}` : infra.server_ip)   : null),
+                        kvMono('IP interna',  infra.internal_ip ? (infra.port ? `${infra.internal_ip}:${infra.port}` : infra.internal_ip) : null),
                         kvMono('URL',         infra.system_url),
                     ],
                     width: '50%',
