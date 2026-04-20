@@ -1,7 +1,9 @@
 import { pdfMake } from './builder.js';
-import { C, th, td, tableLayout, rule, sectionHeader, kv } from './theme.js';
+import { C, th, td, tableLayout, rule, sectionHeader, kv, kvMono, kvPill, pillCell } from './theme.js';
 
-function buildDoc(d) {
+const statusActive = (s) => s && !/(inactivo|descontinuado|archivado|suspendido)/i.test(s);
+
+function buildDoc(d, logoBase64 = null) {
     const generatedAt = d.generated_at ?? new Date().toLocaleString('es-PE');
     const generatedBy = d.generated_by ?? '—';
     const content = [];
@@ -34,8 +36,11 @@ function buildDoc(d) {
                     kv('Sistema',     d.name),
                     kv('Acrónimo',    d.acronym),
                     kv('Área',        d.area),
-                    kv('Responsable', d.responsible),
-                    kv('Estado',      d.status),
+                    kv('Responsables', (() => {
+                        const n = d.responsibles?.length ?? 0;
+                        return `${n} registrado${n !== 1 ? 's' : ''}`;
+                    })()),
+                    kv('Estado', d.status, !statusActive(d.status)),
                 ],
                 width: '50%',
             },
@@ -44,8 +49,8 @@ function buildDoc(d) {
                     kv('Entorno',      d.infrastructure?.environment),
                     kv('Servidor web', d.infrastructure?.web_server),
                     kv('SSL',          d.infrastructure?.ssl_enabled ? 'Habilitado' : 'No habilitado'),
-                    kv('Creado',       d.created_at),
-                    kv('Actualizado',  d.updated_at),
+                    kvMono('Creado',       d.created_at),
+                    kvMono('Actualizado',  d.updated_at),
                 ],
                 width: '50%',
             },
@@ -72,6 +77,37 @@ function buildDoc(d) {
                 vLineWidth: (i) => i === 0 ? 2 : 0,
                 vLineColor: () => C.navy,
             },
+        });
+    }
+
+    // ── Infraestructura ──────────────────────────────────────────────
+    if (d.infrastructure) {
+        content.push(sectionHeader('Infraestructura'));
+        const infra = d.infrastructure;
+        content.push({
+            columns: [
+                {
+                    stack: [
+                        kvMono('Servidor',    infra.server_name),
+                        kv('Sistema op.',     infra.operating_system),
+                        kvMono('IP pública',  infra.server_ip),
+                        kvMono('IP interna',  infra.internal_ip),
+                        kvMono('Puerto',      infra.port ? `:${infra.port}` : null),
+                        kvMono('URL',         infra.system_url),
+                    ],
+                    width: '50%',
+                },
+                {
+                    stack: [
+                        kv('Entorno',         infra.environment),
+                        kv('Web server',      infra.web_server),
+                        kv('SSL',             infra.ssl_enabled ? 'Habilitado' : 'No'),
+                        kvMono('Certificado', infra.ssl_cert),
+                        kv('Notas',           infra.notes, true),
+                    ],
+                    width: '50%',
+                },
+            ],
         });
     }
 
@@ -103,34 +139,25 @@ function buildDoc(d) {
         }
     }
 
-    // ── Infraestructura ──────────────────────────────────────────────
-    if (d.infrastructure) {
-        content.push(sectionHeader('Infraestructura'));
-        const infra = d.infrastructure;
-        const accessStr = infra.public_ip && infra.port
-            ? `${infra.public_ip}:${infra.port}`
-            : (infra.public_ip || (infra.port ? `Puerto :${infra.port}` : null) || '—');
+    // ── Contenedores ─────────────────────────────────────────────────
+    if (d.containers?.length > 0) {
+        content.push(sectionHeader('Contenedores'));
         content.push({
-            columns: [
-                {
-                    stack: [
-                        kv('Servidor',    infra.server_name),
-                        kv('IP expuesta', infra.public_ip ?? infra.server_ip),
-                        kv('Puerto',      infra.port ? `:${infra.port}` : null),
-                        kv('URL',         infra.system_url),
-                    ],
-                    width: '50%',
-                },
-                {
-                    stack: [
-                        kv('Acceso directo', accessStr !== '—' ? accessStr : null),
-                        kv('SSL',            infra.ssl_enabled ? 'Habilitado' : 'No'),
-                        kv('Certificado',    infra.ssl_cert),
-                        kv('Notas',          infra.notes, true),
-                    ],
-                    width: '50%',
-                },
-            ],
+            table: {
+                widths: ['*', '*', 55, 55, '*'],
+                headerRows: 1,
+                body: [
+                    [th('Contenedor'), th('Imagen'), th('Puerto'), th('Estado'), th('Rol')],
+                    ...d.containers.map(c => [
+                        td(c.name,   { bold: true, color: C.navy }),
+                        td(c.image,  { fontSize: 7, color: C.medium }),
+                        td(c.port ?? '—', { alignment: 'center', fontSize: 7, color: C.medium }),
+                        pillCell(c.status ?? '—', statusActive(c.status)),
+                        td(c.role),
+                    ]),
+                ],
+            },
+            layout: tableLayout,
         });
     }
 
@@ -165,15 +192,16 @@ function buildDoc(d) {
         content.push(sectionHeader('Bases de Datos'));
         content.push({
             table: {
-                widths: ['*', 80, '*', 45],
+                widths: ['*', 70, 55, '*', 55],
                 headerRows: 1,
                 body: [
-                    [th('Nombre'), th('Motor'), th('Host'), th('Puerto')],
+                    [th('Nombre'), th('Motor'), th('Ambiente'), th('Host / Servidor'), th('Schema')],
                     ...d.databases.map(db => [
-                        td(db.name, { bold: true }),
+                        td(db.name,        { bold: true }),
                         td(db.engine),
-                        td(db.host, { fontSize: 7 }),
-                        td(db.port?.toString(), { alignment: 'center' }),
+                        td(db.environment),
+                        td(db.host,        { fontSize: 7, color: C.medium }),
+                        td(db.schema,      { fontSize: 7, color: C.medium }),
                     ]),
                 ],
             },
@@ -186,22 +214,80 @@ function buildDoc(d) {
         content.push(sectionHeader('Servicios y APIs'));
         content.push({
             table: {
-                widths: ['*', 50, 55, '*', 44, 30],
+                widths: ['*', 52, 52, '*', 40, 50, 31],
                 headerRows: 1,
                 body: [
-                    [th('Nombre'), th('Tipo'), th('Dirección'), th('Endpoint'), th('Auth'), th('Activo')],
+                    [th('Nombre'), th('Tipo'), th('Dirección'), th('Endpoint'), th('Auth'), th('Entorno'), th('Activo')],
                     ...d.services.map(s => [
-                        td(s.name, { bold: true }),
+                        {
+                            stack: [
+                                { text: s.name, fontSize: 7.5, bold: true, color: C.dark },
+                                ...(s.description ? [{ text: s.description, fontSize: 6.5, color: C.muted, italics: true, margin: [0, 1, 0, 0] }] : []),
+                                ...(s.version    ? [{ text: `v${s.version}`, fontSize: 6.5, color: C.light, margin: [0, 1, 0, 0] }] : []),
+                            ],
+                            border: [false, false, false, true],
+                            borderColor: [null, null, null, C.borderSoft],
+                            margin: [5, 3, 5, 3],
+                        },
                         td(s.type),
                         td(s.direction),
-                        td(s.endpoint, { fontSize: 6.5 }),
+                        td(s.endpoint, { fontSize: 6.5, color: C.medium }),
                         td(s.auth),
-                        td(s.active ? 'Sí' : 'No', { alignment: 'center', bold: s.active, color: s.active ? C.navy : C.light }),
+                        td(s.environment),
+                        td(s.active ? 'Sí' : 'No', {
+                            alignment: 'center',
+                            bold: s.active,
+                            color: s.active ? C.navy : C.light,
+                        }),
                     ]),
                 ],
             },
             layout: tableLayout,
         });
+
+        // Sub-sección: consumidores por cada servicio expuesto
+        const exposed = d.services.filter(s => s.direction === 'Expuesto' && s.consumers?.length > 0);
+        for (const s of exposed) {
+            content.push({
+                text: `Solicitantes / Consumidores — ${s.name}`,
+                fontSize: 6.5,
+                bold: true,
+                color: C.navy,
+                margin: [0, 8, 0, 3],
+            });
+            content.push({
+                table: {
+                    widths: ['*', 38, 60, '*', 42, 40],
+                    headerRows: 1,
+                    body: [
+                        [
+                            th('Solicitado por'),
+                            th('Tipo'),
+                            th('Auth'),
+                            th('URL Gateway'),
+                            th('Consultas'),
+                            th('Estado'),
+                        ],
+                        ...s.consumers.map(c => [
+                            td(c.organization, { fontSize: 6.5, color: C.medium }),
+                            td(c.type,         { fontSize: 6.5 }),
+                            
+                            td(c.auth,         { fontSize: 6.5 }),
+                            td(c.gateway_url,  { fontSize: 5.5, color: C.medium }),
+                            td(c.total != null ? String(c.total) : '—', { fontSize: 6.5, alignment: 'center' }),
+                            td(c.active ? 'Activo' : 'Inactivo', {
+                                fontSize: 6.5,
+                                alignment: 'center',
+                                bold: c.active,
+                                color: c.active ? C.navy : C.light,
+                                italics: !c.active,
+                            }),
+                        ]),
+                    ],
+                },
+                layout: tableLayout,
+            });
+        }
     }
 
     // ── Repositorios ─────────────────────────────────────────────────
@@ -216,7 +302,7 @@ function buildDoc(d) {
                     ...d.repositories.map(r => [
                         td(r.name, { bold: true }),
                         td(r.provider),
-                        td(r.url, { fontSize: 6.5 }),
+                        td(r.url, { fontSize: 6.5, color: C.medium }),
                         td(r.branch),
                     ]),
                 ],
@@ -342,9 +428,36 @@ function buildDoc(d) {
                 {
                     columns: [
                         {
-                            stack: [
-                                { text: 'UNIVERSIDAD NACIONAL MADRE DE DIOS', fontSize: 8, bold: true, color: C.navy },
-                                { text: 'Oficina de Tecnologías de la Información — OTI', fontSize: 6.5, color: C.muted, margin: [0, 1, 0, 0] },
+                            columns: [
+                                logoBase64 ? {
+                                    image: logoBase64,
+                                    width: 30,
+                                    height: 30,
+                                    margin: [0, 0, 8, 0],
+                                } : {
+                                    table: {
+                                        widths: [26],
+                                        body: [[{
+                                            text: 'OTI',
+                                            fontSize: 8,
+                                            bold: true,
+                                            color: C.navy,
+                                            alignment: 'center',
+                                            fillColor: C.navyLight,
+                                            border: [true, true, true, true],
+                                            borderColor: [C.navy, C.navy, C.navy, C.navy],
+                                            margin: [0, 7, 0, 7],
+                                        }]],
+                                    },
+                                    width: 'auto',
+                                    margin: [0, 0, 8, 0],
+                                },
+                                {
+                                    stack: [
+                                        { text: 'UNIVERSIDAD NACIONAL AMAZÓNICA DE MADRE DE DIOS', fontSize: 8, bold: true, color: C.navy },
+                                        { text: 'Oficina de Tecnologías de la Información — OTI', fontSize: 6.5, color: C.muted, margin: [0, 1, 0, 0] },
+                                    ],
+                                },
                             ],
                             margin: [40, 0, 0, 0],
                         },
@@ -386,6 +499,7 @@ function buildDoc(d) {
                             stack: [
                                 { text: [{ text: 'Elaborado el  ', fontSize: 6, color: C.light }, { text: generatedAt, fontSize: 6, color: C.medium, bold: true }] },
                                 { text: [{ text: 'Generado por  ', fontSize: 6, color: C.light }, { text: generatedBy, fontSize: 6, color: C.navy, bold: true }], margin: [0, 2, 0, 0] },
+                                { text: [{ text: 'Documento de uso interno  ·  Clasificación: ', fontSize: 6, color: C.light }, { text: 'Uso restringido', fontSize: 6, color: C.medium, bold: true }], margin: [0, 2, 0, 0] },
                             ],
                             width: '60%',
                             margin: [40, 0, 0, 0],
@@ -416,10 +530,20 @@ window.downloadSystemPdf = async function (systemId, btnEl) {
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>`;
     }
     try {
-        const res  = await fetch(`/systems/${systemId}/pdf-data`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        const [res, logoBase64] = await Promise.all([
+            fetch(`/systems/${systemId}/pdf-data`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } }),
+            fetch('/images/sistema/logo.png')
+                .then(r => r.ok ? r.blob() : null)
+                .then(blob => blob ? new Promise(resolve => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.readAsDataURL(blob);
+                }) : null)
+                .catch(() => null),
+        ]);
         const data = await res.json();
         const filename = `ficha_${(data.acronym || data.id)}_${data.generated_at.slice(0,10).replace(/\//g,'')}.pdf`;
-        pdfMake.createPdf(buildDoc(data)).download(filename);
+        pdfMake.createPdf(buildDoc(data, logoBase64)).download(filename);
     } catch (e) {
         console.error('PDF error:', e);
         if (window.sgToast) sgToast('error', 'No se pudo generar el PDF');

@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Ficha Técnica de Sistema · UNAMAD</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+/* ─────────── Tokens (tweak-able) ─────────── */
+:root {
+  --navy:        #1b3a5c;
+  --navy-light:  #e8f0f7;
+  --black:       #0d0d0d;
+  --dark:        #2a2a2a;
+  --medium:      #4a4a4a;
+  --muted:       #6e6e6e;
+  --light:       #9a9a9a;
+  --border:      #aaaaaa;
+  --border-soft: #d4d4d4;
+  --row-alt:     #f6f6f6;
+  --paper:       #ffffff;
+  --stage:       #e7eaef;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --density: 1;     /* 0.85 compacto · 1 normal · 1.15 espacioso */
+  --show-logo: 1;   /* 1 / 0 */
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--stage);
+  color: var(--dark);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─────────── Toolbar (pantalla) ─────────── */
+.toolbar {
+  position: fixed;
+  top: 16px; right: 16px;
+  display: flex; gap: 8px; align-items: center;
+  z-index: 50;
+  background: #fff;
+  border: 1px solid #e4e7eb;
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+.toolbar button {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--navy);
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  display: inline-flex; gap: 6px; align-items: center;
+  transition: filter .15s ease;
+}
+.toolbar button:hover { filter: brightness(1.1); }
+.toolbar .hint {
+  font-size: 10.5px;
+  color: var(--muted);
+  padding: 0 8px;
+  letter-spacing: 0.02em;
+}
+
+/* ─────────── Stage ─────────── */
+.stage {
+  padding: 40px 20px 60px;
+  display: flex;
+  justify-content: center;
+}
+
+/* ─────────── Hoja A4 ─────────── */
+.page {
+  width: 210mm;
+  min-height: 297mm;
+  background: var(--paper);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    0 8px 28px rgba(15, 23, 42, 0.12);
+  padding: 18mm 14mm 20mm;
+  position: relative;
+  display: flex; flex-direction: column;
+}
+
+/* ─────────── Header ─────────── */
+.doc-header {
+  margin-bottom: 10mm;
+}
+.doc-header .rules {
+  display: flex; flex-direction: column; gap: 2px;
+  margin-bottom: 8px;
+}
+.doc-header .rules .r-thick {
+  height: 2.2px; background: var(--navy);
+}
+.doc-header .rules .r-thin {
+  height: 0.4px; background: var(--border-soft);
+}
+.doc-header .top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.doc-header .brand {
+  display: flex; align-items: center; gap: 10px;
+}
+.doc-header .brand .logo {
+  width: 36px; height: 36px;
+  border: 1.5px solid var(--navy);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--navy);
+  font-weight: 800;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  background: var(--navy-light);
+  display: var(--show-logo-display, flex);
+}
+.doc-header .brand .logo::before {
+  content: 'OTI';
+}
+body.no-logo .doc-header .brand .logo { display: none; }
+
+.doc-header .brand-text .line1 {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: 0.04em;
+}
+.doc-header .brand-text .line2 {
+  font-size: 7px;
+  color: var(--muted);
+  margin-top: 1px;
+  letter-spacing: 0.02em;
+}
+.doc-header .meta {
+  text-align: right;
+}
+.doc-header .meta .line1 {
+  font-size: 7.5px;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: 0.05em;
+}
+.doc-header .meta .line2 {
+  font-size: 7px;
+  color: var(--muted);
+  margin-top: 1px;
+  font-family: var(--font-mono);
+}
+.doc-header .closer {
+  height: 0.4px; background: var(--border-soft);
+  margin-top: 6px;
+}
+
+/* ─────────── Título ─────────── */
+.doc-title {
+  text-align: center;
+  margin: 2mm 0 1mm;
+}
+.doc-title h1 {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.doc-title .acronym {
+  font-size: 9px;
+  color: var(--muted);
+  margin-top: 3px;
+  font-family: var(--font-mono);
+}
+
+/* ─────────── Section header ─────────── */
+.section {
+  margin-top: calc(14px * var(--density));
+}
+.section-head {
+  border-top: 0.6px solid var(--navy);
+  padding-top: 4px;
+  margin-bottom: calc(8px * var(--density));
+}
+.section-head .label {
+  font-size: 7.5px;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ─────────── Key/Value ─────────── */
+.kv-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 28px;
+}
+.kv {
+  display: grid;
+  grid-template-columns: 105px 1fr;
+  padding: calc(2px * var(--density)) 0;
+  font-size: 8px;
+  line-height: 1.45;
+}
+.kv .k {
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+.kv .v {
+  color: var(--dark);
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+.kv .v.mono { font-family: var(--font-mono); font-size: 7.5px; }
+.kv .v.muted { color: var(--light); font-style: italic; }
+
+/* ─────────── Description block ─────────── */
+.block-quote {
+  border-left: 2px solid var(--navy);
+  padding: 6px 10px;
+  font-size: 8px;
+  color: var(--medium);
+  font-style: italic;
+  line-height: 1.5;
+}
+.block-label {
+  font-size: 7.5px;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 8px 0 3px;
+  letter-spacing: 0.02em;
+}
+
+/* ─────────── Stack tags ─────────── */
+.stack-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 4px;
+}
+.stack-tag {
+  border: 0.5px solid var(--navy);
+  color: var(--navy);
+  font-size: 7px;
+  font-weight: 500;
+  text-align: center;
+  padding: 4px 3px;
+  letter-spacing: 0.01em;
+  background: #fff;
+}
+
+/* ─────────── Tablas ─────────── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8px;
+}
+.data-table thead th {
+  background: var(--navy-light);
+  color: var(--navy);
+  font-weight: 700;
+  font-size: 7.2px;
+  text-align: left;
+  padding: 5px 7px;
+  border-bottom: 1px solid var(--navy);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.data-table td {
+  padding: calc(4px * var(--density)) 7px;
+  border-bottom: 0.5px solid var(--border-soft);
+  color: var(--dark);
+  font-size: 8px;
+  vertical-align: top;
+  line-height: 1.4;
+}
+.data-table tr:nth-child(even) td { background: var(--row-alt); }
+.data-table td.mono { font-family: var(--font-mono); font-size: 7.5px; color: var(--medium); }
+.data-table td.c { text-align: center; }
+.data-table td.bold { font-weight: 700; }
+.data-table td.navy { color: var(--navy); font-weight: 600; }
+.data-table td.muted { color: var(--light); font-style: italic; }
+
+/* Estado pills */
+.pill {
+  display: inline-block;
+  font-size: 6.8px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.pill.active { color: var(--navy); border: 0.6px solid var(--navy); background: var(--navy-light); }
+.pill.inactive { color: var(--light); border: 0.6px solid var(--border-soft); }
+
+/* ─────────── Integraciones ─────────── */
+.integrations {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+}
+.integrations h4 {
+  font-size: 7.5px;
+  color: var(--navy);
+  font-weight: 700;
+  margin: 0 0 5px;
+  letter-spacing: 0.02em;
+}
+.integrations li {
+  font-size: 8px;
+  color: var(--dark);
+  list-style: none;
+  padding: 2px 0 2px 12px;
+  position: relative;
+  line-height: 1.4;
+}
+.integrations li::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 7px;
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--navy);
+}
+.integrations .out li::before { background: var(--medium); }
+.integrations ul { margin: 0; padding: 0; }
+.integrations .proto { color: var(--muted); }
+
+/* ─────────── Footer ─────────── */
+.doc-footer {
+  margin-top: auto;
+  padding-top: 8mm;
+}
+.doc-footer .rules {
+  display: flex; flex-direction: column; gap: 2px;
+  margin-bottom: 8px;
+}
+.doc-footer .rules .r-thick { height: 1.2px; background: var(--navy); }
+.doc-footer .rules .r-thin { height: 0.3px; background: var(--border-soft); }
+.doc-footer .grid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 16px;
+  align-items: end;
+}
+.doc-footer .meta-line {
+  font-size: 6.5px;
+  color: var(--light);
+  line-height: 1.5;
+}
+.doc-footer .meta-line strong { color: var(--medium); font-weight: 600; }
+.doc-footer .meta-line .navy { color: var(--navy); font-weight: 700; }
+.doc-footer .right {
+  text-align: right;
+}
+.doc-footer .right .tag {
+  font-size: 6px;
+  color: var(--light);
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+.doc-footer .right .page-num {
+  font-size: 8px;
+  color: var(--navy);
+  font-weight: 700;
+  margin-top: 3px;
+  font-feature-settings: "tnum" 1;
+}
+
+/* ─────────── Tweaks Panel ─────────── */
+.tweaks-panel {
+  position: fixed;
+  bottom: 16px; right: 16px;
+  background: #fff;
+  border: 1px solid #e4e7eb;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.14);
+  padding: 14px 16px;
+  width: 280px;
+  z-index: 60;
+  display: none;
+  font-size: 12px;
+}
+.tweaks-panel.open { display: block; }
+.tweaks-panel h3 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--navy);
+  margin: 0 0 10px;
+  font-weight: 700;
+}
+.tweaks-panel .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid #f0f2f5;
+}
+.tweaks-panel .row:first-of-type { border-top: none; }
+.tweaks-panel .row label {
+  font-size: 11px;
+  color: var(--medium);
+  font-weight: 500;
+}
+.tweaks-panel .swatches {
+  display: flex; gap: 5px;
+}
+.tweaks-panel .swatch {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  outline: 1px solid rgba(0,0,0,0.08);
+}
+.tweaks-panel .swatch.active { border-color: #111; }
+.tweaks-panel select, .tweaks-panel input[type=range] {
+  font-size: 11px;
+  border: 1px solid #e4e7eb;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-family: var(--font-sans);
+}
+.tweaks-panel .check {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+}
+
+/* ─────────── Print ─────────── */
+@page {
+  size: A4;
+  margin: 0;
+}
+@media print {
+  body { background: #fff; }
+  .toolbar, .tweaks-panel { display: none !important; }
+  .stage { padding: 0; }
+  .page {
+    box-shadow: none;
+    margin: 0;
+    width: 210mm;
+    min-height: 297mm;
+    page-break-after: always;
+  }
+}
+
+/* Pantalla pequeña — el A4 se deja scroll horizontal */
+@media (max-width: 840px) {
+  .stage { overflow-x: auto; padding: 24px 16px 40px; justify-content: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <span class="hint">A4 · Ficha Técnica</span>
+  <button onclick="window.print()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    Descargar PDF
+  </button>
+</div>
+
+<!-- Tweaks Panel -->
+<div class="tweaks-panel" id="tweaks">
+  <h3>Tweaks</h3>
+  <div class="row">
+    <label>Color acento</label>
+    <div class="swatches" id="accent-swatches">
+      <div class="swatch active" data-accent="#1b3a5c" data-light="#e8f0f7" style="background:#1b3a5c"></div>
+      <div class="swatch" data-accent="#0f766e" data-light="#e6f2f0" style="background:#0f766e"></div>
+      <div class="swatch" data-accent="#9a3412" data-light="#fbece3" style="background:#9a3412"></div>
+      <div class="swatch" data-accent="#3f3d56" data-light="#ecebf3" style="background:#3f3d56"></div>
+      <div class="swatch" data-accent="#111827" data-light="#eef0f4" style="background:#111827"></div>
+    </div>
+  </div>
+  <div class="row">
+    <label>Densidad</label>
+    <select id="density-sel">
+      <option value="0.85">Compacto</option>
+      <option value="1" selected>Normal</option>
+      <option value="1.15">Espacioso</option>
+    </select>
+  </div>
+  <div class="row">
+    <label>Logo OTI</label>
+    <label class="check"><input type="checkbox" id="logo-chk" checked /> Visible</label>
+  </div>
+  <div class="row">
+    <label>Stack (datos)</label>
+    <select id="sys-sel">
+      <option value="sgati">SGATI — Gestión TI</option>
+      <option value="matri">SIGMAT — Matrícula</option>
+      <option value="biblio">SIBIB — Biblioteca</option>
+    </select>
+  </div>
+</div>
+
+<!-- Stage -->
+<div class="stage">
+  <div class="page" id="page">
+
+    <!-- ─────────── HEADER ─────────── -->
+    <header class="doc-header">
+      <div class="rules"><div class="r-thick"></div><div class="r-thin"></div></div>
+      <div class="top">
+        <div class="brand">
+          <div class="logo"></div>
+          <div class="brand-text">
+            <div class="line1">UNIVERSIDAD NACIONAL AMAZÓNICA DE MADRE DE DIOS</div>
+            <div class="line2">Oficina de Tecnologías de la Información — OTI</div>
+          </div>
+        </div>
+        <div class="meta">
+          <div class="line1">FICHA TÉCNICA DE SISTEMA</div>
+          <div class="line2" id="meta-code">SGATI · Código: SGATI-001</div>
+        </div>
+      </div>
+      <div class="closer"></div>
+    </header>
+
+    <!-- ─────────── TÍTULO ─────────── -->
+    <div class="doc-title">
+      <h1 id="title-name">Sistema de Gestión de Activos Tecnológicos e Inventario</h1>
+      <div class="acronym" id="title-acronym">[ SGATI ]</div>
+    </div>
+
+    <!-- ─────────── INFORMACIÓN GENERAL ─────────── -->
+    <section class="section">
+      <div class="section-head"><div class="label">Información General</div></div>
+      <div class="kv-grid">
+        <div>
+          <div class="kv"><span class="k">Sistema</span><span class="v" id="g-name">SGATI</span></div>
+          <div class="kv"><span class="k">Acrónimo</span><span class="v" id="g-acr">SGATI</span></div>
+          <div class="kv"><span class="k">Área</span><span class="v" id="g-area">Oficina de Tecnologías de la Información</span></div>
+          <div class="kv"><span class="k">Responsable</span><span class="v" id="g-resp">Ing. Marco A. Quispe Ticona</span></div>
+          <div class="kv"><span class="k">Estado</span>
+            <span class="v"><span class="pill active">En Producción</span></span>
+          </div>
+        </div>
+        <div>
+          <div class="kv"><span class="k">Entorno</span><span class="v" id="g-env">Producción</span></div>
+          <div class="kv"><span class="k">Servidor web</span><span class="v mono">Nginx 1.24.0</span></div>
+          <div class="kv"><span class="k">SSL</span><span class="v">Habilitado · Let's Encrypt</span></div>
+          <div class="kv"><span class="k">Creado</span><span class="v mono">2024-03-12</span></div>
+          <div class="kv"><span class="k">Actualizado</span><span class="v mono">2026-04-08</span></div>
+        </div>
+      </div>
+
+      <div class="block-label">Descripción</div>
+      <div class="block-quote" id="g-desc">
+        Plataforma interna para la gestión centralizada de sistemas, servidores, bases de datos y dependencias tecnológicas de la UNAMAD. Permite generar fichas técnicas, controlar responsables y hacer seguimiento del ciclo de vida operativo de cada activo de software.
+      </div>
+    </section>
+
+    <!-- ─────────── INFRAESTRUCTURA ─────────── -->
+    <section class="section">
+      <div class="section-head"><div class="label">Infraestructura</div></div>
+      <div class="kv-grid">
+        <div>
+          <div class="kv"><span class="k">Servidor</span><span class="v mono">srv-oti-app01</span></div>
+          <div class="kv"><span class="k">Sistema operativo</span><span class="v">Ubuntu Server 22.04 LTS</span></div>
+          <div class="kv"><span class="k">IP expuesta</span><span class="v mono">190.223.45.18</span></div>
+          <div class="kv"><span class="k">IP interna</span><span class="v mono">10.10.2.34</span></div>
+          <div class="kv"><span class="k">Puerto</span><span class="v mono">:443</span></div>
+          <div class="kv"><span class="k">URL</span><span class="v mono">https://sgati.unamad.edu.pe</span></div>
+        </div>
+        <div>
+          <div class="kv"><span class="k">Dominio</span><span class="v mono">unamad.edu.pe</span></div>
+          <div class="kv"><span class="k">Acceso directo</span><span class="v mono">190.223.45.18:443</span></div>
+          <div class="kv"><span class="k">SSL</span><span class="v">Habilitado</span></div>
+          <div class="kv"><span class="k">Certificado</span><span class="v mono">LE · Expira 2026-07-22</span></div>
+          <div class="kv"><span class="k">CPU / RAM</span><span class="v">8 vCPU · 16 GB</span></div>
+          <div class="kv"><span class="k">Notas</span><span class="v muted">Cluster redundante con failover manual</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────── STACK TECNOLÓGICO ─────────── -->
+    <section class="section">
+      <div class="section-head"><div class="label">Stack Tecnológico</div></div>
+      <div class="stack-grid">
+        <div class="stack-tag">PHP 8.2</div>
+        <div class="stack-tag">Laravel 11</div>
+        <div class="stack-tag">JavaScript</div>
+        <div class="stack-tag">Alpine.js</div>
+        <div class="stack-tag">Tailwind CSS</div>
+        <div class="stack-tag">PostgreSQL 15</div>
+        <div class="stack-tag">Redis 7</div>
+        <div class="stack-tag">Docker 24</div>
+        <div class="stack-tag">Nginx</div>
+      </div>
+    </section>
+
+    <!-- ─────────── CONTENEDORES ─────────── -->
+    <section class="section">
+      <div class="section-head"><div class="label">Contenedores</div></div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width:22%">Contenedor</th>
+            <th style="width:22%">Imagen</th>
+            <th style="width:12%">Puerto</th>
+            <th style="width:14%">Estado</th>
+            <th>Rol</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="bold navy">sgati-app</td>
+            <td class="mono">php:8.2-fpm-alpine</td>
+            <td class="mono c">9000</td>
+            <td class="c"><span class="pill active">Running</span></td>
+            <td>Backend Laravel + FPM</td>
+          </tr>
+          <tr>
+            <td class="bold navy">sgati-web</td>
+            <td class="mono">nginx:1.24-alpine</td>
+            <td class="mono c">80 / 443</td>
+            <td class="c"><span class="pill active">Running</span></td>
+            <td>Proxy inverso · TLS termination</td>
+          </tr>
+          <tr>
+            <td class="bold navy">sgati-db</td>
+            <td class="mono">postgres:15.4</td>
+            <td class="mono c">5432</td>
+            <td class="c"><span class="pill active">Running</span></td>
+            <td>Base de datos principal</td>
+          </tr>
+          <tr>
+            <td class="bold navy">sgati-cache</td>
+            <td class="mono">redis:7.2-alpine</td>
+            <td class="mono c">6379</td>
+            <td class="c"><span class="pill active">Running</span></td>
+            <td>Cache de sesión y colas</td>
+          </tr>
+          <tr>
+            <td class="bold navy">sgati-queue</td>
+            <td class="mono">php:8.2-cli-alpine</td>
+            <td class="mono c">—</td>
+            <td class="c"><span class="pill active">Running</span></td>
+            <td>Worker de colas (horizon)</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ─────────── RESPONSABLES ─────────── -->
+    <section class="section">
+      <div class="section-head"><div class="label">Responsables</div></div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th style="width:180px">Rol / Nivel</th>
+            <th style="width:80px">Desde</th>
+            <th style="width:70px">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="bold">Ing. Marco A. Quispe Ticona</td>
+            <td>Líder técnico · Nivel 1</td>
+            <td class="mono">2024-03-12</td>
+            <td class="c"><span class="pill active">Activo</span></td>
+          </tr>
+          <tr>
+            <td class="bold">Ing. Diana C. Ramos Flores</td>
+            <td>Desarrolladora backend · Nivel 2</td>
+            <td class="mono">2024-05-02</td>
+            <td class="c"><span class="pill active">Activo</span></td>
+          </tr>
+          <tr>
+            <td class="bold">Bach. Luis F. Ticona Apaza</td>
+            <td>Soporte e infraestructura · Nivel 2</td>
+            <td class="mono">2025-01-15</td>
+            <td class="c"><span class="pill active">Activo</span></td>
+          </tr>
+          <tr>
+            <td class="bold">Ing. Rosa M. Huamán Mendoza</td>
+            <td>QA · Nivel 3</td>
+            <td class="mono">2025-08-01</td>
+            <td class="c muted"><span class="pill inactive">Inactivo</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ─────────── FOOTER ─────────── -->
+    <footer class="doc-footer">
+      <div class="rules"><div class="r-thick"></div><div class="r-thin"></div></div>
+      <div class="grid">
+        <div>
+          <div class="meta-line">
+            <strong>Elaborado el</strong>
+            <span class="navy" id="gen-date">17/04/2026 · 09:12</span>
+          </div>
+          <div class="meta-line">
+            <strong>Generado por</strong>
+            <span class="navy">Ing. Marco A. Quispe Ticona</span>
+          </div>
+          <div class="meta-line" style="margin-top:3px">
+            Documento de uso interno · Clasificación: <strong>Uso restringido</strong>
+          </div>
+        </div>
+        <div class="right">
+          <div class="tag">SGATI — Oficina de Tecnologías de la Información · UNAMAD</div>
+          <div class="page-num">Página 1 de 1</div>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+</div>
+
+<script>
+/* ────────── Tweak Mode ────────── */
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accent": "#111827",
+  "accentLight": "#eef0f4",
+  "density": 1,
+  "showLogo": true,
+  "system": "sgati"
+}/*EDITMODE-END*/;
+
+const SYSTEMS = {
+  sgati: {
+    name: 'Sistema de Gestión de Activos Tecnológicos e Inventario',
+    acronym: 'SGATI',
+    code: 'SGATI · Código: SGATI-001',
+    desc: "Plataforma interna para la gestión centralizada de sistemas, servidores, bases de datos y dependencias tecnológicas de la UNAMAD. Permite generar fichas técnicas, controlar responsables y hacer seguimiento del ciclo de vida operativo de cada activo de software."
+  },
+  matri: {
+    name: 'Sistema Integrado de Matrícula Académica',
+    acronym: 'SIGMAT',
+    code: 'SIGMAT · Código: SIGMAT-002',
+    desc: "Sistema central de matrícula académica para pregrado y posgrado. Integra reserva de aulas, carga lectiva, control de pagos y emisión de reportes oficiales para la Oficina de Servicios Académicos."
+  },
+  biblio: {
+    name: 'Sistema Integrado de Biblioteca Digital',
+    acronym: 'SIBIB',
+    code: 'SIBIB · Código: SIBIB-007',
+    desc: "Catálogo bibliográfico con préstamo digital, control de devoluciones y acceso a repositorios externos. Operado por la Biblioteca Central y disponible en la intranet institucional."
+  }
+};
+
+const root = document.documentElement;
+
+function applyTweaks(state) {
+  root.style.setProperty('--navy', state.accent);
+  root.style.setProperty('--navy-light', state.accentLight);
+  root.style.setProperty('--density', state.density);
+  document.body.classList.toggle('no-logo', !state.showLogo);
+
+  const s = SYSTEMS[state.system] || SYSTEMS.sgati;
+  document.getElementById('title-name').textContent = s.name;
+  document.getElementById('title-acronym').textContent = `[ ${s.acronym} ]`;
+  document.getElementById('meta-code').textContent = s.code;
+  document.getElementById('g-name').textContent = s.acronym;
+  document.getElementById('g-acr').textContent = s.acronym;
+  document.getElementById('g-desc').textContent = s.desc;
+
+  // Sync UI
+  document.querySelectorAll('#accent-swatches .swatch').forEach(sw => {
+    sw.classList.toggle('active', sw.dataset.accent === state.accent);
+  });
+  document.getElementById('density-sel').value = String(state.density);
+  document.getElementById('logo-chk').checked = !!state.showLogo;
+  document.getElementById('sys-sel').value = state.system;
+}
+
+let state = { ...TWEAK_DEFAULTS };
+applyTweaks(state);
+
+function persist(edits) {
+  state = { ...state, ...edits };
+  applyTweaks(state);
+  window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+}
+
+/* Tweak listeners */
+document.querySelectorAll('#accent-swatches .swatch').forEach(sw => {
+  sw.addEventListener('click', () => {
+    persist({ accent: sw.dataset.accent, accentLight: sw.dataset.light });
+  });
+});
+document.getElementById('density-sel').addEventListener('change', e => {
+  persist({ density: parseFloat(e.target.value) });
+});
+document.getElementById('logo-chk').addEventListener('change', e => {
+  persist({ showLogo: e.target.checked });
+});
+document.getElementById('sys-sel').addEventListener('change', e => {
+  persist({ system: e.target.value });
+});
+
+/* Edit mode protocol */
+window.addEventListener('message', (ev) => {
+  const d = ev.data || {};
+  if (d.type === '__activate_edit_mode') {
+    document.getElementById('tweaks').classList.add('open');
+  } else if (d.type === '__deactivate_edit_mode') {
+    document.getElementById('tweaks').classList.remove('open');
+  }
+});
+window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+</script>
+</body>
+</html>

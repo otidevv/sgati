@@ -140,8 +140,7 @@
                     </label>
                     <select id="engine" name="engine" required
                             class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
-                                   dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
-                                   disabled:opacity-60 disabled:cursor-not-allowed">
+                                   dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                         <option value="">Seleccionar…</option>
                         @foreach($engines as $v => $l)
                         <option value="{{ $v }}" {{ old('engine', $database->engine) === $v ? 'selected' : '' }}>{{ $l }}</option>
@@ -223,15 +222,15 @@
         const host   = opt?.dataset?.host   ?? '';
 
         if (engine) {
-            engineSelect.value    = engine;
-            engineSelect.disabled = true;
+            engineSelect.value = engine;
+            engineSelect.classList.add('pointer-events-none', 'opacity-60');
             lockBadge.classList.remove('hidden');
 
             hintText.textContent = label + (host ? '  ·  ' + host : '');
             hint.classList.remove('hidden');
             hint.classList.add('flex');
         } else {
-            engineSelect.disabled = false;
+            engineSelect.classList.remove('pointer-events-none', 'opacity-60');
             lockBadge.classList.add('hidden');
             hint.classList.add('hidden');
             hint.classList.remove('flex');

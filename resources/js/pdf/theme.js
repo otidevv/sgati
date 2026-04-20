@@ -75,6 +75,52 @@ export const kv = (label, value, muted = false) => ({
     margin: [0, 2, 0, 2],
 });
 
+// KV with monospace-style value (IPs, ports, URLs, dates)
+export const kvMono = (label, value, muted = false) => ({
+    columns: [
+        { text: label,        fontSize: 7, bold: true, color: C.muted, width: 105 },
+        { text: value ?? '—', fontSize: 7,             color: muted ? C.light : C.medium },
+    ],
+    margin: [0, 2, 0, 2],
+});
+
+// Pill badge (for standalone use)
+export const pill = (text, active = true) => ({
+    table: {
+        widths: ['auto'],
+        body: [[{
+            text: (text ?? '—').toUpperCase(),
+            fontSize: 6.5,
+            bold: true,
+            color: active ? C.navy : C.light,
+            fillColor: active ? C.navyLight : null,
+            border: [true, true, true, true],
+            borderColor: active
+                ? [C.navy, C.navy, C.navy, C.navy]
+                : [C.borderSoft, C.borderSoft, C.borderSoft, C.borderSoft],
+            margin: [5, 2, 5, 2],
+        }]],
+    },
+});
+
+// KV row where the value is a pill badge
+export const kvPill = (label, text, active = true) => ({
+    columns: [
+        { text: label, fontSize: 7, bold: true, color: C.muted, width: 105 },
+        { stack: [pill(text, active)] },
+    ],
+    margin: [0, 2, 0, 2],
+});
+
+// Table cell containing a centered pill badge
+export const pillCell = (text, active = true) => ({
+    stack: [pill(text, active)],
+    border: [false, false, false, true],
+    borderColor: [null, null, null, C.borderSoft],
+    margin: [3, 2, 3, 2],
+    alignment: 'center',
+});
+
 export const badge = (text) => ({
     table: {
         widths: ['auto'],

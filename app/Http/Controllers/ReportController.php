@@ -239,8 +239,9 @@ class ReportController extends Controller
             'infrastructure.server.ips',
             'infrastructure.sslCertificate',
             'versions',
-            'databases',
-            'services',
+            'databases.databaseServer',
+            'services.gatewayKeys.requestingSystem',
+            'services.gatewayKeys.persona',
             'repositories',
             'integrationsFrom.targetSystem',
             'integrationsTo.sourceSystem',
@@ -269,16 +270,17 @@ class ReportController extends Controller
             'updated_at'  => $system->updated_at?->format('d/m/Y'),
 
             'infrastructure' => $infra ? [
-                'system_url'  => $infra->system_url,
-                'port'        => $infra->port,
-                'public_ip'   => $infra->public_ip,
-                'web_server'  => $infra->web_server,
-                'environment' => $infra->environment,
-                'ssl_enabled' => $infra->ssl_enabled,
-                'server_name' => $server?->name,
-                'server_ip'   => $infra->public_ip ?? $server?->ips->where('type', 'public')->first()?->ip_address,
-                'ssl_cert'    => $infra->sslCertificate?->name,
-                'notes'       => $infra->notes,
+                'system_url'       => $infra->system_url,
+                'port'             => $infra->port,
+                'web_server'       => $infra->web_server,
+                'environment'      => $infra->environment?->label(),
+                'ssl_enabled'      => $infra->ssl_enabled,
+                'server_name'      => $server?->name,
+                'operating_system' => $server?->operating_system,
+                'server_ip'        => $infra->public_ip ?? $server?->ips->where('type', 'public')->first()?->ip_address,
+                'internal_ip'      => $server?->ips->where('type', 'private')->first()?->ip_address,
+                'ssl_cert'         => $infra->sslCertificate?->name,
+                'notes'            => $infra->notes,
             ] : null,
 
             'versions' => $system->versions->map(fn($v) => [
@@ -288,19 +290,54 @@ class ReportController extends Controller
             ]),
 
             'databases' => $system->databases->map(fn($d) => [
-                'name'   => $d->name,
-                'engine' => $d->engine,
-                'host'   => $d->host,
-                'port'   => $d->port,
+                'name'        => $d->db_name,
+                'engine'      => $d->databaseServer?->engine_label ?? strtoupper($d->engine),
+                'environment' => $d->environment?->label(),
+                'host'        => $d->databaseServer?->connection_string,
+                'schema'      => $d->schema_name,
+                'notes'       => $d->notes,
             ]),
 
             'services' => $system->services->map(fn($s) => [
-                'name'      => $s->service_name,
-                'type'      => $s->service_type,
-                'direction' => $s->direction,
-                'endpoint'  => $s->endpoint_url,
-                'auth'      => $s->auth_type,
-                'active'    => $s->is_active,
+                'name'        => $s->service_name,
+                'type'        => strtoupper(str_replace('_', ' ', $s->service_type)),
+                'direction'   => $s->direction === 'consumed' ? 'Consumido' : 'Expuesto',
+                'endpoint'    => $s->endpoint_url,
+                'auth'        => $s->auth_type,
+                'environment' => match($s->environment) {
+                    'production'  => 'Producción',
+                    'staging'     => 'Staging',
+                    'development' => 'Desarrollo',
+                    default       => $s->environment,
+                },
+                'version'     => $s->version,
+                'description' => $s->description,
+                'active'      => $s->is_active,
+                'consumers'   => $s->direction === 'exposed'
+                    ? $s->gatewayKeys->map(fn($k) => [
+                        'name'        => $k->name,
+                        'type'        => match($k->consumer_type ?? 'external') {
+                            'internal' => 'Sistema',
+                            'person'   => 'Persona',
+                            default    => 'Ext.',
+                        },
+                        'organization'=> $k->requestingSystem?->acronym
+                            ?? $k->requestingSystem?->name
+                            ?? ($k->persona ? trim(($k->persona->apellido_paterno ?? '') . ' ' . ($k->persona->nombres ?? $k->persona->name ?? '')) : null)
+                            ?? $k->consumer_organization,
+                        'auth'        => match($k->auth_type ?? 'bearer') {
+                            'bearer'      => 'Bearer',
+                            'api_key'     => 'API Key',
+                            'query_param' => 'Query',
+                            'none'        => 'Sin auth',
+                            default       => $k->auth_type,
+                        },
+                        'gateway_url' => $k->gateway_slug ? $k->gatewayUrl() : null,
+                        'active'      => $k->is_active && !$k->isExpired(),
+                        'total'       => $k->total_requests,
+                        'last_used'   => $k->last_used_at?->format('d/m/Y'),
+                    ])->values()
+                    : [],
             ]),
 
             'repositories' => $system->repositories->map(fn($r) => [
