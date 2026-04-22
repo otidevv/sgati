@@ -186,6 +186,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reports/pdf-data/systems',          [ReportController::class, 'systemsListPdfData'])->name('reports.pdf-data.systems');
     Route::get('/reports/pdf-data/systems-detailed', [ReportController::class, 'systemsDetailedPdfData'])->name('reports.pdf-data.systems-detailed');
     Route::get('/reports/pdf-data/servers',          [ReportController::class, 'serversPdfData'])->name('reports.pdf-data.servers');
+    Route::get('/reports/pdf-data/servers/{server}', [ReportController::class, 'serverPdfData'])->name('reports.pdf-data.server');
 
     // ── Administración (solo admin) ───────────────────────────────────────
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {

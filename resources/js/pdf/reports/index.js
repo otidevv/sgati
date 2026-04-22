@@ -2,6 +2,9 @@ import { pdfMake, wrapDoc } from '../builder.js';
 import { buildContent as systemsListContent }     from './systems-list.js';
 import { buildContent as systemsDetailedContent } from './systems-detailed.js';
 import { buildContent as serversContent }         from './servers.js';
+import { downloadServerPdf as _downloadServerPdf } from '../server-detail.js';
+
+window.downloadServerPdf = _downloadServerPdf;
 
 const today = () => new Date().toISOString().slice(0, 10);
 

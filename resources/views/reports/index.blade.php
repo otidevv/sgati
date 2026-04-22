@@ -296,7 +296,45 @@
         @endif
 
 
-        {{-- ── Tabla completa de sistemas ───────────────────────────────── --}}
+        {{-- ── KPIs de Servidores ──────────────────────────────────────── --}}
+    @php
+    $totalServers    = $servers->count();
+    $activeServers   = $servers->where('is_active', true)->count();
+    $inactiveServers = $servers->where('is_active', false)->count();
+    $physicalServers = $servers->where('host_type', 'physical')->count();
+    $virtualServers  = $servers->where('host_type', 'virtual')->count();
+    $cloudServers    = $servers->whereNotNull('cloud_provider')->count();
+    $serverKpis = [
+        ['label'=>'Total servidores',  'val'=>$totalServers,    'color'=>'slate',  'icon'=>'M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01'],
+        ['label'=>'Activos',           'val'=>$activeServers,   'color'=>'green',  'icon'=>'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
+        ['label'=>'Inactivos',         'val'=>$inactiveServers, 'color'=>'red',    'icon'=>'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'],
+        ['label'=>'Físicos',           'val'=>$physicalServers, 'color'=>'blue',   'icon'=>'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'],
+        ['label'=>'Virtuales',         'val'=>$virtualServers,  'color'=>'violet', 'icon'=>'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4'],
+        ['label'=>'En la nube',        'val'=>$cloudServers,    'color'=>'sky',    'icon'=>'M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z'],
+    ];
+    @endphp
+
+    <div class="flex items-center gap-2 mt-2">
+        <div class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
+        <span class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider px-2">Servidores</span>
+        <div class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        @foreach($serverKpis as $kpi)
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4">
+            <div class="w-8 h-8 rounded-lg bg-{{ $kpi['color'] }}-50 dark:bg-{{ $kpi['color'] }}-900/30 flex items-center justify-center mb-3">
+                <svg class="w-4 h-4 text-{{ $kpi['color'] }}-600 dark:text-{{ $kpi['color'] }}-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $kpi['icon'] }}"/>
+                </svg>
+            </div>
+            <p class="text-xl font-bold text-gray-900 dark:text-white">{{ $kpi['val'] }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ $kpi['label'] }}</p>
+        </div>
+        @endforeach
+    </div>
+
+    {{-- ── Tabla completa de sistemas ───────────────────────────────── --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
                 <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Inventario Completo</h2>
@@ -375,6 +413,108 @@
                     <tr>
                         <td colspan="9" class="px-5 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
                             No hay sistemas registrados.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {{-- ── Tabla completa de servidores ──────────────────────────────── --}}
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/>
+                </svg>
+                <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Inventario de Servidores</h2>
+            </div>
+            <span class="text-xs text-gray-400 dark:text-gray-500">{{ $totalServers }} servidores</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700 text-sm">
+                <thead class="bg-gray-50 dark:bg-gray-700/50">
+                    <tr>
+                        <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Servidor</th>
+                        <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sistema Operativo</th>
+                        <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Función</th>
+                        <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tipo</th>
+                        <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">IP Pública</th>
+                        <th class="px-5 py-4 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sistemas</th>
+                        <th class="px-5 py-4 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Hardware</th>
+                        <th class="px-5 py-4 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
+                        <th class="px-5 py-4 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">PDF</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    @forelse($servers as $srv)
+                    @php
+                        $publicIp = $srv->publicIps->first()?->ip_address;
+                    @endphp
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                        <td class="px-5 py-4">
+                            <a href="{{ route('admin.servers.show', $srv) }}"
+                               class="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:underline">
+                                {{ $srv->name }}
+                            </a>
+                        </td>
+                        <td class="px-5 py-4 text-xs text-gray-600 dark:text-gray-300">{{ $srv->operating_system ?? '—' }}</td>
+                        <td class="px-5 py-4 text-xs text-gray-600 dark:text-gray-300">{{ $srv->function?->label() ?? '—' }}</td>
+                        <td class="px-5 py-4 text-xs">
+                            @php
+                                $hostColors = [
+                                    'physical' => 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+                                    'virtual'  => 'bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300',
+                                    'cloud'    => 'bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300',
+                                    'container'=> 'bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300',
+                                ];
+                                $hc = $hostColors[$srv->host_type] ?? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400';
+                            @endphp
+                            @if($srv->host_type)
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium {{ $hc }}">
+                                {{ ucfirst($srv->host_type) }}
+                            </span>
+                            @else
+                            <span class="text-gray-400 dark:text-gray-500">—</span>
+                            @endif
+                        </td>
+                        <td class="px-5 py-4 font-mono text-xs text-gray-600 dark:text-gray-300">{{ $publicIp ?? '—' }}</td>
+                        <td class="px-5 py-4 text-center text-xs text-gray-600 dark:text-gray-300">{{ $srv->systems->count() ?: '—' }}</td>
+                        <td class="px-5 py-4 text-center text-xs text-gray-500 dark:text-gray-400">
+                            @if($srv->cpu_cores || $srv->ram_gb)
+                            <span class="font-mono">
+                                @if($srv->cpu_cores){{ $srv->cpu_cores }}c @endif
+                                @if($srv->cpu_cores && $srv->ram_gb) / @endif
+                                @if($srv->ram_gb){{ $srv->ram_gb }}GB @endif
+                            </span>
+                            @else
+                            —
+                            @endif
+                        </td>
+                        <td class="px-5 py-4 text-center">
+                            @if($srv->is_active)
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">Activo</span>
+                            @else
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">Inactivo</span>
+                            @endif
+                        </td>
+                        <td class="px-5 py-4 text-center">
+                            <button type="button"
+                                    onclick="downloadServerPdf({{ $srv->id }}, this)"
+                                    title="Descargar ficha PDF del servidor"
+                                    class="inline-flex items-center justify-center w-7 h-7 rounded bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-800/50 transition-colors disabled:opacity-50">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6M9 17h4"/>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="9" class="px-5 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
+                            No hay servidores registrados.
                         </td>
                     </tr>
                     @endforelse

@@ -520,7 +520,9 @@ function infraServerData() {
             this.exposedRows.splice(index, 1);
         },
         init() {
-            if (this.serverId) { this.loadIps(this.serverId); }
+            if (this.serverId) {
+                this.ips = this.serverIpsMap[this.serverId] ?? [];
+            }
         },
         loadIps(serverId) {
             this.serverId = serverId;

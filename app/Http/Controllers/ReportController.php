@@ -203,6 +203,103 @@ class ReportController extends Controller
         ]);
     }
 
+    public function serverPdfData(Server $server): JsonResponse
+    {
+        $server->load([
+            'ips',
+            'deployments.system.area',
+            'deployments.system.responsible',
+            'deployments.exposedIps',
+            'deployments.serverIp',
+            'databaseServers.databases.system',
+            'databaseServers.responsibles.persona',
+            'activeContainers',
+            'responsibles.persona',
+        ]);
+
+        return response()->json([
+            'generated_at' => now()->format('d/m/Y H:i:s'),
+            'generated_by' => auth()->user()?->name ?? 'Sistema',
+            'name'         => $server->name,
+            'is_active'    => $server->is_active,
+            'os'           => $server->operating_system,
+            'function'     => $server->function?->label(),
+            'host_type'    => $server->host_type,
+            'cloud'        => collect([$server->cloud_provider, $server->cloud_region, $server->cloud_instance])->filter()->join(' / '),
+            'cpu'          => $server->cpu_cores,
+            'ram'          => $server->ram_gb,
+            'storage'      => $server->storage_gb,
+            'web_root'     => $server->web_root,
+            'ssh_user'     => $server->ssh_user,
+            'public_ips'   => $server->publicIps->map(fn($ip) => [
+                'ip'         => $ip->ip_address,
+                'interface'  => $ip->interface,
+                'is_primary' => $ip->is_primary,
+                'notes'      => $ip->notes,
+                'systems'    => $server->deployments
+                    ->filter(fn($infra) => $infra->exposedIps->contains('id', $ip->id))
+                    ->map(fn($infra) => [
+                        'name'    => $infra->system?->name,
+                        'acronym' => $infra->system?->acronym,
+                        'url'     => $infra->system_url,
+                        'port'    => $infra->exposedIps->find($ip->id)?->pivot?->port,
+                    ])
+                    ->filter(fn($s) => $s['name'])
+                    ->values(),
+            ])->values(),
+            'private_ips'  => $server->privateIps->map(fn($ip) => [
+                'ip'         => $ip->ip_address,
+                'interface'  => $ip->interface,
+                'is_primary' => $ip->is_primary,
+                'notes'      => $ip->notes,
+            ])->values(),
+            'notes'        => $server->notes,
+            'installed_services' => $server->installed_services ?? [],
+            'systems' => $server->deployments->map(fn($infra) => [
+                'name'        => $infra->system?->name,
+                'acronym'     => $infra->system?->acronym,
+                'area'        => $infra->system?->area?->name,
+                'responsible' => $infra->system?->responsible?->name,
+                'status'      => $infra->system?->status?->label(),
+                'private_ip'   => $infra->serverIp?->ip_address ?? $infra->public_ip,
+                'private_port' => $infra->port,
+                'exposed'      => $infra->exposedIps->map(fn($ip) => [
+                    'ip'   => $ip->ip_address,
+                    'port' => $ip->pivot->port,
+                ])->values(),
+            ])->filter(fn($s) => $s['name'])->values(),
+            'database_servers' => $server->databaseServers->map(fn($ds) => [
+                'name'         => $ds->name,
+                'engine_label' => $ds->engine_label,
+                'host'         => $ds->connection_string,
+                'is_active'    => $ds->is_active,
+                'notes'        => $ds->notes,
+                'responsibles' => $ds->responsibles->map(fn($r) => [
+                    'name'   => $r->persona
+                        ? trim(($r->persona->nombres ?? '') . ' ' . ($r->persona->apellido_paterno ?? '') . ' ' . ($r->persona->apellido_materno ?? ''))
+                        : '—',
+                    'level'  => \App\Models\DatabaseServerResponsible::levelLabel((string) $r->level),
+                    'active' => $r->is_active,
+                ])->values(),
+                'databases' => $ds->databases->map(fn($d) => [
+                    'name'        => $d->db_name,
+                    'schema'      => $d->schema_name,
+                    'environment' => $d->environment?->label(),
+                    'system'      => $d->system?->name,
+                    'system_acronym' => $d->system?->acronym,
+                ])->values(),
+            ])->values(),
+            'containers' => $server->activeContainers->count(),
+            'responsibles' => $server->responsibles->map(fn($r) => [
+                'name'  => $r->persona
+                    ? trim(($r->persona->nombres ?? '') . ' ' . ($r->persona->apellido_paterno ?? '') . ' ' . ($r->persona->apellido_materno ?? ''))
+                    : '—',
+                'level' => \App\Models\DatabaseServerResponsible::levelLabel((string) $r->level),
+                'active'=> $r->is_active,
+            ]),
+        ]);
+    }
+
     public function serversPdfData(): JsonResponse
     {
         $servers = Server::with(['ips', 'systems', 'activeContainers'])
