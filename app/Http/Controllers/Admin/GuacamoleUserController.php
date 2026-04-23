@@ -22,7 +22,8 @@ class GuacamoleUserController extends Controller
             $auth = $guac->authenticate();
 
             // Reutiliza la contraseña existente o genera una nueva
-            $guacPassword = $user->guacamole_password ?? Str::password(20, symbols: false);
+            // getGuacamolePasswordDecrypted() retorna null si el APP_KEY cambió
+            $guacPassword = $user->getGuacamolePasswordDecrypted() ?? Str::password(20, symbols: false);
             $username     = $user->guacamole_username ?? $user->email;
             $fullName     = $user->nombre_completo;
 

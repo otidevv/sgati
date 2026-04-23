@@ -170,16 +170,21 @@ class ServerController extends Controller
             return back()->with('error', "El servidor [{$server->name}] no tiene conexión Guacamole configurada.");
         }
 
-        if (! Auth::user()->isGuacamoledSynced()) {
+        /** @var \App\Models\User $currentUser */
+        $currentUser = Auth::user();
+
+        if (! $currentUser->isGuacamoledSynced()) {
             return back()->with('error', 'Tu cuenta no tiene acceso a Guacamole. Pide al administrador que la sincronice.');
+        }
+
+        $guacPassword = $currentUser->getGuacamolePasswordDecrypted();
+        if (! $guacPassword) {
+            return back()->with('error', 'Las credenciales de Guacamole de tu cuenta están desactualizadas. Pide al administrador que las re-sincronice.');
         }
 
         try {
             $guac      = new GuacamoleService();
             $adminAuth = $guac->authenticate();
-
-            /** @var \App\Models\User $currentUser */
-            $currentUser = Auth::user();
 
             $guac->grantConnectionPermission(
                 $currentUser->guacamole_username,
@@ -190,7 +195,7 @@ class ServerController extends Controller
 
             $userAuth = $guac->authenticateUser(
                 $currentUser->guacamole_username,
-                $currentUser->guacamole_password
+                $guacPassword
             );
 
             $guacUrl = $guac->buildClientUrl(
@@ -228,21 +233,25 @@ class ServerController extends Controller
             $currentUser = Auth::user();
 
             if ($currentUser->isGuacamoledSynced()) {
-                // Otorgar permiso de lectura sobre esta conexión al usuario
-                $guac->grantConnectionPermission(
-                    $currentUser->guacamole_username,
-                    $server->guacamole_connection_id,
-                    $adminAuth['authToken'],
-                    $adminAuth['dataSource']
-                );
+                $guacPassword = $currentUser->getGuacamolePasswordDecrypted();
 
-                // Autenticar con las credenciales del usuario para obtener su propio token
-                $userAuth   = $guac->authenticateUser(
-                    $currentUser->guacamole_username,
-                    $currentUser->guacamole_password
-                );
-                $authToken  = $userAuth['authToken'];
-                $dataSource = $userAuth['dataSource'];
+                if ($guacPassword) {
+                    $guac->grantConnectionPermission(
+                        $currentUser->guacamole_username,
+                        $server->guacamole_connection_id,
+                        $adminAuth['authToken'],
+                        $adminAuth['dataSource']
+                    );
+
+                    $userAuth   = $guac->authenticateUser(
+                        $currentUser->guacamole_username,
+                        $guacPassword
+                    );
+                    $authToken  = $userAuth['authToken'];
+                    $dataSource = $userAuth['dataSource'];
+                }
+                // Si la contraseña no se puede desencriptar (APP_KEY distinto),
+                // se usa el token de admin como fallback silencioso
             }
 
             $url = $guac->buildClientUrl(

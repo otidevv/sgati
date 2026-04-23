@@ -47,7 +47,22 @@ class User extends Authenticatable
 
     public function isGuacamoledSynced(): bool
     {
-        return ! empty($this->guacamole_username) && ! empty($this->guacamole_password);
+        // getRawOriginal evita disparar el cast 'encrypted' al solo verificar existencia
+        return ! empty($this->guacamole_username)
+            && ! empty($this->getRawOriginal('guacamole_password'));
+    }
+
+    /**
+     * Desencripta la contraseña de Guacamole de forma segura.
+     * Si el APP_KEY cambió (ej. al pasar a producción), retorna null en vez de lanzar excepción.
+     */
+    public function getGuacamolePasswordDecrypted(): ?string
+    {
+        try {
+            return $this->guacamole_password;
+        } catch (\Illuminate\Contracts\Encryption\DecryptException) {
+            return null;
+        }
     }
 
     public function role()
