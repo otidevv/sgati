@@ -1,0 +1,16 @@
+# Secretos — nunca commitear
+.env
+
+# SQL generado (se regenera con setup.ps1)
+init/initdb.sql
+
+# Certificados SSL
+nginx/certs/*.pem
+nginx/certs/*.crt
+nginx/certs/*.key
+
+# Datos persistentes (grabaciones, drive)
+data/
+
+# Docker override local
+docker-compose.override.yml
