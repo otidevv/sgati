@@ -2,8 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Area;
+use App\Models\Repository;
+use App\Models\Server;
 use App\Models\System;
+use App\Models\SystemDatabase;
 use App\Models\SystemInfrastructure;
+use App\Models\SystemVersion;
 use App\Enums\SystemStatus;
 
 class DashboardController extends Controller
@@ -33,16 +38,75 @@ class DashboardController extends Controller
 
         $recentSystems = System::with('area')
             ->orderByDesc('updated_at')
-            ->limit(5)
+            ->limit(8)
             ->get();
 
-        $sslExpiring = SystemInfrastructure::with('system')
+        // SSL ya vencido
+        $sslExpired = SystemInfrastructure::with('system')
             ->where('ssl_enabled', true)
-            ->whereNotNull('ssl_expiry')
-            ->whereDate('ssl_expiry', '<=', now()->addDays(30))
+            ->where(function ($q) {
+                $q->where(function ($q2) {
+                    $q2->whereNull('ssl_custom_expiry')->whereDate('ssl_expiry', '<', now());
+                })->orWhereDate('ssl_custom_expiry', '<', now());
+            })
             ->orderBy('ssl_expiry')
             ->get();
 
-        return view('dashboard.index', compact('stats', 'recentSystems', 'sslExpiring'));
+        // SSL próximo a vencer (próximos 30 días, aún no vencido)
+        $sslExpiring = SystemInfrastructure::with('system')
+            ->where('ssl_enabled', true)
+            ->where(function ($q) {
+                $q->where(function ($q2) {
+                    $q2->whereNull('ssl_custom_expiry')
+                       ->whereDate('ssl_expiry', '>=', now())
+                       ->whereDate('ssl_expiry', '<=', now()->addDays(30));
+                })->orWhere(function ($q2) {
+                    $q2->whereDate('ssl_custom_expiry', '>=', now())
+                       ->whereDate('ssl_custom_expiry', '<=', now()->addDays(30));
+                });
+            })
+            ->orderBy('ssl_expiry')
+            ->get();
+
+        // Infraestructura
+        $serverStats = [
+            'total'  => Server::count(),
+            'active' => Server::where('is_active', true)->count(),
+        ];
+
+        $repoCount = Repository::where('is_active', true)->count();
+        $dbCount   = SystemDatabase::count();
+
+        // Distribución por área (solo áreas con sistemas)
+        $areaStats = Area::withCount('systems')
+            ->orderByDesc('systems_count')
+            ->get()
+            ->where('systems_count', '>', 0)
+            ->take(8);
+
+        // Últimos despliegues
+        $recentVersions = SystemVersion::with('system')
+            ->orderByDesc('release_date')
+            ->orderByDesc('created_at')
+            ->limit(6)
+            ->get();
+
+        // Sistemas activos sin infraestructura registrada
+        $systemsWithoutInfra = System::where('status', SystemStatus::Active->value)
+            ->whereDoesntHave('infrastructure')
+            ->count();
+
+        return view('dashboard.index', compact(
+            'stats',
+            'recentSystems',
+            'sslExpired',
+            'sslExpiring',
+            'serverStats',
+            'repoCount',
+            'dbCount',
+            'areaStats',
+            'recentVersions',
+            'systemsWithoutInfra'
+        ));
     }
 }
