@@ -223,6 +223,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('settings/security', [SettingController::class, 'updateSecurity'])->name('settings.security');
 
         Route::prefix('servers/{server}')->name('servers.')->group(function () {
+            Route::get('remote',                         [ServerController::class, 'remote'])->name('remote');
             Route::get('connect',                        [ServerController::class, 'connect'])->name('connect');
             Route::post('reconnect',                     [ServerController::class, 'reconnect'])->name('reconnect');
 

@@ -47,18 +47,16 @@
             @if($server->guacamole_connection_id)
             {{-- Conectar --}}
             @if(auth()->user()->isGuacamoledSynced())
-            <button type="button"
-                    id="btn-guac-connect"
-                    onclick="guacConnect(this, '{{ route('admin.servers.connect', $server) }}')"
-                    title="Abrir escritorio remoto en nueva pestaña"
-                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium
-                           text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-sm">
+            <a href="{{ route('admin.servers.remote', $server) }}"
+               title="Abrir escritorio remoto"
+               class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium
+                      text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-sm">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                 </svg>
                 Conectar
-            </button>
+            </a>
             @else
             <div class="relative group">
                 <button type="button" disabled

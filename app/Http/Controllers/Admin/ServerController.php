@@ -162,6 +162,52 @@ class ServerController extends Controller
     }
 
     /**
+     * Muestra la vista embebida con Guacamole en un iframe.
+     */
+    public function remote(Server $server)
+    {
+        if (! $server->guacamole_connection_id) {
+            return back()->with('error', "El servidor [{$server->name}] no tiene conexión Guacamole configurada.");
+        }
+
+        if (! Auth::user()->isGuacamoledSynced()) {
+            return back()->with('error', 'Tu cuenta no tiene acceso a Guacamole. Pide al administrador que la sincronice.');
+        }
+
+        try {
+            $guac      = new GuacamoleService();
+            $adminAuth = $guac->authenticate();
+
+            /** @var \App\Models\User $currentUser */
+            $currentUser = Auth::user();
+
+            $guac->grantConnectionPermission(
+                $currentUser->guacamole_username,
+                $server->guacamole_connection_id,
+                $adminAuth['authToken'],
+                $adminAuth['dataSource']
+            );
+
+            $userAuth = $guac->authenticateUser(
+                $currentUser->guacamole_username,
+                $currentUser->guacamole_password
+            );
+
+            $guacUrl = $guac->buildClientUrl(
+                $server->guacamole_connection_id,
+                $userAuth['authToken'],
+                $userAuth['dataSource']
+            );
+
+            return view('admin.servers.remote', compact('server', 'guacUrl'));
+
+        } catch (\Throwable $e) {
+            Log::error("Error al abrir escritorio remoto [{$server->name}]: {$e->getMessage()}");
+            return back()->with('error', "No se pudo conectar: {$e->getMessage()}");
+        }
+    }
+
+    /**
      * Genera un token de sesión fresco en Guacamole y redirige al cliente RDP.
      * Si el usuario tiene cuenta propia en Guacamole, se autentica con sus credenciales.
      * Se abre en una nueva pestaña desde el frontend.
