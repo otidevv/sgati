@@ -23,6 +23,9 @@ class User extends Authenticatable
         'two_factor_code',
         'two_factor_expires_at',
         'session_token',
+        'guacamole_username',
+        'guacamole_password',
+        'guacamole_synced_at',
     ];
 
     protected $hidden = [
@@ -37,7 +40,14 @@ class User extends Authenticatable
             'password'              => 'hashed',
             'is_active'             => 'boolean',
             'two_factor_expires_at' => 'datetime',
+            'guacamole_password'    => 'encrypted',
+            'guacamole_synced_at'   => 'datetime',
         ];
+    }
+
+    public function isGuacamoledSynced(): bool
+    {
+        return ! empty($this->guacamole_username) && ! empty($this->guacamole_password);
     }
 
     public function role()

@@ -32,6 +32,7 @@ use App\Http\Controllers\Admin\DatabaseServerResponsibleDocumentController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SslCertificateController;
+use App\Http\Controllers\Admin\GuacamoleUserController;
 use App\Http\Controllers\SystemResponsibleController;
 use App\Http\Controllers\SystemResponsibleDocumentController;
 use App\Http\Controllers\SystemServiceGatewayController;
@@ -196,6 +197,8 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('personas', PersonaController::class);
         Route::get('users/check-email', [UserController::class, 'checkEmail'])->name('users.check-email');
         Route::resource('users', UserController::class);
+        Route::post('users/{user}/guacamole/sync',  [GuacamoleUserController::class, 'sync'])->name('users.guacamole.sync');
+        Route::delete('users/{user}/guacamole',      [GuacamoleUserController::class, 'destroy'])->name('users.guacamole.destroy');
         Route::get('areas/check-name', [AreaController::class, 'checkName'])->name('areas.check-name');
         Route::resource('areas', AreaController::class);
         Route::get('roles',                              [RoleController::class, 'index'])->name('roles.index');

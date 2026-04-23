@@ -122,6 +122,50 @@
                 </td>
                 <td class="px-5 py-3.5 text-right">
                     <div class="inline-flex items-center gap-1">
+
+                        {{-- Guacamole: indicador + botón sync/remove --}}
+                        @if($user->isGuacamoledSynced())
+                        <span title="Sincronizado con Guacamole ({{ $user->guacamole_username }})"
+                              class="inline-flex items-center justify-center w-8 h-8 rounded-lg
+                                     text-emerald-500 dark:text-emerald-400 cursor-default">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                        </span>
+                        <form id="guac-del-{{ $user->id }}"
+                              action="{{ route('admin.users.guacamole.destroy', $user) }}"
+                              method="POST" class="inline">
+                            @csrf @method('DELETE')
+                            <button type="button" title="Quitar de Guacamole"
+                                    onclick="dtConfirmDelete('guac-del-{{ $user->id }}', 'cuenta Guacamole de {{ addslashes($user->name) }}')"
+                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg
+                                           text-emerald-400 dark:text-emerald-500
+                                           hover:text-red-600 dark:hover:text-red-400
+                                           hover:bg-red-50 dark:hover:bg-red-900/30 transition-all">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                                </svg>
+                            </button>
+                        </form>
+                        @else
+                        <form action="{{ route('admin.users.guacamole.sync', $user) }}"
+                              method="POST" class="inline">
+                            @csrf
+                            <button type="submit" title="Crear usuario en Guacamole"
+                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg
+                                           text-gray-400 dark:text-gray-500
+                                           hover:text-orange-600 dark:hover:text-orange-400
+                                           hover:bg-orange-50 dark:hover:bg-orange-900/30 transition-all">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                </svg>
+                            </button>
+                        </form>
+                        @endif
+
                         <a href="{{ route('admin.users.edit', $user) }}" title="Editar"
                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg
                                   text-gray-400 dark:text-gray-500

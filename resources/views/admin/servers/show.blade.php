@@ -46,6 +46,7 @@
             {{-- ── Guacamole ── --}}
             @if($server->guacamole_connection_id)
             {{-- Conectar --}}
+            @if(auth()->user()->isGuacamoledSynced())
             <button type="button"
                     id="btn-guac-connect"
                     onclick="guacConnect(this, '{{ route('admin.servers.connect', $server) }}')"
@@ -58,6 +59,32 @@
                 </svg>
                 Conectar
             </button>
+            @else
+            <div class="relative group">
+                <button type="button" disabled
+                        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium
+                               text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700/50
+                               border border-gray-200 dark:border-gray-600
+                               rounded-lg cursor-not-allowed">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                    Conectar
+                    <svg class="w-3.5 h-3.5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                </button>
+                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-10 w-56">
+                    <div class="bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg px-3 py-2 text-center shadow-lg">
+                        Tu cuenta no tiene acceso a Guacamole.<br>
+                        <span class="text-gray-300">Pide al administrador que sincronice tu usuario.</span>
+                        <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700"></div>
+                    </div>
+                </div>
+            </div>
+            @endif
             {{-- Restablecer --}}
             <button type="button"
                     id="btn-guac-reset"
@@ -75,7 +102,7 @@
             </button>
             @else
             {{-- Sin conexión: CTA para habilitar acceso remoto --}}
-            {{-- <button type="button"
+             <button type="button"
                     id="btn-guac-reset"
                     onclick="guacReconnect(this, '{{ route('admin.servers.reconnect', $server) }}', true)"
                     title="Registrar este servidor en Guacamole para habilitar el acceso remoto"
@@ -89,7 +116,7 @@
                           d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                 </svg>
                 Habilitar acceso remoto
-            </button> --}}
+            </button> 
             @endif
 
             {{-- Editar --}}

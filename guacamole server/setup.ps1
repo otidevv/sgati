@@ -4,10 +4,10 @@
 
 .DESCRIPTION
     Este script realiza los siguientes pasos:
-      1. Verifica que Docker Desktop esté corriendo
+      1. Verifica que Docker Desktop este corriendo
       2. Crea los directorios necesarios
-      3. Copia .env.example → .env si no existe
-      4. Genera el SQL de inicialización de la BD de Guacamole
+      3. Copia .env.example -> .env si no existe
+      4. Genera el SQL de inicializacion de la BD de Guacamole
       5. (Opcional) Genera un certificado SSL auto-firmado
       6. Levanta los contenedores con docker compose
 
@@ -15,10 +15,10 @@
     Genera un certificado SSL auto-firmado para nginx (requiere openssl en PATH).
 
 .PARAMETER Down
-    Detiene y elimina los contenedores (no borra los volúmenes).
+    Detiene y elimina los contenedores (no borra los volumenes).
 
 .PARAMETER Reset
-    Detiene contenedores Y elimina el volumen de la base de datos (¡borra todos los datos!).
+    Detiene contenedores Y elimina el volumen de la base de datos (borra todos los datos).
 
 .EXAMPLE
     .\setup.ps1
@@ -37,48 +37,48 @@ $ErrorActionPreference = 'Stop'
 $GUACAMOLE_VERSION     = '1.5.5'
 $SCRIPT_DIR            = $PSScriptRoot
 
-# ── Helpers ───────────────────────────────────────────────────────────
-function Write-Step  { param($msg) Write-Host "`n  ► $msg" -ForegroundColor Cyan }
-function Write-OK    { param($msg) Write-Host "    ✓ $msg" -ForegroundColor Green }
-function Write-Warn  { param($msg) Write-Host "    ⚠ $msg" -ForegroundColor Yellow }
-function Write-Err   { param($msg) Write-Host "    ✗ $msg" -ForegroundColor Red; exit 1 }
+# -- Helpers ------------------------------------------------------------------
+function Write-Step { param($msg) Write-Host "" ; Write-Host "  --> $msg" -ForegroundColor Cyan }
+function Write-OK   { param($msg) Write-Host "    [OK] $msg" -ForegroundColor Green }
+function Write-Warn { param($msg) Write-Host "    [!]  $msg" -ForegroundColor Yellow }
+function Write-Err  { param($msg) Write-Host "    [X]  $msg" -ForegroundColor Red; exit 1 }
 
 Write-Host ""
-Write-Host "  ═══════════════════════════════════════════════════" -ForegroundColor Blue
-Write-Host "   SGATI — Apache Guacamole $GUACAMOLE_VERSION Setup  " -ForegroundColor Blue
-Write-Host "  ═══════════════════════════════════════════════════" -ForegroundColor Blue
+Write-Host "  ===================================================" -ForegroundColor Blue
+Write-Host "   SGATI -- Apache Guacamole $GUACAMOLE_VERSION Setup  " -ForegroundColor Blue
+Write-Host "  ===================================================" -ForegroundColor Blue
 
 Set-Location $SCRIPT_DIR
 
-# ── Verificar Docker ──────────────────────────────────────────────────
+# -- Verificar Docker ---------------------------------------------------------
 Write-Step "Verificando Docker Desktop..."
 try {
-    $dockerInfo = docker info 2>&1
+    docker info 2>&1 | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "Docker no responde" }
-    Write-OK "Docker está corriendo"
+    Write-OK "Docker esta corriendo"
 } catch {
-    Write-Err "Docker Desktop no está iniciado. Ábrelo y vuelve a ejecutar este script."
+    Write-Err "Docker Desktop no esta iniciado. Abrelo y vuelve a ejecutar este script."
 }
 
-# ── Modo: Down ────────────────────────────────────────────────────────
+# -- Modo: Down ---------------------------------------------------------------
 if ($Down) {
     Write-Step "Deteniendo contenedores..."
     docker compose down
-    Write-OK "Contenedores detenidos (volúmenes conservados)"
+    Write-OK "Contenedores detenidos (volumenes conservados)"
     exit 0
 }
 
-# ── Modo: Reset ───────────────────────────────────────────────────────
+# -- Modo: Reset --------------------------------------------------------------
 if ($Reset) {
-    Write-Warn "RESET: Se eliminarán los contenedores Y el volumen de base de datos."
-    $confirm = Read-Host "  ¿Confirmas? Escribe 'si' para continuar"
+    Write-Warn "RESET: Se eliminaran los contenedores Y el volumen de base de datos."
+    $confirm = Read-Host "  Confirmas? Escribe 'si' para continuar"
     if ($confirm -ne 'si') { Write-Host "  Cancelado."; exit 0 }
     docker compose down -v
     Write-OK "Contenedores y volumen eliminados. Ejecuta el script sin -Reset para reiniciar."
     exit 0
 }
 
-# ── Crear estructura de directorios ───────────────────────────────────
+# -- Crear estructura de directorios ------------------------------------------
 Write-Step "Creando estructura de directorios..."
 
 $dirs = @(
@@ -99,10 +99,10 @@ foreach ($d in $dirs) {
     }
 }
 
-# ── Crear .env desde .env.example ─────────────────────────────────────
+# -- Crear .env desde .env.example --------------------------------------------
 Write-Step "Configurando .env..."
-$envFile     = Join-Path $SCRIPT_DIR '.env'
-$envExample  = Join-Path $SCRIPT_DIR '.env.example'
+$envFile    = Join-Path $SCRIPT_DIR '.env'
+$envExample = Join-Path $SCRIPT_DIR '.env.example'
 
 if (-not (Test-Path $envFile)) {
     Copy-Item $envExample $envFile
@@ -110,7 +110,7 @@ if (-not (Test-Path $envFile)) {
     Write-Warn "IMPORTANTE: Edita .env y cambia GUAC_DB_PASSWORD antes de continuar."
     Write-Host ""
     Write-Host "  Abre el archivo: $envFile" -ForegroundColor Yellow
-    $continue = Read-Host "  ¿Ya editaste el .env? Escribe 'si' para continuar"
+    $continue = Read-Host "  Ya editaste el .env? Escribe 'si' para continuar"
     if ($continue -ne 'si') { Write-Host "  Edita .env y vuelve a ejecutar el script."; exit 0 }
 } else {
     Write-OK ".env ya existe"
@@ -128,32 +128,46 @@ foreach ($line in $envContent) {
 
 $password = $envVars['GUAC_DB_PASSWORD']
 if ([string]::IsNullOrWhiteSpace($password) -or $password -eq 'cambia_esta_contrasena_segura') {
-    Write-Err "GUAC_DB_PASSWORD en .env sigue siendo el valor por defecto. Cámbialo antes de continuar."
+    Write-Err "GUAC_DB_PASSWORD en .env sigue siendo el valor por defecto. Cambialo antes de continuar."
 }
 Write-OK "GUAC_DB_PASSWORD configurado"
 
-# ── Generar SQL de inicialización ─────────────────────────────────────
-Write-Step "Generando SQL de inicialización de Guacamole..."
+# -- Generar SQL de inicializacion --------------------------------------------
+Write-Step "Generando SQL de inicializacion de Guacamole..."
 $initSql = Join-Path $SCRIPT_DIR 'init\initdb.sql'
 
 if (Test-Path $initSql) {
-    Write-OK "init\initdb.sql ya existe — se omite la generación"
+    Write-OK "init\initdb.sql ya existe -- se omite la generacion"
 } else {
     Write-Host "    Descargando imagen guacamole/$GUACAMOLE_VERSION (puede tardar)..." -ForegroundColor Gray
-    $sqlOutput = docker run --rm "guacamole/guacamole:$GUACAMOLE_VERSION" /opt/guacamole/bin/initdb.sh --postgresql 2>&1
 
-    if ($LASTEXITCODE -ne 0) {
-        Write-Err "No se pudo generar el SQL. Error: $sqlOutput"
+    # Primero pull explícito para ver el progreso y separar stderr informativo
+    docker pull "guacamole/guacamole:$GUACAMOLE_VERSION"
+
+    # Generar el SQL; stderr va a la consola (mensajes de Docker), stdout capturado
+    $prevPref = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $sqlOutput = docker run --rm "guacamole/guacamole:$GUACAMOLE_VERSION" /opt/guacamole/bin/initdb.sh --postgresql 2>$null
+    $exitCode  = $LASTEXITCODE
+    $ErrorActionPreference = $prevPref
+
+    if ($exitCode -ne 0) {
+        Write-Err "No se pudo generar el SQL (exit $exitCode)."
     }
 
-    # Filtrar solo líneas SQL (el script imprime algo de log al inicio)
-    $sqlLines = $sqlOutput | Where-Object { $_ -notmatch '^\s*$' -or $_ -match ';$|^--' }
+    # Filtrar solo líneas SQL
+    $sqlLines = $sqlOutput | Where-Object { $_ -match '\S' }
     $sqlLines | Out-File -FilePath $initSql -Encoding utf8
+
+    if ((Get-Item $initSql).Length -lt 1024) {
+        Remove-Item $initSql -Force
+        Write-Err "El SQL generado parece vacio o incompleto. Revisa la imagen de Guacamole."
+    }
 
     Write-OK "init\initdb.sql generado correctamente"
 }
 
-# ── Generar certificado SSL auto-firmado (opcional) ───────────────────
+# -- Generar certificado SSL auto-firmado (opcional) --------------------------
 if ($GenerateCert) {
     Write-Step "Generando certificado SSL auto-firmado..."
     $certDir  = Join-Path $SCRIPT_DIR 'nginx\certs'
@@ -170,47 +184,47 @@ if ($GenerateCert) {
                 -out $certFile `
                 -subj "/CN=$serverName/O=UNAMAD/C=PE" 2>&1 | Out-Null
 
-            if ($LASTEXITCODE -ne 0) { throw "openssl falló" }
+            if ($LASTEXITCODE -ne 0) { throw "openssl fallo" }
             Write-OK "Certificado auto-firmado generado para: $serverName"
-            Write-Warn "Para producción usa un certificado real (Let's Encrypt, institucional, etc.)"
+            Write-Warn "Para produccion usa un certificado real (Let's Encrypt, institucional, etc.)"
             Write-Warn "Activa el bloque HTTPS en nginx\nginx.conf"
         } catch {
-            Write-Warn "No se pudo generar el certificado. ¿Está openssl en el PATH?"
-            Write-Warn "Instálalo con: winget install ShiningLight.OpenSSL.Light"
+            Write-Warn "No se pudo generar el certificado. Esta openssl en el PATH?"
+            Write-Warn "Instalalo con: winget install ShiningLight.OpenSSL.Light"
         }
     }
 }
 
-# ── Levantar servicios ────────────────────────────────────────────────
+# -- Levantar servicios -------------------------------------------------------
 Write-Step "Levantando servicios con Docker Compose..."
 docker compose up -d --build
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Err "docker compose up falló. Revisa los logs con: docker compose logs"
+    Write-Err "docker compose up fallo. Revisa los logs con: docker compose logs"
 }
 
-# ── Resumen final ─────────────────────────────────────────────────────
-$httpPort = if ($envVars['NGINX_HTTP_PORT']) { $envVars['NGINX_HTTP_PORT'] } else { '80' }
+# -- Resumen final ------------------------------------------------------------
+$httpPort   = if ($envVars['NGINX_HTTP_PORT'])  { $envVars['NGINX_HTTP_PORT'] }  else { '80' }
 $serverName = if ($envVars['GUAC_SERVER_NAME']) { $envVars['GUAC_SERVER_NAME'] } else { 'localhost' }
 
 Write-Host ""
-Write-Host "  ═══════════════════════════════════════════════════" -ForegroundColor Green
-Write-Host "   ✓  Guacamole levantado correctamente              " -ForegroundColor Green
-Write-Host "  ═══════════════════════════════════════════════════" -ForegroundColor Green
+Write-Host "  ===================================================" -ForegroundColor Green
+Write-Host "   Guacamole levantado correctamente                 " -ForegroundColor Green
+Write-Host "  ===================================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "  URL de acceso:  http://$serverName`:$httpPort/guacamole/" -ForegroundColor White
-Write-Host "  Si accedes por IP local: http://localhost:$httpPort/guacamole/"  -ForegroundColor White
+Write-Host "  URL de acceso:  http://${serverName}:${httpPort}/guacamole/" -ForegroundColor White
+Write-Host "  Si accedes por IP local: http://localhost:${httpPort}/guacamole/" -ForegroundColor White
 Write-Host ""
 Write-Host "  Credenciales iniciales:" -ForegroundColor Yellow
 Write-Host "    Usuario:    guacadmin" -ForegroundColor White
-Write-Host "    Contraseña: guacadmin  ← CAMBIA ESTO DE INMEDIATO" -ForegroundColor Red
+Write-Host "    Contrasena: guacadmin  <-- CAMBIA ESTO DE INMEDIATO" -ForegroundColor Red
 Write-Host ""
-Write-Host "  Comandos útiles:" -ForegroundColor Gray
+Write-Host "  Comandos utiles:" -ForegroundColor Gray
 Write-Host "    Ver logs:         docker compose logs -f" -ForegroundColor Gray
 Write-Host "    Ver logs guacd:   docker compose logs -f guacd" -ForegroundColor Gray
 Write-Host "    Detener:          .\setup.ps1 -Down" -ForegroundColor Gray
 Write-Host "    Reset completo:   .\setup.ps1 -Reset" -ForegroundColor Gray
 Write-Host ""
-Write-Host "  NOTA: La primera vez que se inicia puede tardar ~30 seg" -ForegroundColor Yellow
-Write-Host "  mientras PostgreSQL aplica el esquema de base de datos." -ForegroundColor Yellow
+Write-Host "  NOTA: La primera vez puede tardar ~30 seg mientras" -ForegroundColor Yellow
+Write-Host "  PostgreSQL aplica el esquema de base de datos." -ForegroundColor Yellow
 Write-Host ""

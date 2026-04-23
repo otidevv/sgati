@@ -106,6 +106,126 @@ class GuacamoleService
             );
     }
 
+    // ── Usuarios en Guacamole ────────────────────────────────────────
+
+    /**
+     * Comprueba si el usuario existe en Guacamole.
+     */
+    public function guacamoleUserExists(string $username, string $token, string $dataSource): bool
+    {
+        $response = Http::timeout(10)
+            ->get("{$this->baseUrl}/api/session/data/{$dataSource}/users/{$username}?token={$token}");
+
+        return $response->successful();
+    }
+
+    /**
+     * Crea un usuario en Guacamole.
+     */
+    public function createGuacamoleUser(
+        string $username,
+        string $password,
+        string $fullName,
+        string $email,
+        string $token,
+        string $dataSource
+    ): void {
+        $response = Http::timeout(10)
+            ->asJson()
+            ->post(
+                "{$this->baseUrl}/api/session/data/{$dataSource}/users?token={$token}",
+                $this->buildUserPayload($username, $password, $fullName, $email)
+            );
+
+        if (! $response->successful()) {
+            throw new \RuntimeException(
+                "Error al crear usuario en Guacamole [{$username}]: " . $response->body()
+            );
+        }
+    }
+
+    /**
+     * Actualiza un usuario existente en Guacamole (incluyendo contraseña).
+     */
+    public function updateGuacamoleUser(
+        string $username,
+        string $password,
+        string $fullName,
+        string $email,
+        string $token,
+        string $dataSource
+    ): void {
+        $response = Http::timeout(10)
+            ->asJson()
+            ->put(
+                "{$this->baseUrl}/api/session/data/{$dataSource}/users/{$username}?token={$token}",
+                $this->buildUserPayload($username, $password, $fullName, $email)
+            );
+
+        if (! $response->successful()) {
+            throw new \RuntimeException(
+                "Error al actualizar usuario en Guacamole [{$username}]: " . $response->body()
+            );
+        }
+    }
+
+    /**
+     * Elimina un usuario de Guacamole.
+     */
+    public function deleteGuacamoleUser(string $username, string $token, string $dataSource): void
+    {
+        Http::timeout(10)
+            ->delete("{$this->baseUrl}/api/session/data/{$dataSource}/users/{$username}?token={$token}");
+    }
+
+    /**
+     * Autentica un usuario en Guacamole y devuelve su token de sesión.
+     */
+    public function authenticateUser(string $username, string $password): array
+    {
+        $response = Http::timeout(10)
+            ->asForm()
+            ->post("{$this->baseUrl}/api/tokens", [
+                'username' => $username,
+                'password' => $password,
+            ]);
+
+        if (! $response->successful()) {
+            throw new \RuntimeException(
+                "No se pudo autenticar al usuario [{$username}] en Guacamole."
+            );
+        }
+
+        return [
+            'authToken'  => $response->json('authToken'),
+            'dataSource' => $response->json('dataSource'),
+        ];
+    }
+
+    /**
+     * Otorga permiso de lectura sobre una conexión a un usuario.
+     * Usa JSON Patch (RFC 6902).
+     */
+    public function grantConnectionPermission(
+        string $username,
+        string $connectionId,
+        string $token,
+        string $dataSource
+    ): void {
+        Http::timeout(10)
+            ->asJson()
+            ->patch(
+                "{$this->baseUrl}/api/session/data/{$dataSource}/users/{$username}/permissions?token={$token}",
+                [
+                    [
+                        'op'    => 'add',
+                        'path'  => "/connectionPermissions/{$connectionId}",
+                        'value' => 'READ',
+                    ],
+                ]
+            );
+    }
+
     // ── URL de cliente ───────────────────────────────────────────────
 
     /**
@@ -179,6 +299,27 @@ class GuacamoleService
                 'guacd-port'               => '',
                 'guacd-hostname'           => '',
                 'guacd-encryption'         => '',
+            ],
+        ];
+    }
+
+    private function buildUserPayload(string $username, string $password, string $fullName, string $email): array
+    {
+        return [
+            'username' => $username,
+            'password' => $password,
+            'attributes' => [
+                'disabled'                  => '',
+                'expired'                   => '',
+                'access-window-start'       => '',
+                'access-window-end'         => '',
+                'valid-from'                => '',
+                'valid-until'               => '',
+                'timezone'                  => null,
+                'guac-full-name'            => $fullName,
+                'guac-email-address'        => $email,
+                'guac-organizational-role'  => '',
+                'guac-organization'         => 'UNAMAD',
             ],
         ];
     }

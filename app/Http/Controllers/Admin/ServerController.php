@@ -10,6 +10,7 @@ use App\Models\ServerContainer;
 use App\Enums\ServerFunction;
 use App\Services\GuacamoleService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -162,6 +163,7 @@ class ServerController extends Controller
 
     /**
      * Genera un token de sesión fresco en Guacamole y redirige al cliente RDP.
+     * Si el usuario tiene cuenta propia en Guacamole, se autentica con sus credenciales.
      * Se abre en una nueva pestaña desde el frontend.
      */
     public function connect(Server $server)
@@ -171,15 +173,38 @@ class ServerController extends Controller
         }
 
         try {
-            $guac  = new GuacamoleService();
-            $auth  = $guac->authenticate();
-            $url   = $guac->buildClientUrl(
+            $guac      = new GuacamoleService();
+            $adminAuth = $guac->authenticate();
+            $authToken  = $adminAuth['authToken'];
+            $dataSource = $adminAuth['dataSource'];
+
+            /** @var \App\Models\User $currentUser */
+            $currentUser = Auth::user();
+
+            if ($currentUser->isGuacamoledSynced()) {
+                // Otorgar permiso de lectura sobre esta conexión al usuario
+                $guac->grantConnectionPermission(
+                    $currentUser->guacamole_username,
+                    $server->guacamole_connection_id,
+                    $adminAuth['authToken'],
+                    $adminAuth['dataSource']
+                );
+
+                // Autenticar con las credenciales del usuario para obtener su propio token
+                $userAuth   = $guac->authenticateUser(
+                    $currentUser->guacamole_username,
+                    $currentUser->guacamole_password
+                );
+                $authToken  = $userAuth['authToken'];
+                $dataSource = $userAuth['dataSource'];
+            }
+
+            $url = $guac->buildClientUrl(
                 $server->guacamole_connection_id,
-                $auth['authToken'],
-                $auth['dataSource']
+                $authToken,
+                $dataSource
             );
 
-            // Devolvemos la URL como JSON para que el JS la abra en nueva pestaña
             if (request()->expectsJson()) {
                 return response()->json(['url' => $url]);
             }
