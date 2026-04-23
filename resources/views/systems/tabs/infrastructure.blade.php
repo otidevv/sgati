@@ -224,10 +224,14 @@
                                     {{ $serverIp->type === 'public' ? 'pública' : 'privada' }}
                                 </span>
                             </p>
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono font-medium
+                            @php
+                                $serverIpHref = 'http://' . $serverIp->ip_address . ($infra->port ? ':' . $infra->port : '');
+                            @endphp
+                            <a href="{{ $serverIpHref }}" target="_blank"
+                               class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors
                                 {{ $serverIp->type === 'public'
-                                    ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700'
-                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600' }}">
+                                    ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
+                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-600' }}">
                                 <span class="w-1.5 h-1.5 rounded-full {{ $serverIp->type === 'public' ? 'bg-emerald-500' : 'bg-slate-400' }} shrink-0"></span>
                                 {{ $serverIp->ip_address }}
                                 @if($infra->port)
@@ -236,7 +240,10 @@
                                 @if($serverIp->is_primary)
                                 <span class="text-[10px] font-semibold opacity-60">· principal</span>
                                 @endif
-                            </span>
+                                <svg class="w-3 h-3 opacity-60 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                </svg>
+                            </a>
                             @if($serverIp->type === 'private')
                             <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">Solo accesible desde la red local</p>
                             @endif
