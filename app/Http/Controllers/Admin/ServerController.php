@@ -119,15 +119,32 @@ class ServerController extends Controller
 
         $server->update($data);
 
-        $server->ips()->delete();
+        // Sync IPs by ip_address to preserve existing ports
+        $server->load('ips');
+        $existingIps = $server->ips->keyBy('ip_address');
+        $submittedAddresses = collect($ips)
+            ->pluck('ip_address')
+            ->filter()
+            ->unique()
+            ->values();
+
+        // Delete IPs that were removed from the form
+        $server->ips()->whereNotIn('ip_address', $submittedAddresses)->delete();
+
+        // Update existing IPs or create new ones
         foreach ($ips as $i => $ip) {
             if (empty($ip['ip_address'])) continue;
-            $server->ips()->create([
-                'ip_address' => $ip['ip_address'],
+            $attrs = [
                 'type'       => $ip['type'],
                 'interface'  => $ip['interface'] ?? null,
                 'is_primary' => isset($ip['is_primary']) || $i === 0,
-            ]);
+            ];
+            $existing = $existingIps->get($ip['ip_address']);
+            if ($existing) {
+                $existing->update($attrs);
+            } else {
+                $server->ips()->create(array_merge(['ip_address' => $ip['ip_address']], $attrs));
+            }
         }
 
         $server->refresh()->load('ips', 'primaryIp');
