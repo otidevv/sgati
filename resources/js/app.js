@@ -1,6 +1,7 @@
 import './bootstrap';
 import './pdf/system-detail';
 import './pdf/reports/index';
+import './pdf/responsible-acta';
 
 import Alpine from 'alpinejs';
 import Swal from 'sweetalert2';

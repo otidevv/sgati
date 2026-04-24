@@ -232,6 +232,7 @@ Route::middleware(['auth'])->group(function () {
             Route::patch('responsibles/{responsible}/deactivate',                                [ServerResponsibleController::class, 'deactivate'])->name('responsibles.deactivate');
             Route::patch('responsibles/{responsible}/reactivate',                                [ServerResponsibleController::class, 'reactivate'])->name('responsibles.reactivate');
             Route::delete('responsibles/{responsible}',                                          [ServerResponsibleController::class, 'destroy'])->name('responsibles.destroy');
+            Route::get('responsibles/{responsible}/pdf-data',                                    [ServerResponsibleController::class, 'pdfData'])->name('responsibles.pdf-data');
 
             Route::post('responsibles/{responsible}/documents',                                  [ServerResponsibleDocumentController::class, 'store'])->name('responsibles.documents.store');
             Route::get('responsibles/{responsible}/documents/{document}/download',               [ServerResponsibleDocumentController::class, 'download'])->name('responsibles.documents.download');
