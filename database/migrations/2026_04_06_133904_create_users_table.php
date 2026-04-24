@@ -18,10 +18,16 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('two_factor_code', 6)->nullable();
+            $table->timestamp('two_factor_expires_at')->nullable();
             $table->foreignId('role_id')->nullable()->constrained('roles')->nullOnDelete();
             $table->foreignId('area_id')->nullable()->constrained('areas')->nullOnDelete();
             $table->boolean('is_active')->default(true);
             $table->rememberToken();
+            $table->string('session_token')->nullable();
+            $table->string('guacamole_username', 150)->nullable();
+            $table->text('guacamole_password')->nullable();
+            $table->timestamp('guacamole_synced_at')->nullable();
             $table->timestamps();
         });
 

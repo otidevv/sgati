@@ -6,15 +6,13 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('system_infrastructure', function (Blueprint $table) {
             $table->id();
             $table->foreignId('system_id')->unique()->constrained('systems')->cascadeOnDelete();
             $table->foreignId('server_id')->nullable()->constrained('servers')->nullOnDelete();
+            $table->foreignId('server_ip_id')->nullable()->constrained('server_ips')->nullOnDelete();
             $table->string('public_ip', 45)->nullable();
             $table->string('system_url', 255)->nullable();
             $table->integer('port')->nullable();
@@ -29,9 +27,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('system_infrastructure');

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('server_ip_id')
                   ->constrained('server_ips')
                   ->cascadeOnDelete();
+            $table->unsignedSmallInteger('port')->nullable();
             $table->primary(['system_infrastructure_id', 'server_ip_id']);
             $table->timestamps();
         });

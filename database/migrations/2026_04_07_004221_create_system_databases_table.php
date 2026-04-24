@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('system_id')->constrained('systems')->cascadeOnDelete();
             $table->foreignId('database_server_id')->nullable()->constrained('database_servers')->nullOnDelete();
             $table->string('db_name', 100);
-            $table->enum('engine', ['postgresql', 'mysql', 'oracle', 'sqlserver', 'sqlite', 'mongodb', 'other']);
+            $table->enum('engine', ['postgresql', 'mysql', 'mariadb', 'oracle', 'sqlserver', 'sqlite', 'mongodb', 'other']);
             $table->string('schema_name', 100)->nullable();
             $table->string('db_user', 100)->nullable();
             $table->text('db_password')->nullable();
