@@ -661,7 +661,7 @@
                                     </span>
                                     <div class="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover/row:opacity-100 transition-opacity">
                                         <button type="button"
-                                                onclick="downloadResponsibleActa({{ $server->id }}, {{ $resp->id }}, this)"
+                                                onclick="downloadResponsibleActa('{{ route('admin.servers.responsibles.pdf-data', [$server, $resp]) }}', this)"
                                                 title="Generar acta de asignación PDF"
                                                 class="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 dark:text-gray-500
                                                        hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50">

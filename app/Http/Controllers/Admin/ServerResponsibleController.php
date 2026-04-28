@@ -84,44 +84,58 @@ class ServerResponsibleController extends Controller
 
     public function pdfData(Server $server, ServerResponsible $responsible): JsonResponse
     {
-        $responsible->load(['persona', 'documents']);
-        $server->load(['ips', 'responsibles.persona']);
+        $responsible->load('persona');
+        $server->load('ips');
 
         $primaryIp = $server->ips->where('is_primary', true)->first()?->ip_address
             ?? $server->ips->first()?->ip_address;
 
         $publicIps = $server->ips->where('type', 'public')->pluck('ip_address')->all();
 
+        $fields = [
+            ['label' => 'Nombre del servidor', 'value' => $server->name],
+            ['label' => 'Sistema operativo',   'value' => $server->operating_system ?? '—'],
+            ['label' => 'Tipo de host',         'value' => $server->host_type        ?? '—'],
+            ['label' => 'Función',              'value' => $server->function?->value ?? $server->function ?? '—'],
+            ['label' => 'IP principal',         'value' => $primaryIp                ?? '—'],
+        ];
+        if ($publicIps) {
+            $fields[] = ['label' => 'IPs públicas', 'value' => implode(', ', $publicIps)];
+        }
+        if ($server->notes) {
+            $fields[] = ['label' => 'Notas', 'value' => $server->notes];
+        }
+
         return response()->json([
-            'generated_at'  => now()->format('d/m/Y H:i'),
-            'generated_by'  => auth()->user()?->persona?->nombre_completo
-                             ?? auth()->user()?->name
-                             ?? 'Sistema',
-            'server' => [
-                'name'     => $server->name,
-                'os'       => $server->operating_system,
-                'function' => $server->function?->value ?? $server->function,
-                'host_type'=> $server->host_type,
-                'services' => $server->installed_services ?? [],
-                'primary_ip'  => $primaryIp,
-                'public_ips'  => $publicIps,
-                'notes'    => $server->notes,
+            'generated_at' => now()->format('d/m/Y H:i'),
+            'generated_by' => auth()->user()?->persona?->nombre_completo
+                           ?? auth()->user()?->name
+                           ?? 'Sistema',
+            'context' => [
+                'subtitle'      => 'RESPONSABILIDAD DE SERVIDOR',
+                'section_title' => 'Datos del Servidor',
+                'fields'        => $fields,
+                'responsibilities' => [
+                    'Velar por el correcto funcionamiento, disponibilidad y seguridad del servidor asignado.',
+                    'Notificar oportunamente cualquier incidente, falla o anomalía que afecte al servidor.',
+                    'Mantener actualizados el sistema operativo y los servicios instalados conforme a las políticas de seguridad de la OTI.',
+                    'Gestionar los accesos, credenciales y configuraciones del servidor con criterios de mínimo privilegio y seguridad.',
+                    'Coordinar con la OTI antes de realizar cambios estructurales, migraciones o configuraciones críticas en el servidor.',
+                    'Custodiar la información alojada en el servidor bajo los principios de confidencialidad, integridad y disponibilidad.',
+                ],
             ],
             'responsible' => [
-                'id'           => $responsible->id,
-                'nombres'      => $responsible->persona?->nombres,
-                'apellido_pat' => $responsible->persona?->apellido_paterno,
-                'apellido_mat' => $responsible->persona?->apellido_materno,
+                'apellido_pat'    => $responsible->persona?->apellido_paterno,
                 'nombre_completo' => $responsible->persona
-                    ? trim($responsible->persona->apellido_paterno . ' ' . $responsible->persona->apellido_materno . ', ' . $responsible->persona->nombres)
+                    ? trim($responsible->persona->apellido_paterno . ' ' . ($responsible->persona->apellido_materno ?? '') . ', ' . $responsible->persona->nombres)
                     : '—',
-                'dni'          => $responsible->persona?->dni,
-                'email'        => $responsible->persona?->email_personal,
-                'telefono'     => $responsible->persona?->telefono,
-                'level'        => $responsible->level,
-                'level_label'  => ServerResponsible::levelLabel($responsible->level),
-                'assigned_at'  => $responsible->assigned_at?->format('d/m/Y'),
-                'is_active'    => $responsible->is_active,
+                'dni'        => $responsible->persona?->dni,
+                'email'      => $responsible->persona?->email_personal,
+                'telefono'   => $responsible->persona?->telefono,
+                'role'       => $responsible->level,
+                'role_label' => ServerResponsible::levelLabel($responsible->level),
+                'assigned_at'=> $responsible->assigned_at?->format('d/m/Y'),
+                'is_active'  => $responsible->is_active,
             ],
         ]);
     }

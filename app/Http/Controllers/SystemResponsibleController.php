@@ -80,4 +80,59 @@ class SystemResponsibleController extends Controller
 
         return redirect(route('systems.show', $system) . '#responsibles')->with('success', 'Responsable eliminado del historial.');
     }
+
+    public function pdfData(System $system, SystemResponsible $responsible): \Illuminate\Http\JsonResponse
+    {
+        $responsible->load('persona');
+        $system->load('area');
+
+        $levels    = (array) $responsible->level;
+        $roleLabel = implode(' · ', array_map(fn($l) => SystemResponsible::levelLabel($l), $levels));
+        $roleKey   = $levels[0] ?? 'soporte';
+
+        $fields = [
+            ['label' => 'Nombre del sistema', 'value' => $system->name],
+            ['label' => 'Acrónimo',            'value' => $system->acronym ?? '—'],
+            ['label' => 'Estado',              'value' => $system->status?->label() ?? '—'],
+        ];
+        if ($system->area?->name) {
+            $fields[] = ['label' => 'Área responsable', 'value' => $system->area->name];
+        }
+        if ($system->observations) {
+            $fields[] = ['label' => 'Observaciones', 'value' => $system->observations];
+        }
+
+        return response()->json([
+            'generated_at' => now()->format('d/m/Y H:i'),
+            'generated_by' => auth()->user()?->persona?->nombre_completo
+                           ?? auth()->user()?->name
+                           ?? 'Sistema',
+            'context' => [
+                'subtitle'      => 'RESPONSABILIDAD DE SISTEMA',
+                'section_title' => 'Datos del Sistema',
+                'fields'        => $fields,
+                'responsibilities' => [
+                    'Velar por el correcto funcionamiento, disponibilidad y continuidad operativa del sistema asignado.',
+                    'Coordinar y supervisar las actividades de desarrollo, mantenimiento y soporte del sistema.',
+                    'Notificar oportunamente cualquier incidente, vulnerabilidad o anomalía que afecte al sistema.',
+                    'Garantizar el cumplimiento de los estándares y políticas de seguridad definidos por la OTI.',
+                    'Coordinar con la OTI antes de realizar actualizaciones, migraciones o cambios críticos en el sistema.',
+                    'Asegurar la disponibilidad y actualización de la documentación técnica y funcional del sistema.',
+                ],
+            ],
+            'responsible' => [
+                'apellido_pat'    => $responsible->persona?->apellido_paterno,
+                'nombre_completo' => $responsible->persona
+                    ? trim($responsible->persona->apellido_paterno . ' ' . ($responsible->persona->apellido_materno ?? '') . ', ' . $responsible->persona->nombres)
+                    : '—',
+                'dni'        => $responsible->persona?->dni,
+                'email'      => $responsible->persona?->email_personal,
+                'telefono'   => $responsible->persona?->telefono,
+                'role'       => $roleKey,
+                'role_label' => $roleLabel,
+                'assigned_at'=> $responsible->assigned_at?->format('d/m/Y'),
+                'is_active'  => $responsible->is_active,
+            ],
+        ]);
+    }
 }

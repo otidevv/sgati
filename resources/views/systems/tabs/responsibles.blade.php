@@ -41,6 +41,11 @@
     $historicalResponsibles  = $system->responsibles->where('is_active', false)->sortByDesc('unassigned_at');
 @endphp
 
+<div class="space-y-4">
+
+{{-- ══════════════════════════════════════════════════════
+     BLOQUE 1 · Responsables del Sistema
+══════════════════════════════════════════════════════ --}}
 <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
     {{-- Header --}}
     <div class="px-5 py-3.5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
@@ -108,6 +113,15 @@
                             <span class="font-normal text-gray-600 dark:text-gray-300">{{ $resp->persona->nombres }}</span>
                         </span>
                         <div class="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                            <button type="button"
+                                    onclick="downloadResponsibleActa('{{ route('systems.responsibles.pdf-data', [$system, $resp]) }}', this)"
+                                    title="Generar acta de asignación PDF"
+                                    class="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 dark:text-gray-500
+                                           hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </button>
                             <button onclick="sysRespOpenDocUpload({{ $resp->id }})"
                                     title="Adjuntar documento"
                                     class="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 dark:text-gray-500
@@ -318,6 +332,273 @@
 
     @endif
 </div>
+
+{{-- ══════════════════════════════════════════════════════
+     BLOQUE 2 · Responsables de Bases de Datos (solo lectura)
+══════════════════════════════════════════════════════ --}}
+@php
+$dbsConResp   = $system->databases->filter(fn($db) => $db->responsibles->isNotEmpty());
+$totalDbActiv = $system->databases->sum(fn($db) => $db->responsibles->where('is_active', true)->count());
+@endphp
+@if($dbsConResp->isNotEmpty())
+<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="px-5 py-3.5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+            </svg>
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Responsables de Bases de Datos</h3>
+            @if($totalDbActiv)
+            <span class="text-xs text-gray-400 dark:text-gray-500">({{ $totalDbActiv }} activo{{ $totalDbActiv !== 1 ? 's' : '' }})</span>
+            @endif
+        </div>
+        <span class="text-[11px] text-gray-400 dark:text-gray-500 italic">Solo lectura · gestiona desde cada BD</span>
+    </div>
+    <div class="divide-y divide-gray-100 dark:divide-gray-700/60">
+        @foreach($dbsConResp as $db)
+        @php
+            $activeDbResps = $db->responsibles->where('is_active', true);
+            $histDbResps   = $db->responsibles->where('is_active', false);
+        @endphp
+        <div class="px-4 py-3 border-l-[3px] border-amber-300 dark:border-amber-600 hover:bg-amber-50/30 dark:hover:bg-amber-900/10 transition-colors">
+            <div class="flex items-center justify-between gap-2 mb-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-semibold text-gray-800 dark:text-gray-100 font-mono">{{ $db->db_name }}</span>
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium uppercase
+                                 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">{{ $db->engine }}</span>
+                    @if($db->environment)
+                    <span class="text-[10px] text-gray-400 dark:text-gray-500">{{ $db->environment->label() }}</span>
+                    @endif
+                    @if($histDbResps->isNotEmpty())
+                    <span class="text-[10px] text-gray-400 dark:text-gray-500">· {{ $histDbResps->count() }} en historial</span>
+                    @endif
+                </div>
+                <a href="{{ route('systems.databases.show', [$system, $db]) }}"
+                   title="Gestionar responsables de esta BD"
+                   class="inline-flex items-center gap-1 text-[11px] font-medium text-amber-600 dark:text-amber-400
+                          hover:text-amber-700 dark:hover:text-amber-300 hover:underline flex-shrink-0">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                    Gestionar
+                </a>
+            </div>
+            @if($activeDbResps->isNotEmpty())
+            <div class="flex flex-wrap gap-1.5">
+                @foreach($activeDbResps as $resp)
+                @php
+                    $dbInitials = strtoupper(
+                        substr($resp->persona->apellido_paterno, 0, 1) .
+                        substr($resp->persona->apellido_materno ?? '', 0, 1)
+                    );
+                @endphp
+                <div class="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-lg
+                            bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50
+                            text-[11px]">
+                    <span class="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-800/60 text-amber-700 dark:text-amber-300
+                                 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{{ $dbInitials }}</span>
+                    <span class="font-medium text-gray-800 dark:text-gray-200">
+                        {{ $resp->persona->apellido_paterno }}{{ $resp->persona->apellido_materno ? ' '.$resp->persona->apellido_materno : '' }},
+                        {{ $resp->persona->nombres }}
+                    </span>
+                    <span class="text-amber-600 dark:text-amber-400">
+                        · {{ \App\Models\SystemDatabaseResponsible::levelLabel($resp->level) }}
+                    </span>
+                </div>
+                @endforeach
+            </div>
+            @else
+            <p class="text-[11px] text-gray-400 dark:text-gray-500 italic">Sin responsables activos</p>
+            @endif
+        </div>
+        @endforeach
+    </div>
+</div>
+@endif
+
+{{-- ══════════════════════════════════════════════════════
+     BLOQUE 3 · Colaboradores de Repositorios (solo lectura)
+══════════════════════════════════════════════════════ --}}
+@php
+$reposConCollab   = $system->repositories->filter(fn($r) => $r->collaborators->isNotEmpty());
+$totalCollabActiv = $system->repositories->sum(fn($r) => $r->collaborators->where('is_active', true)->count());
+@endphp
+@if($reposConCollab->isNotEmpty())
+<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="px-5 py-3.5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+            </svg>
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Colaboradores de Repositorios</h3>
+            @if($totalCollabActiv)
+            <span class="text-xs text-gray-400 dark:text-gray-500">({{ $totalCollabActiv }} activo{{ $totalCollabActiv !== 1 ? 's' : '' }})</span>
+            @endif
+        </div>
+        <span class="text-[11px] text-gray-400 dark:text-gray-500 italic">Solo lectura · gestiona desde cada repositorio</span>
+    </div>
+    <div class="divide-y divide-gray-100 dark:divide-gray-700/60">
+        @foreach($reposConCollab as $repo)
+        @php
+            $activeCollabs = $repo->collaborators->where('is_active', true);
+            $histCollabs   = $repo->collaborators->where('is_active', false);
+            $providerLabel = match($repo->provider->value) {
+                'github'    => 'GitHub',
+                'gitlab'    => 'GitLab',
+                'bitbucket' => 'Bitbucket',
+                'gitea'     => 'Gitea',
+                default     => $repo->provider->value,
+            };
+        @endphp
+        <div class="px-4 py-3 border-l-[3px] border-violet-300 dark:border-violet-600 hover:bg-violet-50/30 dark:hover:bg-violet-900/10 transition-colors">
+            <div class="flex items-center justify-between gap-2 mb-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-semibold text-gray-800 dark:text-gray-100">{{ $repo->name }}</span>
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium
+                                 bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300">{{ $providerLabel }}</span>
+                    @if(!$repo->is_active)
+                    <span class="text-[10px] text-red-500 dark:text-red-400 font-medium">Inactivo</span>
+                    @endif
+                    @if($histCollabs->isNotEmpty())
+                    <span class="text-[10px] text-gray-400 dark:text-gray-500">· {{ $histCollabs->count() }} en historial</span>
+                    @endif
+                </div>
+                <a href="{{ route('systems.repositories.show', [$system, $repo]) }}"
+                   title="Gestionar colaboradores de este repositorio"
+                   class="inline-flex items-center gap-1 text-[11px] font-medium text-violet-600 dark:text-violet-400
+                          hover:text-violet-700 dark:hover:text-violet-300 hover:underline flex-shrink-0">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                    Gestionar
+                </a>
+            </div>
+            @if($activeCollabs->isNotEmpty())
+            <div class="flex flex-wrap gap-1.5">
+                @foreach($activeCollabs as $collab)
+                @php
+                    $collabInitials = strtoupper(
+                        substr($collab->persona->apellido_paterno ?? '', 0, 1) .
+                        substr($collab->persona->apellido_materno ?? '', 0, 1)
+                    );
+                @endphp
+                <div class="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-lg
+                            bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-700/50
+                            text-[11px]">
+                    <span class="w-5 h-5 rounded-full bg-violet-100 dark:bg-violet-800/60 text-violet-700 dark:text-violet-300
+                                 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{{ $collabInitials }}</span>
+                    <span class="font-medium text-gray-800 dark:text-gray-200">
+                        {{ $collab->persona->apellido_paterno ?? '' }}{{ ($collab->persona->apellido_materno ?? '') ? ' '.($collab->persona->apellido_materno ?? '') : '' }},
+                        {{ $collab->persona->nombres ?? '' }}
+                    </span>
+                    <span class="text-violet-600 dark:text-violet-400">
+                        · {{ \App\Models\RepositoryCollaborator::roleLabel($collab->role) }}
+                    </span>
+                </div>
+                @endforeach
+            </div>
+            @else
+            <p class="text-[11px] text-gray-400 dark:text-gray-500 italic">Sin colaboradores activos</p>
+            @endif
+        </div>
+        @endforeach
+    </div>
+</div>
+@endif
+
+{{-- ══════════════════════════════════════════════════════
+     BLOQUE 4 · Responsables de Versiones (solo lectura)
+══════════════════════════════════════════════════════ --}}
+@php
+$versionsConResp   = $system->versions->filter(fn($v) => $v->responsibles->isNotEmpty());
+$totalVersionActiv = $system->versions->sum(fn($v) => $v->responsibles->where('is_active', true)->count());
+@endphp
+@if($versionsConResp->isNotEmpty())
+<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="px-5 py-3.5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+            </svg>
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Responsables de Versiones</h3>
+            @if($totalVersionActiv)
+            <span class="text-xs text-gray-400 dark:text-gray-500">({{ $totalVersionActiv }} activo{{ $totalVersionActiv !== 1 ? 's' : '' }})</span>
+            @endif
+        </div>
+        <span class="text-[11px] text-gray-400 dark:text-gray-500 italic">Solo lectura · gestiona desde cada versión</span>
+    </div>
+    <div class="divide-y divide-gray-100 dark:divide-gray-700/60">
+        @foreach($versionsConResp as $version)
+        @php
+            $activeVResps = $version->responsibles->where('is_active', true);
+            $histVResps   = $version->responsibles->where('is_active', false);
+            $envLabel = match($version->environment?->value) {
+                'production'  => 'Producción',
+                'staging'     => 'Staging',
+                'development' => 'Desarrollo',
+                default       => null,
+            };
+        @endphp
+        <div class="px-4 py-3 border-l-[3px] border-blue-300 dark:border-blue-600 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors">
+            <div class="flex items-center justify-between gap-2 mb-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold font-mono
+                                 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300
+                                 ring-1 ring-blue-200 dark:ring-blue-800">v{{ $version->version }}</span>
+                    @if($envLabel)
+                    <span class="text-[10px] text-gray-400 dark:text-gray-500">{{ $envLabel }}</span>
+                    @endif
+                    @if($version->release_date)
+                    <span class="text-[10px] text-gray-400 dark:text-gray-500">· {{ $version->release_date->format('d/m/Y') }}</span>
+                    @endif
+                    @if($histVResps->isNotEmpty())
+                    <span class="text-[10px] text-gray-400 dark:text-gray-500">· {{ $histVResps->count() }} en historial</span>
+                    @endif
+                </div>
+                <a href="{{ route('systems.versions.show', [$system, $version]) }}"
+                   title="Gestionar responsables de esta versión"
+                   class="inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 dark:text-blue-400
+                          hover:text-blue-700 dark:hover:text-blue-300 hover:underline flex-shrink-0">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                    Gestionar
+                </a>
+            </div>
+            @if($activeVResps->isNotEmpty())
+            <div class="flex flex-wrap gap-1.5">
+                @foreach($activeVResps as $resp)
+                @php
+                    $vInitials = strtoupper(
+                        substr($resp->persona->apellido_paterno, 0, 1) .
+                        substr($resp->persona->apellido_materno ?? '', 0, 1)
+                    );
+                @endphp
+                <div class="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-lg
+                            bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50
+                            text-[11px]">
+                    <span class="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-800/60 text-blue-700 dark:text-blue-300
+                                 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{{ $vInitials }}</span>
+                    <span class="font-medium text-gray-800 dark:text-gray-200">
+                        {{ $resp->persona->apellido_paterno }}{{ $resp->persona->apellido_materno ? ' '.$resp->persona->apellido_materno : '' }},
+                        {{ $resp->persona->nombres }}
+                    </span>
+                    <span class="text-blue-600 dark:text-blue-400">
+                        · {{ \App\Models\SystemVersionResponsible::roleLabel($resp->role) }}
+                    </span>
+                </div>
+                @endforeach
+            </div>
+            @else
+            <p class="text-[11px] text-gray-400 dark:text-gray-500 italic">Sin responsables activos</p>
+            @endif
+        </div>
+        @endforeach
+    </div>
+</div>
+@endif
+
+</div>{{-- /space-y-4 --}}
 
 {{-- ════════════════════════════════════════════════
      MODAL: Asignar / Editar Responsable

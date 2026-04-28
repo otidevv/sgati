@@ -81,4 +81,54 @@ class DatabaseServerResponsibleController extends Controller
 
         return back()->with('success', 'Responsable eliminado del historial.');
     }
+
+    public function pdfData(Server $server, DatabaseServer $databaseServer, DatabaseServerResponsible $responsible): \Illuminate\Http\JsonResponse
+    {
+        $responsible->load('persona');
+
+        $fields = [
+            ['label' => 'Motor de BD',   'value' => $databaseServer->engine_label],
+            ['label' => 'Host / Puerto', 'value' => $databaseServer->connection_string],
+            ['label' => 'Servidor',      'value' => $server->name],
+        ];
+        if ($databaseServer->name) {
+            $fields[] = ['label' => 'Nombre / Instancia', 'value' => $databaseServer->name];
+        }
+        if ($databaseServer->notes) {
+            $fields[] = ['label' => 'Notas', 'value' => $databaseServer->notes];
+        }
+
+        return response()->json([
+            'generated_at' => now()->format('d/m/Y H:i'),
+            'generated_by' => auth()->user()?->persona?->nombre_completo
+                           ?? auth()->user()?->name
+                           ?? 'Sistema',
+            'context' => [
+                'subtitle'      => 'RESPONSABILIDAD DE SERVIDOR DE BD',
+                'section_title' => 'Datos del Servidor de Base de Datos',
+                'fields'        => $fields,
+                'responsibilities' => [
+                    'Velar por el correcto funcionamiento, disponibilidad y seguridad del servidor de base de datos asignado.',
+                    'Gestionar las instancias, usuarios y configuraciones del servidor con criterios de mínimo privilegio y seguridad.',
+                    'Implementar y verificar periódicamente las copias de seguridad y los planes de recuperación ante desastres.',
+                    'Notificar oportunamente cualquier incidente, falla o anomalía que afecte al servidor de base de datos.',
+                    'Mantener actualizados el motor de base de datos y los parches de seguridad conforme a las políticas de la OTI.',
+                    'Coordinar con la OTI antes de realizar cambios estructurales, migraciones o actualizaciones del motor.',
+                ],
+            ],
+            'responsible' => [
+                'apellido_pat'    => $responsible->persona?->apellido_paterno,
+                'nombre_completo' => $responsible->persona
+                    ? trim($responsible->persona->apellido_paterno . ' ' . ($responsible->persona->apellido_materno ?? '') . ', ' . $responsible->persona->nombres)
+                    : '—',
+                'dni'        => $responsible->persona?->dni,
+                'email'      => $responsible->persona?->email_personal,
+                'telefono'   => $responsible->persona?->telefono,
+                'role'       => $responsible->level,
+                'role_label' => DatabaseServerResponsible::levelLabel($responsible->level),
+                'assigned_at'=> $responsible->assigned_at?->format('d/m/Y'),
+                'is_active'  => $responsible->is_active,
+            ],
+        ]);
+    }
 }

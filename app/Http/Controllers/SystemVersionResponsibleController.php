@@ -81,4 +81,57 @@ class SystemVersionResponsibleController extends Controller
         return redirect(route('systems.versions.show', [$system, $version]))
             ->with('success', 'Responsable eliminado del historial.');
     }
+
+    public function pdfData(System $system, SystemVersion $version, SystemVersionResponsible $responsible): \Illuminate\Http\JsonResponse
+    {
+        $responsible->load('persona');
+
+        $fields = [
+            ['label' => 'Número de versión', 'value' => 'v' . $version->version],
+            ['label' => 'Sistema',            'value' => $system->name],
+            ['label' => 'Ambiente',           'value' => $version->environment?->label() ?? '—'],
+        ];
+        if ($version->release_date) {
+            $fields[] = ['label' => 'Fecha de despliegue', 'value' => $version->release_date->format('d/m/Y')];
+        }
+        if ($version->git_branch) {
+            $fields[] = ['label' => 'Rama Git', 'value' => $version->git_branch];
+        }
+        if ($version->changes) {
+            $fields[] = ['label' => 'Cambios incluidos', 'value' => \Illuminate\Support\Str::limit($version->changes, 200)];
+        }
+
+        return response()->json([
+            'generated_at' => now()->format('d/m/Y H:i'),
+            'generated_by' => auth()->user()?->persona?->nombre_completo
+                           ?? auth()->user()?->name
+                           ?? 'Sistema',
+            'context' => [
+                'subtitle'      => 'RESPONSABILIDAD DE VERSIÓN',
+                'section_title' => 'Datos de la Versión',
+                'fields'        => $fields,
+                'responsibilities' => [
+                    'Coordinar y supervisar el proceso de despliegue de la versión indicada en el ambiente correspondiente.',
+                    'Verificar el correcto funcionamiento del sistema tras el despliegue y validar los criterios de aceptación.',
+                    'Notificar oportunamente cualquier incidente o falla detectada durante o después del despliegue.',
+                    'Coordinar con los equipos de desarrollo y operaciones para la resolución de incidencias post-despliegue.',
+                    'Custodiar el registro de cambios (changelog) y la documentación técnica de la versión.',
+                    'Asegurar el cumplimiento del proceso de control de cambios definido por la OTI.',
+                ],
+            ],
+            'responsible' => [
+                'apellido_pat'    => $responsible->persona?->apellido_paterno,
+                'nombre_completo' => $responsible->persona
+                    ? trim($responsible->persona->apellido_paterno . ' ' . ($responsible->persona->apellido_materno ?? '') . ', ' . $responsible->persona->nombres)
+                    : '—',
+                'dni'        => $responsible->persona?->dni,
+                'email'      => $responsible->persona?->email_personal,
+                'telefono'   => $responsible->persona?->telefono,
+                'role'       => $responsible->role,
+                'role_label' => SystemVersionResponsible::roleLabel($responsible->role),
+                'assigned_at'=> $responsible->assigned_at?->format('d/m/Y'),
+                'is_active'  => $responsible->is_active,
+            ],
+        ]);
+    }
 }

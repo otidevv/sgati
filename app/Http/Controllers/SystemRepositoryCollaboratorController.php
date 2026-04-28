@@ -81,4 +81,57 @@ class SystemRepositoryCollaboratorController extends Controller
         return redirect(route('systems.repositories.show', [$system, $repository]))
             ->with('success', 'Colaborador eliminado del historial.');
     }
+
+    public function pdfData(System $system, Repository $repository, RepositoryCollaborator $collaborator): \Illuminate\Http\JsonResponse
+    {
+        $collaborator->load('persona');
+
+        $fields = [
+            ['label' => 'Repositorio', 'value' => $repository->name],
+            ['label' => 'Proveedor',   'value' => $repository->provider->label()],
+            ['label' => 'Sistema',     'value' => $system->name],
+        ];
+        if ($repository->clean_url) {
+            $fields[] = ['label' => 'URL', 'value' => $repository->clean_url];
+        }
+        if ($repository->default_branch) {
+            $fields[] = ['label' => 'Rama principal', 'value' => $repository->default_branch];
+        }
+        if ($repository->notes) {
+            $fields[] = ['label' => 'Notas', 'value' => $repository->notes];
+        }
+
+        return response()->json([
+            'generated_at' => now()->format('d/m/Y H:i'),
+            'generated_by' => auth()->user()?->persona?->nombre_completo
+                           ?? auth()->user()?->name
+                           ?? 'Sistema',
+            'context' => [
+                'subtitle'      => 'RESPONSABILIDAD DE REPOSITORIO',
+                'section_title' => 'Datos del Repositorio',
+                'fields'        => $fields,
+                'responsibilities' => [
+                    'Gestionar los accesos y permisos del repositorio conforme al nivel de colaboración asignado.',
+                    'Velar por la integridad, consistencia y seguridad del código fuente alojado en el repositorio.',
+                    'Cumplir con las políticas de control de versiones (branching, commits, merge requests) definidas por la OTI.',
+                    'Notificar oportunamente cualquier incidente de seguridad o acceso no autorizado al repositorio.',
+                    'Coordinar con la OTI antes de realizar cambios en la rama principal o modificaciones en la configuración del repositorio.',
+                    'Custodiar las credenciales de acceso al repositorio con criterios de confidencialidad y seguridad.',
+                ],
+            ],
+            'responsible' => [
+                'apellido_pat'    => $collaborator->persona?->apellido_paterno,
+                'nombre_completo' => $collaborator->persona
+                    ? trim(($collaborator->persona->apellido_paterno ?? '') . ' ' . ($collaborator->persona->apellido_materno ?? '') . ', ' . ($collaborator->persona->nombres ?? ''))
+                    : '—',
+                'dni'        => $collaborator->persona?->dni,
+                'email'      => $collaborator->persona?->email_personal,
+                'telefono'   => $collaborator->persona?->telefono,
+                'role'       => $collaborator->role,
+                'role_label' => RepositoryCollaborator::roleLabel($collaborator->role),
+                'assigned_at'=> $collaborator->assigned_at?->format('d/m/Y'),
+                'is_active'  => $collaborator->is_active,
+            ],
+        ]);
+    }
 }

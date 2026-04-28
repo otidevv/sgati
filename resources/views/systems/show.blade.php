@@ -174,4 +174,8 @@
     </div>
 
 </div>
+
+{{-- Modal de previsualización de documentos (compartido entre tabs) --}}
+<x-doc-preview-modal />
+
 @endsection

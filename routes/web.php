@@ -67,6 +67,7 @@ Route::middleware(['auth'])->group(function () {
             Route::patch('responsibles/{responsible}/deactivate',                                    [SystemVersionResponsibleController::class, 'deactivate'])->name('responsibles.deactivate');
             Route::patch('responsibles/{responsible}/reactivate',                                    [SystemVersionResponsibleController::class, 'reactivate'])->name('responsibles.reactivate');
             Route::delete('responsibles/{responsible}',                                              [SystemVersionResponsibleController::class, 'destroy'])->name('responsibles.destroy');
+            Route::get('responsibles/{responsible}/pdf-data',                                        [SystemVersionResponsibleController::class, 'pdfData'])->name('responsibles.pdf-data');
 
             Route::post('responsibles/{responsible}/documents',                                      [SystemVersionResponsibleDocumentController::class, 'store'])->name('responsibles.documents.store');
             Route::get('responsibles/{responsible}/documents/{document}/download',                   [SystemVersionResponsibleDocumentController::class, 'download'])->name('responsibles.documents.download');
@@ -94,6 +95,7 @@ Route::middleware(['auth'])->group(function () {
             Route::patch('responsibles/{responsible}/deactivate',                                        [SystemDatabaseResponsibleController::class, 'deactivate'])->name('responsibles.deactivate');
             Route::patch('responsibles/{responsible}/reactivate',                                        [SystemDatabaseResponsibleController::class, 'reactivate'])->name('responsibles.reactivate');
             Route::delete('responsibles/{responsible}',                                                  [SystemDatabaseResponsibleController::class, 'destroy'])->name('responsibles.destroy');
+            Route::get('responsibles/{responsible}/pdf-data',                                            [SystemDatabaseResponsibleController::class, 'pdfData'])->name('responsibles.pdf-data');
 
             Route::post('responsibles/{responsible}/documents',                                          [SystemDatabaseResponsibleDocumentController::class, 'store'])->name('responsibles.documents.store');
             Route::get('responsibles/{responsible}/documents/{document}/download',                       [SystemDatabaseResponsibleDocumentController::class, 'download'])->name('responsibles.documents.download');
@@ -155,6 +157,7 @@ Route::middleware(['auth'])->group(function () {
             Route::patch('collaborators/{collaborator}/deactivate',         [SystemRepositoryCollaboratorController::class, 'deactivate'])->name('collaborators.deactivate');
             Route::patch('collaborators/{collaborator}/reactivate',         [SystemRepositoryCollaboratorController::class, 'reactivate'])->name('collaborators.reactivate');
             Route::delete('collaborators/{collaborator}',                   [SystemRepositoryCollaboratorController::class, 'destroy'])->name('collaborators.destroy');
+            Route::get('collaborators/{collaborator}/pdf-data',             [SystemRepositoryCollaboratorController::class, 'pdfData'])->name('collaborators.pdf-data');
         });
 
         // Responsables del sistema
@@ -163,6 +166,7 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('responsibles/{responsible}/deactivate',                            [SystemResponsibleController::class, 'deactivate'])->name('responsibles.deactivate');
         Route::patch('responsibles/{responsible}/reactivate',                            [SystemResponsibleController::class, 'reactivate'])->name('responsibles.reactivate');
         Route::delete('responsibles/{responsible}',                                      [SystemResponsibleController::class, 'destroy'])->name('responsibles.destroy');
+        Route::get('responsibles/{responsible}/pdf-data',                                [SystemResponsibleController::class, 'pdfData'])->name('responsibles.pdf-data');
 
         Route::post('responsibles/{responsible}/documents',                              [SystemResponsibleDocumentController::class, 'store'])->name('responsibles.documents.store');
         Route::get('responsibles/{responsible}/documents/{document}/download',           [SystemResponsibleDocumentController::class, 'download'])->name('responsibles.documents.download');
@@ -259,6 +263,7 @@ Route::middleware(['auth'])->group(function () {
                 Route::patch('responsibles/{responsible}/deactivate',           [DatabaseServerResponsibleController::class, 'deactivate'])->name('responsibles.deactivate');
                 Route::patch('responsibles/{responsible}/reactivate',           [DatabaseServerResponsibleController::class, 'reactivate'])->name('responsibles.reactivate');
                 Route::delete('responsibles/{responsible}',                     [DatabaseServerResponsibleController::class, 'destroy'])->name('responsibles.destroy');
+                Route::get('responsibles/{responsible}/pdf-data',               [DatabaseServerResponsibleController::class, 'pdfData'])->name('responsibles.pdf-data');
 
                 Route::post('responsibles/{responsible}/documents',                                          [DatabaseServerResponsibleDocumentController::class, 'store'])->name('responsibles.documents.store');
                 Route::get('responsibles/{responsible}/documents/{document}/download',                       [DatabaseServerResponsibleDocumentController::class, 'download'])->name('responsibles.documents.download');
