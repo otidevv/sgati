@@ -130,9 +130,7 @@
                 <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Detalles Técnicos</h2>
             </div>
             <div class="p-6 space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {{-- Stack Tecnológico (tag input) --}}
-                    <div x-data="{
+                <div x-data="{
                         tags: {{ old('tech_stack') ? old('tech_stack') : '[]' }},
                         input: '',
                         add() {
@@ -169,17 +167,6 @@
                         <input type="hidden" name="tech_stack" :value="JSON.stringify(tags)">
                         @error('tech_stack')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                     </div>
-                    <div>
-                        <label for="repo_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL del Repositorio</label>
-                        <input type="url" id="repo_url" name="repo_url" value="{{ old('repo_url') }}"
-                               class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                               placeholder="https://github.com/org/repo"
-                               maxlength="255"
-                               onblur="validateRepoUrl(this)">
-                        <p id="repo_url-error" class="hidden mt-1 text-sm text-red-600 dark:text-red-400">Ingresa una URL válida (debe comenzar con http:// o https://).</p>
-                        @error('repo_url')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
-                    </div>
-                </div>
                 <div>
                     <label for="observations" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observaciones</label>
                     <textarea id="observations" name="observations" rows="3"
@@ -212,16 +199,4 @@
         </div>
     </form>
 </div>
-@push('scripts')
-<script>
-function validateRepoUrl(input) {
-    const val = input.value.trim();
-    const err = document.getElementById('repo_url-error');
-    if (!val) { err.classList.add('hidden'); return; }
-    const valid = /^https?:\/\/.+/.test(val);
-    err.classList.toggle('hidden', valid);
-    input.classList.toggle('border-red-400', !valid);
-}
-</script>
-@endpush
 @endsection

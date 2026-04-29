@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\LogsSystemActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SystemResponsible extends Model
 {
+    use LogsSystemActivity;
     protected $fillable = [
         'system_id', 'persona_id', 'level',
         'document_notes',
@@ -37,6 +39,8 @@ class SystemResponsible extends Model
     {
         return $this->hasMany(SystemResponsibleDocument::class)->orderBy('created_at');
     }
+
+    protected function activitySubjectType(): string { return 'responsable'; }
 
     public static function levelLabel(string $level): string
     {

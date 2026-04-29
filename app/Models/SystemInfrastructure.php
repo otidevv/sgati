@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use App\Enums\Environment;
+use App\Traits\LogsSystemActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class SystemInfrastructure extends Model
 {
+    use LogsSystemActivity;
     protected $table = 'system_infrastructure';
 
     protected $fillable = [
@@ -61,6 +63,8 @@ class SystemInfrastructure extends Model
     {
         return $this->belongsTo(SslCertificate::class, 'ssl_certificate_id');
     }
+
+    protected function activitySubjectType(): string { return 'infraestructura'; }
 
     /**
      * Devuelve la fecha de vencimiento efectiva del SSL:

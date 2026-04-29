@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use App\Enums\RepoProvider;
+use App\Traits\LogsSystemActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class Repository extends Model
 {
+    use LogsSystemActivity;
     protected $fillable = [
-        'system_id', 'name', 'provider', 'repo_url',
+        'system_id', 'name', 'provider', 'provider_other', 'repo_url',
         'username', 'token', 'credential_type',
         'default_branch', 'repo_type', 'is_private',
         'is_active', 'notes',
@@ -42,6 +44,13 @@ class Repository extends Model
      * URL limpia sin credenciales incrustadas.
      * Ej: https://github.com/unamad-oti/sgati
      */
+    protected function ignoredForActivity(): array
+    {
+        return ['updated_at', 'created_at', 'deleted_at', 'token'];
+    }
+
+    protected function activitySubjectType(): string { return 'repositorio'; }
+
     public function getCleanUrlAttribute(): ?string
     {
         if (!$this->repo_url) return null;

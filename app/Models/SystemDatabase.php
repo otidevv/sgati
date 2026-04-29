@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Enums\Environment;
+use App\Traits\LogsSystemActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SystemDatabase extends Model
 {
+    use LogsSystemActivity;
     protected $fillable = [
         'system_id', 'database_server_id',
         'db_name', 'engine', 'schema_name',
@@ -37,4 +39,11 @@ class SystemDatabase extends Model
     {
         return $this->hasMany(SystemDatabaseResponsible::class)->orderBy('assigned_at');
     }
+
+    protected function ignoredForActivity(): array
+    {
+        return ['updated_at', 'created_at', 'deleted_at', 'db_password'];
+    }
+
+    protected function activitySubjectType(): string { return 'base de datos'; }
 }

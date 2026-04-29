@@ -77,6 +77,7 @@ class SystemController extends Controller
             'integrationsFrom.targetSystem',
             'integrationsTo.sourceSystem',
             'documents.uploadedBy', 'statusLogs.changedBy',
+            'activityLogs.causer',
             'responsibles.persona', 'responsibles.documents',
         ]);
 

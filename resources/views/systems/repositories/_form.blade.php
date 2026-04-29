@@ -13,11 +13,11 @@
         @error('name')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
     </div>
 
-    <div>
+    <div x-data="{ provider: '{{ old('provider', $repository?->provider?->value ?? 'github') }}' }">
         <label for="provider" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Proveedor <span class="text-red-500">*</span>
         </label>
-        <select id="provider" name="provider" required
+        <select id="provider" name="provider" required x-model="provider"
                 class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
             @foreach($providers as $p)
             <option value="{{ $p->value }}" {{ old('provider', $repository?->provider?->value) === $p->value ? 'selected' : '' }}>
@@ -26,6 +26,21 @@
             @endforeach
         </select>
         @error('provider')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
+
+        <div x-show="provider === 'other'" x-transition:enter="transition ease-out duration-150"
+             x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+             class="mt-3">
+            <label for="provider_other" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Especificar proveedor <span class="text-red-500">*</span>
+            </label>
+            <input type="text" id="provider_other" name="provider_other"
+                   value="{{ old('provider_other', $repository?->provider_other) }}"
+                   maxlength="100"
+                   :required="provider === 'other'"
+                   class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                   placeholder="Ej: Forgejo, Gogs, Azure DevOps…">
+            @error('provider_other')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
+        </div>
     </div>
 
     <div>

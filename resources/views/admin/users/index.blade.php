@@ -124,6 +124,7 @@
                     <div class="inline-flex items-center gap-1">
 
                         {{-- Guacamole: indicador + botón sync/remove --}}
+                        @if(config('guacamole.enabled'))
                         @if($user->isGuacamoledSynced())
                         <span title="Sincronizado con Guacamole ({{ $user->guacamole_username }})"
                               class="inline-flex items-center justify-center w-8 h-8 rounded-lg
@@ -164,6 +165,7 @@
                                 </svg>
                             </button>
                         </form>
+                        @endif
                         @endif
 
                         <a href="{{ route('admin.users.edit', $user) }}" title="Editar"

@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Enums\Environment;
+use App\Traits\LogsSystemActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SystemVersion extends Model
 {
+    use LogsSystemActivity;
     protected $fillable = [
         'system_id', 'version', 'release_date', 'environment',
         'changes', 'git_commit', 'git_branch', 'deployed_by', 'notes',
@@ -35,4 +37,6 @@ class SystemVersion extends Model
     {
         return $this->hasMany(SystemVersionResponsible::class)->orderBy('assigned_at');
     }
+
+    protected function activitySubjectType(): string { return 'versión'; }
 }

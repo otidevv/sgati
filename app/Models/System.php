@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Enums\SystemStatus;
+use App\Traits\LogsSystemActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class System extends Model
 {
+    use LogsSystemActivity;
     protected $fillable = [
         'name', 'slug', 'acronym', 'description', 'status',
         'area_id', 'responsible_id', 'tech_stack', 'repo_url', 'observations',
@@ -102,6 +104,11 @@ class System extends Model
         return $this->hasMany(SystemStatusLog::class)->orderByDesc('created_at');
     }
 
+    public function activityLogs()
+    {
+        return $this->hasMany(SystemActivityLog::class)->orderByDesc('created_at');
+    }
+
     public function repositories()
     {
         return $this->hasMany(Repository::class);
@@ -120,5 +127,20 @@ class System extends Model
     public function integrationsTo()
     {
         return $this->hasMany(SystemIntegration::class, 'target_system_id');
+    }
+
+    protected function resolveActivitySystemId(): ?int
+    {
+        return $this->id;
+    }
+
+    protected function ignoredForActivity(): array
+    {
+        return ['updated_at', 'created_at', 'deleted_at', 'status', 'slug'];
+    }
+
+    protected function activitySubjectType(): string
+    {
+        return 'datos generales';
     }
 }

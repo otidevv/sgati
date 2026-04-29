@@ -8,6 +8,7 @@ enum RepoProvider: string
     case GitLab    = 'gitlab';
     case Bitbucket = 'bitbucket';
     case Gitea     = 'gitea';
+    case OneDev    = 'onedev';
     case Other     = 'other';
 
     public function label(): string
@@ -17,6 +18,7 @@ enum RepoProvider: string
             self::GitLab    => 'GitLab',
             self::Bitbucket => 'Bitbucket',
             self::Gitea     => 'Gitea',
+            self::OneDev    => 'OneDev',
             self::Other     => 'Otro',
         };
     }
@@ -28,6 +30,7 @@ enum RepoProvider: string
             self::GitLab    => 'orange',
             self::Bitbucket => 'blue',
             self::Gitea     => 'teal',
+            self::OneDev    => 'violet',
             self::Other     => 'gray',
         };
     }
@@ -39,6 +42,7 @@ enum RepoProvider: string
             self::GitLab    => 'gitlab',
             self::Bitbucket => 'bitbucket',
             self::Gitea     => 'gitea',
+            self::OneDev    => 'onedev',
             self::Other     => 'git',
         };
     }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\LogsSystemActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,6 +10,7 @@ use Illuminate\Support\Str;
 
 class SystemService extends Model
 {
+    use LogsSystemActivity;
     protected $fillable = [
         'system_id', 'service_name', 'service_type', 'endpoint_url',
         'direction', 'auth_type', 'description', 'is_active',
@@ -72,6 +74,13 @@ class SystemService extends Model
     {
         return $this->hasMany(ServiceGatewayLog::class, 'system_service_id')->orderByDesc('created_at');
     }
+
+    protected function ignoredForActivity(): array
+    {
+        return ['updated_at', 'created_at', 'deleted_at', 'api_key', 'api_secret', 'token', 'gateway_slug'];
+    }
+
+    protected function activitySubjectType(): string { return 'servicio'; }
 
     /** Genera y asigna un slug único para el gateway */
     public function generateGatewaySlug(): void
