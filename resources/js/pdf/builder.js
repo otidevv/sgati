@@ -48,7 +48,7 @@ export function reportHeader(title, generatedAt, generatedBy) {
 // Pie de página estándar para reportes
 export const reportFooter = (cp, pc, fm = 40) => ({
     columns: [
-        { text: 'SGATI — OTI UNAMAD', fontSize: 6, color: C.light, italics: true, margin: [fm, 0, 0, 0] },
+        { text: `${window._appConfig?.name ?? 'OTI'} — OTI UNAMAD`, fontSize: 6, color: C.light, italics: true, margin: [fm, 0, 0, 0] },
         { text: `Página ${cp} de ${pc}`, fontSize: 7, color: C.navy, bold: true, alignment: 'right', margin: [0, 0, fm, 0] },
     ],
     margin: [0, 10, 0, 0],

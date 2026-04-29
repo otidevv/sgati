@@ -26,7 +26,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔐 SGATI</h1>
+            <h1>🔐 {{ config('app.name') }}</h1>
             <p>Sistema de Gestión de Tecnologías de Información</p>
         </div>
         <div class="body">
@@ -49,7 +49,7 @@
         </div>
         <div class="footer">
             <p>
-                Este correo fue enviado automáticamente por SGATI — OTI UNAMAD.<br>
+                Este correo fue enviado automáticamente por {{ config('app.name') }} — OTI UNAMAD.<br>
                 Por favor no respondas a este mensaje.
             </p>
         </div>

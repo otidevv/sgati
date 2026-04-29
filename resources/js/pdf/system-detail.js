@@ -466,7 +466,7 @@ function buildDoc(d, logoBase64 = null) {
                                 {
                                     text: currentPage > 1
                                         ? d.name.toUpperCase() + (d.acronym ? `  [${d.acronym}]` : '')
-                                        : `SGATI  ·  Código: ${d.acronym ?? d.id}`,
+                                        : `${window._appConfig?.name ?? ''}  ·  Código: ${d.acronym ?? d.id}`,
                                     fontSize: 6.5,
                                     color: C.muted,
                                     alignment: 'right',
@@ -498,14 +498,13 @@ function buildDoc(d, logoBase64 = null) {
                             stack: [
                                 { text: [{ text: 'Elaborado el  ', fontSize: 6, color: C.light }, { text: generatedAt, fontSize: 6, color: C.medium, bold: true }] },
                                 { text: [{ text: 'Generado por  ', fontSize: 6, color: C.light }, { text: generatedBy, fontSize: 6, color: C.navy, bold: true }], margin: [0, 2, 0, 0] },
-                                { text: [{ text: 'Documento de uso interno  ·  Clasificación: ', fontSize: 6, color: C.light }, { text: 'Uso restringido', fontSize: 6, color: C.medium, bold: true }], margin: [0, 2, 0, 0] },
                             ],
                             width: '60%',
                             margin: [40, 0, 0, 0],
                         },
                         {
                             stack: [
-                                { text: 'SGATI — Oficina de Tecnologías de la Información · UNAMAD', fontSize: 5.5, color: C.light, alignment: 'right', italics: true },
+                                { text: `${window._appConfig?.name ?? ''} — Oficina de Tecnologías de la Información · UNAMAD`, fontSize: 5.5, color: C.light, alignment: 'right', italics: true },
                                 { text: `Página ${currentPage} de ${pageCount}`, fontSize: 7, color: C.navy, bold: true, alignment: 'right', margin: [0, 2, 0, 0] },
                             ],
                             width: '40%',

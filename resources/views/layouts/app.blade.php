@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'SGATI') }} - @yield('title', 'Dashboard')</title>
+    <title>{{ config('app.name') }} - @yield('title', 'Dashboard')</title>
 
     <link rel="icon" type="image/png" href="{{ asset('images/sistema/logo.png') }}">
 
@@ -22,6 +22,11 @@
             (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         }
+    </script>
+
+    <!-- Config de la app accesible desde JS -->
+    <script>
+        window._appConfig = { name: @json(config('app.name')) };
     </script>
 
     <!-- Flash messages para toasts -->

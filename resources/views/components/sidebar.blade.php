@@ -8,10 +8,10 @@
 >
     {{-- Logo --}}
     <div class="flex items-center gap-3 px-6 h-16 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-        <img src="{{ asset('images/sistema/logo.png') }}" alt="Logo SGATI" class="w-9 h-9 object-contain">
+        <img src="{{ asset('images/sistema/logo.png') }}" alt="Logo {{ config('app.name') }}" class="w-9 h-9 object-contain">
         <div>
-            <span class="text-lg font-bold text-gray-900 dark:text-white">SGATI</span>
-            <p class="text-[10px] text-gray-500 dark:text-gray-400 -mt-0.5">Sistema de Gestión TI</p>
+            <span class="text-lg font-bold text-gray-900 dark:text-white">{{ config('app.name') }}</span>
+            <p class="text-[10px] text-gray-500 dark:text-gray-400 -mt-0.5"></p>
         </div>
     </div>
 
