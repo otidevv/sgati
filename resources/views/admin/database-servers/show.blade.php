@@ -271,6 +271,23 @@
                             </dd>
                         </div>
                         <div class="flex items-center justify-between px-5 py-3">
+                            <dt class="text-xs text-gray-500 dark:text-gray-400">Autenticación</dt>
+                            <dd>
+                                @php
+                                    $authMeta = [
+                                        'credentials' => ['Usuario y contraseña',          'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'],
+                                        'windows'     => ['Windows (SSPI / AD)',            'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'],
+                                        'kerberos'    => ['Kerberos / LDAP',                'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'],
+                                        'iam'         => ['IAM / Cloud',                    'bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'],
+                                        'trusted'     => ['Confianza local',                'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300'],
+                                    ];
+                                    $at = $databaseServer->auth_type ?? 'credentials';
+                                    [$atLabel, $atClass] = $authMeta[$at] ?? ['Desconocido', 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'];
+                                @endphp
+                                <span class="text-xs font-medium px-2 py-0.5 rounded-full {{ $atClass }}">{{ $atLabel }}</span>
+                            </dd>
+                        </div>
+                        <div class="flex items-center justify-between px-5 py-3">
                             <dt class="text-xs text-gray-500 dark:text-gray-400">Usuario admin</dt>
                             <dd class="text-sm font-mono text-gray-800 dark:text-gray-200">
                                 {{ $databaseServer->admin_user ?: '—' }}</dd>
@@ -883,7 +900,27 @@
                                 class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
                                       dark:text-white focus:ring-violet-500 focus:border-violet-500 sm:text-sm">
                         </div>
-                        <div>
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                Tipo de autenticación <span class="text-red-500">*</span>
+                            </label>
+                            <select name="auth_type" id="edit-auth-type"
+                                    onchange="editAuthTypeChanged(this.value)"
+                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
+                                           dark:text-white focus:ring-violet-500 focus:border-violet-500 sm:text-sm">
+                                @foreach([
+                                    'credentials' => 'Usuario y contraseña',
+                                    'windows'     => 'Autenticación de Windows (SSPI / Active Directory)',
+                                    'kerberos'    => 'Kerberos / LDAP',
+                                    'iam'         => 'IAM / Cloud (AWS RDS, Azure AD, GCP)',
+                                    'trusted'     => 'Confianza local (sin credenciales)',
+                                ] as $v => $l)
+                                    <option value="{{ $v }}" @selected(old('auth_type', $databaseServer->auth_type ?? 'credentials') === $v)>{{ $l }}</option>
+                                @endforeach
+                            </select>
+                            <p id="edit-auth-hint" class="mt-1 text-xs text-gray-400 dark:text-gray-500"></p>
+                        </div>
+                        <div id="edit-user-wrap">
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Usuario
                                 admin</label>
                             <input type="text" name="admin_user"
@@ -891,7 +928,7 @@
                                 class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
                                       dark:text-white focus:ring-violet-500 focus:border-violet-500 sm:text-sm">
                         </div>
-                        <div>
+                        <div id="edit-pass-wrap">
                             <label
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Contraseña</label>
                             <input type="password" name="admin_password" placeholder="Dejar vacío para no cambiar"
@@ -1513,6 +1550,29 @@
             document.getElementById('db-doc-file-label').innerHTML =
                 '<span class="font-medium text-gray-700 dark:text-gray-300">' + name + '</span>';
         }
+
+        // ── Tipo de autenticación (formulario de edición) ─────────────────────
+        const EDIT_AUTH_HINTS = {
+            credentials: 'Autenticación estándar con usuario y contraseña.',
+            windows:     'Usa la cuenta de Windows / Active Directory. No se almacenan credenciales.',
+            kerberos:    'Kerberos o LDAP. Ingresa el principal (ej. usuario@DOMINIO). No se guarda contraseña.',
+            iam:         'Credenciales delegadas a IAM (AWS RDS, Azure AD, GCP). No se guarda contraseña.',
+            trusted:     'Conexión de confianza local (peer/socket). No requiere usuario ni contraseña.',
+        };
+
+        function editAuthTypeChanged(type) {
+            const userWrap = document.getElementById('edit-user-wrap');
+            const passWrap = document.getElementById('edit-pass-wrap');
+            const hint     = document.getElementById('edit-auth-hint');
+            userWrap.classList.toggle('hidden', !['credentials', 'kerberos', 'iam'].includes(type));
+            passWrap.classList.toggle('hidden', type !== 'credentials');
+            if (hint) hint.textContent = EDIT_AUTH_HINTS[type] ?? '';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const sel = document.getElementById('edit-auth-type');
+            if (sel) editAuthTypeChanged(sel.value);
+        });
 
         // ── Contraseña ────────────────────────────────────────────────────────
         function togglePassword() {

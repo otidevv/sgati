@@ -44,9 +44,20 @@ function buildHeader(d) {
     ];
 }
 
+const AUTH_TYPE_META = {
+    credentials: { label: 'Usuario y contraseña',       color: '#1d4ed8' },
+    windows:     { label: 'Windows (SSPI / AD)',         color: '#7c3aed' },
+    kerberos:    { label: 'Kerberos / LDAP',             color: '#92400e' },
+    iam:         { label: 'IAM / Cloud',                 color: '#c2410c' },
+    trusted:     { label: 'Confianza local',             color: '#065f46' },
+};
+
 // Renders one DatabaseServer block (header + responsibles + databases table)
 function buildDatabaseServerBlock(ds) {
     const blocks = [];
+
+    const authMeta  = AUTH_TYPE_META[ds.auth_type] ?? AUTH_TYPE_META.credentials;
+    const showUser  = ['credentials', 'kerberos', 'iam'].includes(ds.auth_type);
 
     // Sub-header: engine label + host + status
     blocks.push({
@@ -67,7 +78,29 @@ function buildDatabaseServerBlock(ds) {
                 alignment: 'right',
             },
         ],
-        margin: [0, 6, 0, 4],
+        margin: [0, 6, 0, 2],
+    });
+
+    // Auth type + optional admin user row
+    blocks.push({
+        columns: [
+            {
+                text: [
+                    { text: 'Autenticación: ', fontSize: 6.5, color: C.muted },
+                    { text: authMeta.label, fontSize: 6.5, bold: true, color: authMeta.color },
+                ],
+                width: '*',
+            },
+            ...(showUser && ds.admin_user ? [{
+                text: [
+                    { text: 'Usuario: ', fontSize: 6.5, color: C.muted },
+                    { text: ds.admin_user, fontSize: 6.5, color: C.dark },
+                ],
+                width: 'auto',
+                alignment: 'right',
+            }] : []),
+        ],
+        margin: [0, 0, 0, 4],
     });
 
     // Responsibles of this database server (active only, 3 per row)

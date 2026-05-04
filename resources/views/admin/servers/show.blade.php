@@ -1685,7 +1685,23 @@
                         <p id="db-port-hint" class="mt-1 text-xs text-gray-400 dark:text-gray-500"></p>
                         <p id="db-port-error" class="hidden mt-1 text-xs text-red-500"></p>
                     </div>
-                    <div>
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                            Tipo de autenticación <span class="text-red-500">*</span>
+                        </label>
+                        <select name="auth_type" id="db-auth-type"
+                                onchange="dbAuthTypeChanged(this.value)"
+                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
+                                       dark:text-white focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="credentials">Usuario y contraseña</option>
+                            <option value="windows">Autenticación de Windows (SSPI / Active Directory)</option>
+                            <option value="kerberos">Kerberos / LDAP</option>
+                            <option value="iam">IAM / Cloud (AWS RDS, Azure AD, GCP)</option>
+                            <option value="trusted">Confianza local (sin credenciales)</option>
+                        </select>
+                        <p id="db-auth-type-hint" class="mt-1 text-xs text-gray-400 dark:text-gray-500"></p>
+                    </div>
+                    <div id="db-user-wrap">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Usuario Admin</label>
                         <input type="text" name="admin_user" id="db-admin-user"
                                placeholder="postgres" autocomplete="off"
@@ -1693,7 +1709,7 @@
                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700
                                       dark:text-white font-mono focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                     </div>
-                    <div>
+                    <div id="db-pass-wrap">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                             Contraseña Admin
                             <span class="font-normal text-gray-400 text-xs ml-1" id="db-pass-hint">(encriptada)</span>
@@ -2242,8 +2258,27 @@ function validateDbForm(e) {
     return true;
 }
 
+const DB_AUTH_TYPE_HINTS = {
+    credentials: 'Autenticación estándar con usuario y contraseña.',
+    windows:     'Usa la cuenta de Windows / Active Directory. No se almacenan credenciales.',
+    kerberos:    'Kerberos o LDAP. Ingresa el principal (ej. usuario@DOMINIO). No se guarda contraseña.',
+    iam:         'Credenciales delegadas a IAM (AWS RDS, Azure AD, GCP). No se guarda contraseña.',
+    trusted:     'Conexión de confianza local (peer/socket). No requiere usuario ni contraseña.',
+};
+
+function dbAuthTypeChanged(type) {
+    const userWrap = document.getElementById('db-user-wrap');
+    const passWrap = document.getElementById('db-pass-wrap');
+    const hint     = document.getElementById('db-auth-type-hint');
+    const showUser = ['credentials', 'kerberos', 'iam'].includes(type);
+    const showPass = type === 'credentials';
+    userWrap.classList.toggle('hidden', !showUser);
+    passWrap.classList.toggle('hidden', !showPass);
+    if (hint) hint.textContent = DB_AUTH_TYPE_HINTS[type] ?? '';
+}
+
 // Inicializar hint al cargar (motor por defecto = postgresql)
-document.addEventListener('DOMContentLoaded', () => dbEngineChanged('postgresql'));
+document.addEventListener('DOMContentLoaded', () => { dbEngineChanged('postgresql'); dbAuthTypeChanged('credentials'); });
 
 // ── Motores de BD ────────────────────────────────────────────────────
 const dbStoreUrl   = "{{ route('admin.servers.database-servers.store', $server) }}";
@@ -2261,6 +2296,9 @@ function editDbServer(id, data) {
     document.getElementById('db-admin-user').value = data.admin_user  ?? '';
     document.getElementById('db-admin-pass').placeholder = '••••••••  (dejar vacío para no cambiar)';
     document.getElementById('db-notes').value      = data.notes       ?? '';
+    const authType = data.auth_type ?? 'credentials';
+    document.getElementById('db-auth-type').value = authType;
+    dbAuthTypeChanged(authType);
     // Actualizar hint de puerto y limpiar errores previos
     const defaultPort = DB_DEFAULT_PORTS[data.engine] ?? null;
     document.getElementById('db-port-hint').textContent = defaultPort
@@ -2282,6 +2320,7 @@ function resetDbModal() {
     if (btn) { btn.disabled = false; btn.textContent = 'Guardar'; }
     ['db-host', 'db-version', 'db-port'].forEach(clearDbFieldError);
     dbEngineChanged('postgresql');
+    dbAuthTypeChanged('credentials');
 }
 </script>
 @endpush

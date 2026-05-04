@@ -8,7 +8,7 @@ class DatabaseServer extends Model
 {
     protected $fillable = [
         'server_id', 'engine', 'version',
-        'host', 'port',
+        'host', 'port', 'auth_type',
         'admin_user', 'admin_password',
         'name', 'is_active', 'notes',
     ];

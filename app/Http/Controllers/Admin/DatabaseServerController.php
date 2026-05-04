@@ -9,7 +9,8 @@ use Illuminate\Http\Request;
 
 class DatabaseServerController extends Controller
 {
-    private const ENGINES = ['postgresql','mysql','mariadb','oracle','sqlserver','sqlite','mongodb','other'];
+    private const ENGINES    = ['postgresql','mysql','mariadb','oracle','sqlserver','sqlite','mongodb','other'];
+    private const AUTH_TYPES = ['credentials','windows','kerberos','iam','trusted'];
 
     public function show(Server $server, DatabaseServer $databaseServer)
     {
@@ -31,10 +32,14 @@ class DatabaseServerController extends Controller
             'version'        => 'nullable|string|max:50',
             'host'           => 'nullable|string|max:150',
             'port'           => 'nullable|integer|min:1|max:65535',
+            'auth_type'      => 'nullable|in:' . implode(',', self::AUTH_TYPES),
             'admin_user'     => 'nullable|string|max:100',
             'admin_password' => 'nullable|string',
             'notes'          => 'nullable|string',
         ]);
+
+        $data['auth_type'] ??= 'credentials';
+        self::applyAuthTypeCredentials($data);
 
         $server->databaseServers()->create($data);
 
@@ -49,10 +54,14 @@ class DatabaseServerController extends Controller
             'version'        => 'nullable|string|max:50',
             'host'           => 'nullable|string|max:150',
             'port'           => 'nullable|integer|min:1|max:65535',
+            'auth_type'      => 'nullable|in:' . implode(',', self::AUTH_TYPES),
             'admin_user'     => 'nullable|string|max:100',
             'admin_password' => 'nullable|string',
             'notes'          => 'nullable|string',
         ]);
+
+        $data['auth_type'] ??= 'credentials';
+        self::applyAuthTypeCredentials($data);
 
         if (empty($data['admin_password'])) {
             unset($data['admin_password']);
@@ -67,5 +76,14 @@ class DatabaseServerController extends Controller
     {
         $databaseServer->delete();
         return back()->with('success', 'Motor de BD eliminado.');
+    }
+
+    private static function applyAuthTypeCredentials(array &$data): void
+    {
+        match ($data['auth_type']) {
+            'windows', 'trusted' => $data['admin_user'] = $data['admin_password'] = null,
+            'kerberos', 'iam'    => $data['admin_password'] = null,
+            default              => null,
+        };
     }
 }

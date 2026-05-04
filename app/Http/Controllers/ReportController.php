@@ -273,6 +273,8 @@ class ReportController extends Controller
                 'engine_label' => $ds->engine_label,
                 'host'         => $ds->connection_string,
                 'is_active'    => $ds->is_active,
+                'auth_type'    => $ds->auth_type ?? 'credentials',
+                'admin_user'   => $ds->admin_user,
                 'notes'        => $ds->notes,
                 'responsibles' => $ds->responsibles->map(fn($r) => [
                     'name'   => $r->persona
