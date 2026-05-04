@@ -6,6 +6,7 @@ use App\Models\System;
 use App\Models\Area;
 use App\Models\User;
 use App\Enums\SystemStatus;
+use App\Enums\SystemOriginType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -31,11 +32,12 @@ class SystemController extends Controller
 
     public function create()
     {
-        $areas    = Area::orderBy('name')->get();
-        $users    = User::where('is_active', true)->orderBy('name')->get();
-        $statuses = SystemStatus::cases();
+        $areas       = Area::orderBy('name')->get();
+        $users       = User::where('is_active', true)->orderBy('name')->get();
+        $statuses    = SystemStatus::cases();
+        $originTypes = SystemOriginType::cases();
 
-        return view('systems.create', compact('areas', 'users', 'statuses'));
+        return view('systems.create', compact('areas', 'users', 'statuses', 'originTypes'));
     }
 
     public function store(Request $request)
@@ -61,6 +63,10 @@ class SystemController extends Controller
         $system = System::create($data);
         $system->infrastructure()->create([]);
 
+        if ($request->filled('origin_type')) {
+            $system->origin()->create($this->extractOriginData($request));
+        }
+
         return redirect()->route('systems.show', $system)
             ->with('success', 'Sistema registrado correctamente.');
     }
@@ -69,6 +75,7 @@ class SystemController extends Controller
     {
         $system->load([
             'area', 'responsible',
+            'origin',
             'infrastructure.server.ips',
             'versions.responsibles.persona',
             'databases.databaseServer', 'databases.responsibles.persona',
@@ -88,11 +95,14 @@ class SystemController extends Controller
 
     public function edit(System $system)
     {
-        $areas    = Area::orderBy('name')->get();
-        $users    = User::where('is_active', true)->orderBy('name')->get();
-        $statuses = SystemStatus::cases();
+        $system->load('origin');
 
-        return view('systems.edit', compact('system', 'areas', 'users', 'statuses'));
+        $areas       = Area::orderBy('name')->get();
+        $users       = User::where('is_active', true)->orderBy('name')->get();
+        $statuses    = SystemStatus::cases();
+        $originTypes = SystemOriginType::cases();
+
+        return view('systems.edit', compact('system', 'areas', 'users', 'statuses', 'originTypes'));
     }
 
     public function update(Request $request, System $system)
@@ -126,6 +136,15 @@ class SystemController extends Controller
             ]);
         }
 
+        if ($request->filled('origin_type')) {
+            $system->origin()->updateOrCreate(
+                ['system_id' => $system->id],
+                $this->extractOriginData($request)
+            );
+        } else {
+            $system->origin()->delete();
+        }
+
         return redirect()->route('systems.show', $system)
             ->with('success', 'Sistema actualizado correctamente.');
     }
@@ -136,5 +155,35 @@ class SystemController extends Controller
 
         return redirect()->route('systems.index')
             ->with('success', 'Sistema eliminado.');
+    }
+
+    private function extractOriginData(Request $request): array
+    {
+        $type = $request->input('origin_type');
+
+        $common = [
+            'origin_type'  => $type,
+            'origin_notes' => $request->input('origin_notes'),
+        ];
+
+        return match($type) {
+            'donated' => array_merge($common, $request->only([
+                'donor_name', 'donor_institution', 'donation_type',
+                'thesis_title', 'thesis_author', 'thesis_university',
+                'donation_date', 'donation_document',
+            ])),
+            'third_party' => array_merge($common, $request->only([
+                'company_name', 'contact_name', 'contact_email', 'contact_phone',
+                'contract_number', 'contract_date', 'contract_value', 'warranty_expiry',
+            ])),
+            'internal' => array_merge($common, $request->only([
+                'team_name', 'dev_start_date', 'dev_end_date', 'methodology', 'project_code',
+            ])),
+            'state' => array_merge($common, $request->only([
+                'state_entity', 'state_entity_code', 'state_system_code',
+                'state_official_url', 'legal_basis', 'state_implementation_date',
+            ])),
+            default => $common,
+        };
     }
 }

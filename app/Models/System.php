@@ -119,6 +119,11 @@ class System extends Model
         return $this->hasMany(ServerContainer::class);
     }
 
+    public function origin()
+    {
+        return $this->hasOne(SystemOrigin::class);
+    }
+
     public function integrationsFrom()
     {
         return $this->hasMany(SystemIntegration::class, 'source_system_id');
