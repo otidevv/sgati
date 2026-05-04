@@ -165,21 +165,38 @@ function buildDoc(d, logoBase64 = null) {
         content.push(sectionHeader('Responsables'));
         content.push({
             table: {
-                widths: ['*', 130, 65, 50],
+                widths: ['*', 110, 100, 50, 42],
                 headerRows: 1,
                 body: [
-                    [th('Nombre'), th('Rol / Nivel'), th('Desde'), th('Estado')],
-                    ...d.responsibles.map(r => [
-                        td(r.name, { bold: true, color: C.dark }),
-                        td(r.level),
-                        td(r.assigned_at),
-                        td(r.active ? 'Activo' : 'Inactivo', {
-                            alignment: 'center',
-                            bold: r.active,
-                            color: r.active ? C.navy : C.light,
-                            italics: !r.active,
-                        }),
-                    ]),
+                    [th('Nombre'), th('Nivel(es)'), th('Documento(s) de asignación'), th('Desde'), th('Estado')],
+                    ...d.responsibles.map(r => {
+                        const docs = r.documents ?? [];
+                        const docsCell = docs.length > 0
+                            ? {
+                                stack: docs.map((doc, i) => ({
+                                    text: doc,
+                                    fontSize: 6.5,
+                                    color: C.medium,
+                                    margin: [0, i > 0 ? 2 : 0, 0, 0],
+                                })),
+                                margin: [5, 3, 5, 3],
+                                border: [false, false, false, true],
+                                borderColor: [null, null, null, C.borderSoft],
+                            }
+                            : td('—', { fontSize: 6.5, color: C.light, italics: true });
+                        return [
+                            td(r.name, { bold: true, color: C.dark }),
+                            td(r.level, { fontSize: 7 }),
+                            docsCell,
+                            td(r.assigned_at),
+                            td(r.active ? 'Activo' : 'Inactivo', {
+                                alignment: 'center',
+                                bold: r.active,
+                                color: r.active ? C.navy : C.light,
+                                italics: !r.active,
+                            }),
+                        ];
+                    }),
                 ],
             },
             layout: tableLayout,

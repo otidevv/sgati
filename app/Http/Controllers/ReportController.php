@@ -343,6 +343,7 @@ class ReportController extends Controller
             'integrationsFrom.targetSystem',
             'integrationsTo.sourceSystem',
             'responsibles.persona',
+            'responsibles.documents',
             'statusLogs',
         ]);
 
@@ -456,16 +457,40 @@ class ReportController extends Controller
                 'notes'    => $i->notes ?? null,
             ]),
 
-            'responsibles' => $system->responsibles->map(fn($r) => [
-                'name'        => $r->persona
-                    ? trim(($r->persona->nombres ?? '') . ' ' . ($r->persona->apellido_paterno ?? '') . ' ' . ($r->persona->apellido_materno ?? ''))
-                    : '—',
-                'level'       => is_array($r->level)
-                    ? implode(', ', array_map(fn($l) => \App\Models\SystemResponsible::levelLabel($l), $r->level))
-                    : \App\Models\SystemResponsible::levelLabel((string) $r->level),
-                'assigned_at' => $r->assigned_at?->format('d/m/Y'),
-                'active'      => $r->is_active,
-            ]),
+            'responsibles' => $system->responsibles->map(function ($r) {
+                $docLabels = [
+                    'resolucion_directoral' => 'R.D.',
+                    'resolucion_jefatural'  => 'R.J.',
+                    'memorando'             => 'Memo.',
+                    'oficio'                => 'Oficio',
+                    'contrato'              => 'Contrato',
+                    'acta'                  => 'Acta',
+                    'otro'                  => 'Doc.',
+                ];
+                $docs = $r->documents->map(function ($doc) use ($docLabels) {
+                    $metaParts = array_filter([
+                        $docLabels[$doc->document_type] ?? $doc->document_type,
+                        $doc->document_number,
+                        $doc->document_date?->format('d/m/Y'),
+                    ]);
+                    if ($metaParts) {
+                        return implode(' · ', $metaParts);
+                    }
+                    return $doc->description ?: $doc->original_name ?: null;
+                })->filter()->values()->toArray();
+
+                return [
+                    'name'        => $r->persona
+                        ? trim(($r->persona->nombres ?? '') . ' ' . ($r->persona->apellido_paterno ?? '') . ' ' . ($r->persona->apellido_materno ?? ''))
+                        : '—',
+                    'level'       => is_array($r->level)
+                        ? implode(' · ', array_map(fn($l) => \App\Models\SystemResponsible::levelLabel($l), $r->level))
+                        : \App\Models\SystemResponsible::levelLabel((string) $r->level),
+                    'assigned_at' => $r->assigned_at?->format('d/m/Y'),
+                    'active'      => $r->is_active,
+                    'documents'   => $docs,
+                ];
+            }),
 
             'status_logs' => $system->statusLogs->take(10)->map(fn($l) => [
                 'status' => $l->new_status ?? '—',
