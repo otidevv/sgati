@@ -11,6 +11,7 @@ function wizardForm(initialStep) {
         nameError: false,
         systemName: {!! json_encode(old('name', '')) !!},
         originType: {!! json_encode(old('origin_type', '')) !!},
+        donationType: {!! json_encode(old('donation_type', '')) !!},
         tags: {!! json_encode(old('tech_stack') ? (json_decode(old('tech_stack'), true) ?: []) : []) !!},
         tagInput: '',
         originLabels: {
@@ -294,6 +295,7 @@ elseif ($errors->hasAny(['status','area_id'])) $initialStep = 2;
                                 @foreach(['thesis'=>'Tesis','research_project'=>'Proyecto de investigación','direct_donation'=>'Donación directa','agreement'=>'Convenio'] as $val=>$lbl)
                                 <label class="cursor-pointer">
                                     <input type="radio" name="donation_type" value="{{ $val }}"
+                                           x-model="donationType"
                                            {{ old('donation_type') === $val ? 'checked' : '' }} class="peer sr-only">
                                     <div class="px-3 py-2 text-center rounded-lg border-2 border-gray-200 dark:border-gray-600
                                                 peer-checked:border-purple-500 peer-checked:bg-purple-100 dark:peer-checked:bg-purple-900/40
@@ -313,17 +315,32 @@ elseif ($errors->hasAny(['status','area_id'])) $initialStep = 2;
                                 <input type="text" name="donor_institution" value="{{ old('donor_institution') }}" placeholder="Universidad, empresa…"
                                        class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm">
                             </div>
-                            <div class="sm:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Título de la tesis / proyecto</label>
+                            <div class="sm:col-span-2"
+                                 x-show="donationType === 'thesis' || donationType === 'research_project' || donationType === 'agreement'"
+                                 x-transition:enter="transition ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+                                 x-transition:leave="transition ease-in duration-100"
+                                 x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-1">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                       x-text="donationType === 'thesis' ? 'Título de la tesis' : (donationType === 'research_project' ? 'Título del proyecto de investigación' : 'Título del convenio')"></label>
                                 <input type="text" name="thesis_title" value="{{ old('thesis_title') }}" placeholder="Título completo"
                                        class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm">
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Autor(es)</label>
+                            <div x-show="donationType === 'thesis' || donationType === 'research_project'"
+                                 x-transition:enter="transition ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+                                 x-transition:leave="transition ease-in duration-100"
+                                 x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-1">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                       x-text="donationType === 'thesis' ? 'Autor(es)' : 'Investigador(es) principal(es)'"></label>
                                 <input type="text" name="thesis_author" value="{{ old('thesis_author') }}"
                                        class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm">
                             </div>
-                            <div>
+                            <div x-show="donationType === 'thesis' || donationType === 'research_project'"
+                                 x-transition:enter="transition ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+                                 x-transition:leave="transition ease-in duration-100"
+                                 x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-1">
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Universidad / Institución académica</label>
                                 <input type="text" name="thesis_university" value="{{ old('thesis_university') }}"
                                        class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm">
