@@ -1,4 +1,182 @@
 <div class="space-y-6">
+
+    {{-- Ficha de Baja --}}
+    @if($system->status->value === 'decommissioned' && $system->decommission)
+    @php $d = $system->decommission; @endphp
+    <div class="rounded-xl border-2 border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 overflow-hidden">
+        {{-- Banner --}}
+        <div class="bg-red-600 dark:bg-red-800 px-5 py-3 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+                <svg class="w-5 h-5 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                </svg>
+                <span class="text-sm font-bold text-white uppercase tracking-wide">Sistema dado de baja</span>
+            </div>
+            <span class="text-xs font-semibold text-red-100 bg-red-700 dark:bg-red-900 px-3 py-1 rounded-full">
+                Efectivo: {{ $d->effective_date->format('d/m/Y') }}
+            </span>
+        </div>
+
+        <div class="p-5 space-y-5">
+
+            {{-- Motivo --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                <div class="flex gap-3 sm:col-span-2">
+                    <span class="text-xs font-medium text-red-500 dark:text-red-400 w-36 flex-shrink-0 pt-0.5">Tipo de motivo</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300">
+                        {{ $d->reason_type->label() }}
+                    </span>
+                </div>
+                <div class="flex gap-3 sm:col-span-2">
+                    <span class="text-xs font-medium text-red-500 dark:text-red-400 w-36 flex-shrink-0 pt-0.5">Motivo detallado</span>
+                    <span class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{{ $d->reason }}</span>
+                </div>
+                @if($d->shutdown_date)
+                <div class="flex gap-3">
+                    <span class="text-xs font-medium text-red-500 dark:text-red-400 w-36 flex-shrink-0 pt-0.5">Apagado el</span>
+                    <span class="text-sm text-gray-700 dark:text-gray-300">{{ $d->shutdown_date->format('d/m/Y') }}</span>
+                </div>
+                @endif
+                @if($d->users_affected !== null)
+                <div class="flex gap-3">
+                    <span class="text-xs font-medium text-red-500 dark:text-red-400 w-36 flex-shrink-0 pt-0.5">Usuarios afectados</span>
+                    <span class="text-sm text-gray-700 dark:text-gray-300">{{ number_format($d->users_affected) }}</span>
+                </div>
+                @endif
+            </div>
+
+            {{-- Sustento documental --}}
+            @if($d->resolution_number || $d->memo_number)
+            <div class="border-t border-red-200 dark:border-red-800 pt-4">
+                <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Sustento documental</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                    @if($d->resolution_number)
+                    <div class="flex gap-3">
+                        <span class="text-xs font-medium text-gray-500 dark:text-gray-400 w-36 flex-shrink-0 pt-0.5">N° Resolución</span>
+                        <span class="text-sm font-mono text-gray-800 dark:text-gray-200">{{ $d->resolution_number }}</span>
+                    </div>
+                    @endif
+                    @if($d->resolution_date)
+                    <div class="flex gap-3">
+                        <span class="text-xs font-medium text-gray-500 dark:text-gray-400 w-36 flex-shrink-0 pt-0.5">Fecha resolución</span>
+                        <span class="text-sm text-gray-800 dark:text-gray-200">{{ $d->resolution_date->format('d/m/Y') }}</span>
+                    </div>
+                    @endif
+                    @if($d->resolution_entity)
+                    <div class="flex gap-3 sm:col-span-2">
+                        <span class="text-xs font-medium text-gray-500 dark:text-gray-400 w-36 flex-shrink-0 pt-0.5">Entidad emisora</span>
+                        <span class="text-sm text-gray-800 dark:text-gray-200">{{ $d->resolution_entity }}</span>
+                    </div>
+                    @endif
+                    @if($d->memo_number)
+                    <div class="flex gap-3">
+                        <span class="text-xs font-medium text-gray-500 dark:text-gray-400 w-36 flex-shrink-0 pt-0.5">N° Memorando</span>
+                        <span class="text-sm font-mono text-gray-800 dark:text-gray-200">{{ $d->memo_number }}</span>
+                    </div>
+                    @endif
+                    @if($d->memo_date)
+                    <div class="flex gap-3">
+                        <span class="text-xs font-medium text-gray-500 dark:text-gray-400 w-36 flex-shrink-0 pt-0.5">Fecha memorando</span>
+                        <span class="text-sm text-gray-800 dark:text-gray-200">{{ $d->memo_date->format('d/m/Y') }}</span>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            @endif
+
+            {{-- Autorización --}}
+            @if($d->authorized_by_name || $d->authorized_by_position)
+            <div class="border-t border-red-200 dark:border-red-800 pt-4">
+                <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Autorización</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                    @if($d->authorized_by_name)
+                    <div class="flex gap-3">
+                        <span class="text-xs font-medium text-gray-500 dark:text-gray-400 w-36 flex-shrink-0 pt-0.5">Autorizado por</span>
+                        <span class="text-sm text-gray-800 dark:text-gray-200">{{ $d->authorized_by_name }}</span>
+                    </div>
+                    @endif
+                    @if($d->authorized_by_position)
+                    <div class="flex gap-3">
+                        <span class="text-xs font-medium text-gray-500 dark:text-gray-400 w-36 flex-shrink-0 pt-0.5">Cargo</span>
+                        <span class="text-sm text-gray-800 dark:text-gray-200">{{ $d->authorized_by_position }}</span>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            @endif
+
+            {{-- Sistema sucesor y datos --}}
+            @if($d->successorSystem || $d->successor_description || $d->data_migrated || $d->data_retention_until)
+            <div class="border-t border-red-200 dark:border-red-800 pt-4">
+                <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Sistema sucesor y datos</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                    @if($d->successorSystem)
+                    <div class="flex gap-3 sm:col-span-2">
+                        <span class="text-xs font-medium text-gray-500 dark:text-gray-400 w-36 flex-shrink-0 pt-0.5">Sistema sucesor</span>
+                        <a href="{{ route('systems.show', $d->successorSystem) }}"
+                           class="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                            {{ $d->successorSystem->acronym ? "[{$d->successorSystem->acronym}] " : '' }}{{ $d->successorSystem->name }}
+                        </a>
+                    </div>
+                    @elseif($d->successor_description)
+                    <div class="flex gap-3 sm:col-span-2">
+                        <span class="text-xs font-medium text-gray-500 dark:text-gray-400 w-36 flex-shrink-0 pt-0.5">Sucesor</span>
+                        <span class="text-sm text-gray-800 dark:text-gray-200">{{ $d->successor_description }}</span>
+                    </div>
+                    @endif
+                    <div class="flex gap-3">
+                        <span class="text-xs font-medium text-gray-500 dark:text-gray-400 w-36 flex-shrink-0 pt-0.5">Data migrada</span>
+                        <span class="text-sm {{ $d->data_migrated ? 'text-green-600 dark:text-green-400 font-medium' : 'text-gray-500 dark:text-gray-400' }}">
+                            {{ $d->data_migrated ? 'Sí' : 'No' }}
+                        </span>
+                    </div>
+                    @if($d->data_migrated && $d->data_migration_destination)
+                    <div class="flex gap-3">
+                        <span class="text-xs font-medium text-gray-500 dark:text-gray-400 w-36 flex-shrink-0 pt-0.5">Destino de data</span>
+                        <span class="text-sm text-gray-800 dark:text-gray-200">{{ $d->data_migration_destination }}</span>
+                    </div>
+                    @endif
+                    @if($d->data_retention_until)
+                    <div class="flex gap-3">
+                        <span class="text-xs font-medium text-gray-500 dark:text-gray-400 w-36 flex-shrink-0 pt-0.5">Conservar hasta</span>
+                        <span class="text-sm {{ $d->data_retention_until->isPast() ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-gray-200' }}">
+                            {{ $d->data_retention_until->format('d/m/Y') }}
+                        </span>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            @endif
+
+            {{-- Notas de auditoría --}}
+            @if($d->audit_notes || $d->reactivation_procedure)
+            <div class="border-t border-red-200 dark:border-red-800 pt-4 space-y-3">
+                @if($d->audit_notes)
+                <div>
+                    <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Notas de auditoría</p>
+                    <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{{ $d->audit_notes }}</p>
+                </div>
+                @endif
+                @if($d->reactivation_procedure)
+                <div>
+                    <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Procedimiento de reactivación</p>
+                    <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{{ $d->reactivation_procedure }}</p>
+                </div>
+                @endif
+            </div>
+            @endif
+
+            {{-- Pie: registrado por --}}
+            <div class="border-t border-red-200 dark:border-red-800 pt-3 flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                Registrado por
+                <span class="font-medium text-gray-500 dark:text-gray-400">{{ $d->registeredBy->name ?? 'Sistema' }}</span>
+                el {{ $d->created_at->format('d/m/Y \a \l\a\s H:i') }}
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- Descripción --}}
     @if($system->description)
     <div>

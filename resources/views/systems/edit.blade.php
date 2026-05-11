@@ -189,30 +189,31 @@ elseif ($errors->hasAny(['status','area_id','responsible_id','status_reason'])) 
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             @foreach($statuses as $s)
                             @php
-                            $checked = old('status', $system->status->value) === $s->value;
-                            $borderActive = match($s->value) {
-                                'active'      => 'border-green-500 bg-green-50 dark:bg-green-900/30',
-                                'development' => 'border-blue-500 bg-blue-50 dark:bg-blue-900/30',
-                                'maintenance' => 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/30',
-                                'inactive'    => 'border-red-500 bg-red-50 dark:bg-red-900/30',
-                                default       => 'border-gray-400 bg-gray-50',
-                            };
-                            $dotColor = match($s->value) {
+                            $checked   = old('status', $system->status->value) === $s->value;
+                            $dotColor  = match($s->value) {
                                 'active'      => 'bg-green-500',
                                 'development' => 'bg-blue-500',
                                 'maintenance' => 'bg-yellow-400',
                                 'inactive'    => 'bg-red-400',
                                 default       => 'bg-gray-400',
                             };
+                            $activeClasses = match($s->value) {
+                                'active'      => 'border-green-500 bg-green-50 dark:bg-green-900/30',
+                                'development' => 'border-blue-500 bg-blue-50 dark:bg-blue-900/30',
+                                'maintenance' => 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/30',
+                                'inactive'    => 'border-red-500 bg-red-50 dark:bg-red-900/30',
+                                default       => 'border-gray-400 bg-gray-100 dark:bg-gray-700',
+                            };
                             @endphp
                             <label class="cursor-pointer">
                                 <input type="radio" name="status" value="{{ $s->value }}"
                                        {{ $checked ? 'checked' : '' }}
                                        x-model="currentStatus"
-                                       class="peer sr-only">
-                                <div class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600
-                                            peer-checked:{{ $borderActive }}
-                                            transition-all hover:border-gray-300 dark:hover:border-gray-500 text-center">
+                                       class="sr-only">
+                                <div class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-center"
+                                     :class="currentStatus === '{{ $s->value }}'
+                                         ? '{{ $activeClasses }}'
+                                         : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'">
                                     <span class="w-3 h-3 rounded-full {{ $dotColor }}"></span>
                                     <span class="text-xs font-semibold text-gray-700 dark:text-gray-200 leading-tight">{{ $s->label() }}</span>
                                 </div>

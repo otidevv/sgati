@@ -34,7 +34,7 @@ class SystemController extends Controller
     {
         $areas       = Area::orderBy('name')->get();
         $users       = User::where('is_active', true)->orderBy('name')->get();
-        $statuses    = SystemStatus::cases();
+        $statuses    = array_filter(SystemStatus::cases(), fn($s) => $s !== SystemStatus::Decommissioned);
         $originTypes = SystemOriginType::cases();
 
         return view('systems.create', compact('areas', 'users', 'statuses', 'originTypes'));
@@ -76,6 +76,7 @@ class SystemController extends Controller
         $system->load([
             'area', 'responsible',
             'origin',
+            'decommission.registeredBy', 'decommission.successorSystem',
             'infrastructure.server.ips',
             'versions.responsibles.persona',
             'databases.databaseServer', 'databases.responsibles.persona',
@@ -99,7 +100,7 @@ class SystemController extends Controller
 
         $areas       = Area::orderBy('name')->get();
         $users       = User::where('is_active', true)->orderBy('name')->get();
-        $statuses    = SystemStatus::cases();
+        $statuses    = array_filter(SystemStatus::cases(), fn($s) => $s !== SystemStatus::Decommissioned);
         $originTypes = SystemOriginType::cases();
 
         return view('systems.edit', compact('system', 'areas', 'users', 'statuses', 'originTypes'));

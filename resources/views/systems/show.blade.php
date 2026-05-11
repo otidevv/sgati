@@ -8,18 +8,20 @@
     @php
     $sv = $system->status->value;
     $gradientColors = match($sv) {
-        'active'      => 'linear-gradient(135deg, #16a34a 0%, #059669 100%)',
-        'development' => 'linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)',
-        'maintenance' => 'linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)',
-        'inactive'    => 'linear-gradient(135deg, #6b7280 0%, #374151 100%)',
-        default       => 'linear-gradient(135deg, #6b7280 0%, #374151 100%)',
+        'active'         => 'linear-gradient(135deg, #16a34a 0%, #059669 100%)',
+        'development'    => 'linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)',
+        'maintenance'    => 'linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)',
+        'inactive'       => 'linear-gradient(135deg, #6b7280 0%, #374151 100%)',
+        'decommissioned' => 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+        default          => 'linear-gradient(135deg, #6b7280 0%, #374151 100%)',
     };
     $accentColor = match($sv) {
-        'active'      => '#16a34a',
-        'development' => '#2563eb',
-        'maintenance' => '#f59e0b',
-        'inactive'    => '#6b7280',
-        default       => '#6b7280',
+        'active'         => '#16a34a',
+        'development'    => '#2563eb',
+        'maintenance'    => '#f59e0b',
+        'inactive'       => '#6b7280',
+        'decommissioned' => '#475569',
+        default          => '#6b7280',
     };
     @endphp
     <div class="relative rounded-2xl shadow-lg overflow-hidden">
@@ -89,6 +91,13 @@
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                         Editar
                     </a>
+                    @if($system->status->value === 'inactive')
+                    <a href="{{ route('systems.decommission.create', $system) }}"
+                       style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 1rem; background: rgba(239,68,68,0.25); color: white; font-size: 0.875rem; font-weight: 500; border-radius: 0.5rem; border: 1px solid rgba(239,68,68,0.4); backdrop-filter: blur(4px); transition: all 0.2s;">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                        Dar de baja
+                    </a>
+                    @endif
                     @endcan
                     @can('systems.delete')
                     <form action="{{ route('systems.destroy', $system) }}" method="POST" class="inline">
@@ -172,6 +181,7 @@
             <div x-show="tab === 'logs'"           x-cloak> @include('systems.tabs.logs') </div>
         </div>
     </div>
+
 
 </div>
 

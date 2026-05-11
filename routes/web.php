@@ -38,6 +38,7 @@ use App\Http\Controllers\SystemResponsibleDocumentController;
 use App\Http\Controllers\SystemServiceGatewayController;
 use App\Http\Controllers\SystemServiceGatewayKeyController;
 use App\Http\Controllers\SystemServiceGatewayKeyDocumentController;
+use App\Http\Controllers\SystemDecommissionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => redirect()->route('dashboard'));
@@ -56,6 +57,10 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('systems', SystemController::class);
 
     Route::prefix('systems/{system}')->name('systems.')->group(function () {
+
+        // Baja del sistema
+        Route::get('decommission',  [SystemDecommissionController::class, 'create'])->name('decommission.create');
+        Route::post('decommission', [SystemDecommissionController::class, 'store'])->name('decommission.store');
 
         // Versiones
         Route::resource('versions', SystemVersionController::class)

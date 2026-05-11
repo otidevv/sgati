@@ -134,6 +134,11 @@ class System extends Model
         return $this->hasMany(SystemIntegration::class, 'target_system_id');
     }
 
+    public function decommission()
+    {
+        return $this->hasOne(SystemDecommission::class);
+    }
+
     protected function resolveActivitySystemId(): ?int
     {
         return $this->id;
